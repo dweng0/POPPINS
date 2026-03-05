@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 19 scenario(s) across 2 test file(s).
+Checked 21 scenario(s) across 3 test file(s).
 
 
 ## Feature: Add the front matter to the BDD file
@@ -25,5 +25,16 @@ Checked 19 scenario(s) across 2 test file(s).
 - [x] Cancelling adding a background to the feature through user input
 - [x] Completing the BDD
 
+## Feature: Distribution
+
+- [x] A user can build the tool using a build script
+
+## Feature: Application branding
+
+- [ ] UNCOVERED: A sheep mascot is displayed when the application starts
+
 ---
-**19/19 scenarios covered.**
+**20/21 scenarios covered.**
+
+1 scenario(s) need tests:
+- A sheep mascot is displayed when the application starts

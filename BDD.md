@@ -130,3 +130,23 @@ System: A react cli tool that allows you to create a BDD file in the same format
             When the BDD file is saved to their project
             Then the user should be given a success message that their BDD file has been created and saved to their project.
 
+    Feature: Distribution
+        As a user
+        I want to be able to build and run the tool easily
+        So that I can use it without needing to understand the internals
+
+        Scenario: A user can build the tool using a build script
+            Given the user has cloned the repository
+            When the user runs the build script
+            Then the tool should be compiled and ready to use
+
+    Feature: Application branding
+        As a user
+        I want to see a sheep mascot when I open the application
+        So that the tool feels welcoming and distinctive
+
+        Scenario: A sheep mascot is displayed when the application starts
+            Given the user opens the application
+            When the application starts
+            Then a sheep mascot should be displayed in the terminal
+
