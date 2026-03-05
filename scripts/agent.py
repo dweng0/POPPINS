@@ -256,9 +256,31 @@ def main():
             tool_results = []
             for block in response.content:
                 if block.type == "tool_use":
-                    print(f"\n\033[36m[{block.name}]\033[0m ", end="", flush=True)
+                    # Show tool name + key input detail
+                    if block.name == "bash":
+                        cmd_preview = block.input.get("command", "")[:120]
+                        print(f"\n\033[36m[{block.name}]\033[0m \033[90m$ {cmd_preview}\033[0m", flush=True)
+                    elif block.name == "write_file":
+                        path = block.input.get('path', '')
+                        content = block.input.get('content', '')
+                        lines = content.splitlines()
+                        print(f"\n\033[36m[{block.name}]\033[0m \033[90m{path} ({len(lines)} lines)\033[0m", flush=True)
+                        preview_lines = lines[:4]
+                        shown = "\n  ".join(preview_lines)
+                        suffix = f"\n  ... ({len(lines) - 4} more lines)" if len(lines) > 4 else ""
+                        print(f"  \033[90m{shown}{suffix}\033[0m", flush=True)
+                    elif block.name in ("read_file", "edit_file"):
+                        print(f"\n\033[36m[{block.name}]\033[0m \033[90m{block.input.get('path', '')}\033[0m", flush=True)
+                    else:
+                        print(f"\n\033[36m[{block.name}]\033[0m", flush=True)
                     result = run_tool(block.name, block.input)
-                    print("\033[32mdone\033[0m", flush=True)
+                    # Show a short output preview
+                    preview = str(result).strip()
+                    if preview and preview != f"(exit code: 0)":
+                        lines = preview.splitlines()
+                        shown = "\n  ".join(lines[:5])
+                        suffix = f"\n  ... ({len(lines) - 5} more lines)" if len(lines) > 5 else ""
+                        print(f"  \033[90m{shown}{suffix}\033[0m", flush=True)
                     tool_results.append({
                         "type": "tool_result",
                         "tool_use_id": block.id,

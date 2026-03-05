@@ -18,7 +18,7 @@ echo "  Test:      $TEST_CMD"
 echo ""
 
 REPO="${REPO:-$(git remote get-url origin 2>/dev/null | sed 's/.*github.com[:/]//' | sed 's/\.git$//' || echo 'unknown/repo')}"
-MODEL="${MODEL:-claude-opus-4-6}"
+MODEL="${MODEL:-claude-sonnet-4-6}"
 DATE=$(date +%Y-%m-%d)
 SESSION_TIME=$(date +%H:%M)
 
@@ -98,7 +98,7 @@ Rust:
     cargo init
 
 Go:
-    go mod init $(basename \$(pwd))
+    go mod init \$(basename \$(pwd))
 
 Java (Maven):
     mvn archetype:generate -DgroupId=com.example -DartifactId=app -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
