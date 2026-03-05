@@ -232,6 +232,20 @@ if [ "$BUILD_OK" = false ] || [ "$TEST_OK" = false ]; then
     exit 1
 fi
 
+# ── Ensure journal has a Day 0 entry ──
+if ! grep -q "## Day 0" JOURNAL.md 2>/dev/null; then
+    echo "→ Agent did not write journal entry — writing fallback..."
+    JOURNAL_ENTRY="## Day 0 — $SESSION_TIME — Bootstrap
+
+Bootstrapped $LANGUAGE/$FRAMEWORK project. Build: $BUILD_CMD. Test: $TEST_CMD.
+(Entry written by bootstrap.sh fallback — agent did not complete Phase 6.)
+"
+    # Prepend after the first line (the # Journal heading)
+    awk -v entry="$JOURNAL_ENTRY" 'NR==1{print; print ""; print entry; next}1' JOURNAL.md > JOURNAL.md.tmp && mv JOURNAL.md.tmp JOURNAL.md
+    git add JOURNAL.md
+    git commit -m "Bootstrap: fallback journal entry" || true
+fi
+
 # ── Ensure initialized marker exists ──
 if [ ! -f .baadd_initialized ]; then
     touch .baadd_initialized

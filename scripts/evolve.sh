@@ -23,7 +23,7 @@ echo "  Test:      $TEST_CMD"
 echo ""
 
 REPO="${REPO:-$(git remote get-url origin 2>/dev/null | sed 's/.*github.com[:/]//' | sed 's/\.git$//' || echo 'unknown/repo')}"
-MODEL="${MODEL:-claude-opus-4-6}"
+MODEL="${MODEL:-claude-sonnet-4-6}"
 TIMEOUT="${TIMEOUT:-3600}"
 DATE=$(date +%Y-%m-%d)
 SESSION_TIME=$(date +%H:%M)

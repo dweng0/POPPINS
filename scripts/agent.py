@@ -185,6 +185,30 @@ def run_tool(name, input_data):
         return f"ERROR: {e}"
 
 
+def prune_old_tool_results(messages, keep_last=3):
+    """Replace content of old tool_result messages with [pruned] to limit context growth."""
+    # Find all user messages that contain tool_results
+    tool_result_indices = [
+        i for i, m in enumerate(messages)
+        if m["role"] == "user" and isinstance(m["content"], list)
+        and any(isinstance(b, dict) and b.get("type") == "tool_result" for b in m["content"])
+    ]
+    # Prune all but the last `keep_last`
+    to_prune = tool_result_indices[:-keep_last] if len(tool_result_indices) > keep_last else []
+    pruned = 0
+    for i in to_prune:
+        new_content = []
+        for block in messages[i]["content"]:
+            if isinstance(block, dict) and block.get("type") == "tool_result":
+                if block.get("content") != "[pruned]":
+                    block = {**block, "content": "[pruned]"}
+                    pruned += 1
+            new_content.append(block)
+        messages[i]["content"] = new_content
+    if pruned:
+        print(f"  \033[90m[context: pruned {pruned} old tool result(s)]\033[0m", flush=True)
+
+
 def load_skills(skills_dir):
     """Load skill files and return as system prompt additions."""
     if not skills_dir or not os.path.isdir(skills_dir):
@@ -231,9 +255,29 @@ def main():
 
     iteration = 0
     max_iterations = 50  # safety limit
+    wrap_up_at = 45
+    wrap_up_injected = False
 
     while iteration < max_iterations:
         iteration += 1
+
+        if iteration >= wrap_up_at and not wrap_up_injected:
+            print(f"\n\033[33m[agent: iteration {iteration}/{max_iterations} — injecting wrap-up reminder]\033[0m", flush=True)
+            messages.append({
+                "role": "user",
+                "content": (
+                    f"⚠️ You have used {iteration} of {max_iterations} allowed iterations. "
+                    "Stop starting new work. Finish only what you are currently doing, then wrap up:\n"
+                    "1. Run the build and tests — fix any failures before committing.\n"
+                    "2. Update BDD_STATUS.md with current coverage.\n"
+                    "3. Write your journal entry to JOURNAL.md. Include: what you completed this session, "
+                    "which scenarios are still uncovered or failing, and exactly where the next session should pick up. "
+                    "The next session's agent will read this journal to orient itself — make the handoff clear.\n"
+                    "4. Commit everything.\n"
+                    "Do not start any new scenarios."
+                )
+            })
+            wrap_up_injected = True
 
         response = client.messages.create(
             model=args.model,
@@ -289,6 +333,7 @@ def main():
 
             messages.append({"role": "assistant", "content": response.content})
             messages.append({"role": "user", "content": tool_results})
+            prune_old_tool_results(messages)
         else:
             print(f"\n[stopped: {response.stop_reason}]", flush=True)
             break
