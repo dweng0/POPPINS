@@ -5,6 +5,26 @@
 </div>
 
 [![Evolution](https://github.com/dweng0/BAADD/actions/workflows/evolve.yml/badge.svg)](https://github.com/dweng0/BAADD/actions/workflows/evolve.yml) [![CI](https://github.com/dweng0/BAADD/actions/workflows/ci.yml/badge.svg)](https://github.com/dweng0/BAADD/actions/workflows/ci.yml)
+
+## Supported Models
+
+BAADD auto-detects your provider from environment variables. Set one API key and run — no config needed.
+
+| Provider | Environment Variable | Default Model | Notes |
+|----------|---------------------|---------------|-------|
+| **Anthropic** | `ANTHROPIC_API_KEY` | `claude-sonnet-4-5` | Highest priority; native tool use |
+| **OpenAI** | `OPENAI_API_KEY` | `gpt-4o` | |
+| **Groq** | `GROQ_API_KEY` | `llama-3.3-70b-versatile` | Fast inference |
+| **Alibaba / Qwen** | `DASHSCOPE_API_KEY` | `qwen-max` | OpenAI-compatible endpoint |
+| **Moonshot / Kimi** | `MOONSHOT_API_KEY` | `moonshot-v1-8k` | OpenAI-compatible endpoint |
+| **Ollama** | `OLLAMA_HOST` | _(pass `--model`_) | Local models, no API key required |
+
+Provider priority (first key found wins): `ANTHROPIC_API_KEY` > `MOONSHOT_API_KEY` > `DASHSCOPE_API_KEY` > `OPENAI_API_KEY` > `GROQ_API_KEY` > `OLLAMA_HOST`
+
+Override the model at any time with `--model <name>` or force a provider with `--provider <name>`.
+
+---
+
 # The task
 
 Write software by describing its behaviour in a `BDD.md` file.
