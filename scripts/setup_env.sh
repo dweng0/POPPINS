@@ -86,13 +86,18 @@ case "$LANGUAGE" in
 esac
 
 # Always ensure agent dependencies are available
+if command -v uv &>/dev/null; then
+  PY_INSTALL="uv pip install --quiet"
+else
+  PY_INSTALL="python3 -m pip install --quiet"
+fi
 if ! python3 -c "import anthropic" &>/dev/null; then
   echo "  Installing anthropic Python package..."
-  pip install anthropic --quiet
+  $PY_INSTALL anthropic
 fi
 if ! python3 -c "import openai" &>/dev/null; then
   echo "  Installing openai Python package..."
-  pip install openai --quiet
+  $PY_INSTALL openai
 fi
 
 echo "  Environment ready."

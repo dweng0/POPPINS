@@ -3,6 +3,18 @@
 <!-- Agent writes entries here, newest at the top. Never delete entries. -->
 <!-- Format: ## Day N — HH:MM — [short title] -->
 
+## Day 1 — 12:31 — Fix linting errors (CI failure)
+
+Fixing five ESLint errors that caused CI to fail: removed three unused variables in app.tsx (BackgroundData import, backgroundDraft state, featureAction state) and two unused variables in the test file (beforeEach import, BACKSPACE constant). All checks now pass: npm run format, npm run lint, npm run build, and npm test. CI failure resolved.
+
+Previous CI run FAILED due to ESLint errors. After applying fixes, all checks pass with 24 tests passing and 21/21 BDD scenarios covered.
+
+**What worked:** Direct identification of unused variables from ESLint output, two-file fix (src/app.tsx and tests/app.test.tsx).
+
+**What failed:** CI run before fix. No scenarios affected - all 21 scenarios were already covered and passing.
+
+**Final state:** All linting errors resolved, CI should now pass. 24 tests passing, 21/21 BDD scenarios covered.
+
 ## Day 2 — 23:05 — Build script and sheep mascot
 
 **Scenarios implemented:**

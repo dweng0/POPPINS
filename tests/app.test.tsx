@@ -1,6 +1,6 @@
 import React from "react";
 import { render } from "ink-testing-library";
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import App from "../src/app.js";
 import * as fs from "fs";
 
@@ -14,7 +14,6 @@ vi.mock("fs", async (importOriginal) => {
 
 const ENTER = "\r";
 const ESCAPE = "\u001B";
-const BACKSPACE = "\u007F";
 
 function typeText(stdin: { write: (s: string) => void }, text: string) {
   for (const char of text) {

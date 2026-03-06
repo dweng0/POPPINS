@@ -7,7 +7,6 @@ import {
   FeatureData,
   Frontmatter,
   ScenarioData,
-  BackgroundData,
 } from "./types.js";
 import { inferCommand } from "./utils/commands.js";
 import { generateBddContent } from "./utils/bddWriter.js";
@@ -75,11 +74,7 @@ export default function App({ outputPath = "BDD.md" }: AppProps) {
   const [scenarioDraft, setScenarioDraft] = useState<Partial<ScenarioDraft>>(
     {},
   );
-  const [backgroundDraft, setBackgroundDraft] = useState<
-    Partial<BackgroundDraft>
-  >({});
   const [savedFilePath, setSavedFilePath] = useState("");
-  const [featureAction, setFeatureAction] = useState("");
 
   function buildFrontmatter(): Frontmatter {
     return {
@@ -106,7 +101,6 @@ export default function App({ outputPath = "BDD.md" }: AppProps) {
     setCurrentFeatureBackground(null);
     setCurrentFeatureScenarios([]);
     setScenarioDraft({});
-    setBackgroundDraft({});
   }
 
   function saveBddFile(allFeatures: FeatureData[]) {
@@ -195,12 +189,10 @@ export default function App({ outputPath = "BDD.md" }: AppProps) {
 
   function handleFeatureAction(val: string) {
     const lower = val.toLowerCase().trim();
-    setFeatureAction(lower);
     if (lower === "scenario" || lower === "s") {
       setScenarioDraft({});
       setStep("scenario_name");
     } else if (lower === "background" || lower === "b") {
-      setBackgroundDraft({});
       setStep("background_given");
     } else if (lower === "done" || lower === "d") {
       commitCurrentFeature();
@@ -242,7 +234,6 @@ export default function App({ outputPath = "BDD.md" }: AppProps) {
   function handleBackgroundGiven(val: string) {
     const bg: BackgroundDraft = { given: val };
     setCurrentFeatureBackground(bg);
-    setBackgroundDraft({});
     setStep("feature_action");
   }
 
