@@ -13,6 +13,14 @@
 
 set -euo pipefail
 
+# ── Load .env if present ──
+if [ -f .env ]; then
+  set -o allexport
+  # shellcheck disable=SC1091
+  source .env
+  set +o allexport
+fi
+
 # ── Step 1: Load config from BDD.md ──
 echo "→ Loading config from BDD.md..."
 eval "$(python3 scripts/parse_bdd_config.py BDD.md)"
