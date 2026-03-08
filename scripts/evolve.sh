@@ -317,7 +317,7 @@ echo "  Coverage: $COVERED/$TOTAL scenarios"
 if ! grep -q "## Day $DAY.*$SESSION_TIME" JOURNAL.md 2>/dev/null; then
     echo "  No journal found — asking agent to write one..."
     COMMITS=$(git log --oneline "$SESSION_START_SHA"..HEAD --format="%s" \
-        | grep -v "session wrap-up\|BDD status" \
+        | { grep -v "session wrap-up\|BDD status" || true; } \
         | sed "s/Day $DAY[^:]*: //" \
         | paste -sd ", " -)
     [ -z "$COMMITS" ] && COMMITS="no commits made"
@@ -359,7 +359,7 @@ fi
 # ── Step 11: Update journal index ──
 echo "→ Updating JOURNAL_INDEX.md..."
 COMMITS_SUMMARY=$(git log --oneline "$SESSION_START_SHA"..HEAD --format="%s" \
-    | grep -v "session wrap-up\|BDD status\|journal entry\|fallback" \
+    | { grep -v "session wrap-up\|BDD status\|journal entry\|fallback" || true; } \
     | sed "s/Day $DAY[^:]*: //" \
     | paste -sd "; " -)
 [ -z "$COMMITS_SUMMARY" ] && COMMITS_SUMMARY="no changes"
