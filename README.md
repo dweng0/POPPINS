@@ -152,6 +152,59 @@ Trigger manually: **Actions tab → Evolution → Run workflow**.
 
 ---
 
+## Commands reference
+
+### Project initialization and updates
+
+```bash
+# Initialize BAADD in a new project
+curl -fsSL https://raw.githubusercontent.com/dweng0/BAADD/main/install.sh | bash
+
+# Update BAADD framework to latest version (preserves your journals)
+./install.sh --update
+
+# Pin to a specific BAADD version
+./install.sh --version v1.2.0
+```
+
+### Evolution and development
+
+```bash
+# Run one evolution session manually (tests one scenario)
+ANTHROPIC_API_KEY=sk-... ./scripts/evolve.sh
+
+# Check BDD scenario coverage
+python3 scripts/check_bdd_coverage.py BDD.md
+
+# Run your project's build command (from BDD.md)
+python3 -m py_compile pyken.py  # or whatever your build_cmd is
+
+# Run your project's tests (from BDD.md)
+.venv/bin/pytest tests/  # or whatever your test_cmd is
+```
+
+### Interactive evolution (Claude Code only)
+
+```bash
+# Run evolution sessions interactively with Claude Code
+/evolve
+```
+
+### Useful tools
+
+```bash
+# See what the agent will work on next
+cat JOURNAL_INDEX.md
+
+# Read full session logs
+cat JOURNAL.md
+
+# Check framework version
+cat .baadd | python3 -c "import sys,json; print(json.load(sys.stdin)['version'])"
+```
+
+---
+
 ## File reference
 
 | File | Purpose |
@@ -214,3 +267,11 @@ Claude Code will read the spec, pick the next uncovered scenario, write the test
 Label issues with `agent-input` to have the agent pick them up.
 
 If an issue proposes a new feature, the agent will add it to `BDD.md` as a Scenario before implementing it.
+
+---
+
+## Links
+
+- **BAADD Framework**: https://github.com/dweng0/BAADD
+- **Documentation**: See the `CLAUDE.md` file in your project for detailed guidance
+- **GitHub Issues**: Use `agent-input` label to task the AI agent
