@@ -3,7 +3,12 @@
     "allow": [
       "Bash(find /c/projects/BAADD -maxdepth 2 -type f \\\\\\(-name JOURNAL* -o -name LEARNING* -o -name ISSUE* -o -name .baadd* \\\\\\))",
       "Bash(bash -n scripts/evolve.sh)",
-      "Bash(python3 -c \"import json; json.load\\(open\\(''.baadd''\\)\\)\")"
+      "Bash(python3 -c \"import json; json.load\\(open\\(''.baadd''\\)\\)\")",
+      "Bash(file scripts/*.sh scripts/*.py)",
+      "Bash(git config:*)",
+      "Bash(git tag:*)",
+      "Bash(git push:*)",
+      "Bash(gh auth:*)"
     ]
   }
 }
