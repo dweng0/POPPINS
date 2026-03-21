@@ -1,0 +1,137 @@
+<svg viewBox="-10 -10 140 150" fill="none" xmlns="http://www.w3.org/2000/svg" width="180" height="180">
+  <style>
+    @keyframes head-bob {
+      0%, 100% { transform: rotate(-2deg); }
+      50% { transform: rotate(2deg); }
+    }
+    @keyframes ear-wiggle-left {
+      0%, 100% { transform: rotate(-6deg); }
+      50% { transform: rotate(6deg); }
+    }
+    @keyframes ear-wiggle-right {
+      0%, 100% { transform: rotate(6deg); }
+      50% { transform: rotate(-6deg); }
+    }
+    @keyframes eye-blink {
+      0%, 90%, 100% { opacity: 1; }
+      95% { opacity: 0; }
+    }
+    @keyframes tail-wag {
+      0%, 100% { transform: rotate(-8deg); }
+      50% { transform: rotate(8deg); }
+    }
+    @keyframes arm-wave-left {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(-6deg); }
+    }
+    @keyframes arm-wave-right {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(6deg); }
+    }
+    .sheep-head {
+      transform-origin: 60px 48px;
+      animation: head-bob 3s ease-in-out infinite;
+    }
+    .sheep-ear-left {
+      transform-origin: 35px 38px;
+      animation: ear-wiggle-left 2.2s ease-in-out infinite;
+    }
+    .sheep-ear-right {
+      transform-origin: 85px 38px;
+      animation: ear-wiggle-right 2.2s ease-in-out infinite 0.3s;
+    }
+    .sheep-eye {
+      animation: eye-blink 4s ease-in-out infinite;
+    }
+    .sheep-tail {
+      transform-origin: 100px 85px;
+      animation: tail-wag 1.8s ease-in-out infinite;
+    }
+    .sheep-arm-left {
+      transform-origin: 22px 88px;
+      animation: arm-wave-left 2.5s ease-in-out infinite;
+    }
+    .sheep-arm-right {
+      transform-origin: 98px 88px;
+      animation: arm-wave-right 2.5s ease-in-out infinite 0.4s;
+    }
+  </style>
+
+  <defs>
+    <linearGradient id="sheep-wool-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8f8ff" />
+      <stop offset="100%" stop-color="#dde4f0" />
+    </linearGradient>
+    <linearGradient id="sheep-face-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5d5c0" />
+      <stop offset="100%" stop-color="#e8b89a" />
+    </linearGradient>
+  </defs>
+
+  <!-- Legs -->
+  <rect x="38" y="108" width="10" height="18" rx="5" fill="#e8b89a" />
+  <rect x="72" y="108" width="10" height="18" rx="5" fill="#e8b89a" />
+  <!-- Hooves -->
+  <rect x="37" y="122" width="12" height="8" rx="4" fill="#5a3e5a" />
+  <rect x="71" y="122" width="12" height="8" rx="4" fill="#5a3e5a" />
+
+  <!-- Tail (fluffy wool puff) -->
+  <g class="sheep-tail">
+    <circle cx="104" cy="82" r="10" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+    <circle cx="110" cy="78" r="7" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+    <circle cx="112" cy="85" r="6" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+  </g>
+
+  <!-- Body - fluffy wool cloud -->
+  <ellipse cx="60" cy="90" rx="38" ry="28" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="1" />
+  <!-- Wool bumps on body -->
+  <circle cx="35" cy="82" r="16" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+  <circle cx="50" cy="72" r="15" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+  <circle cx="70" cy="72" r="15" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+  <circle cx="85" cy="82" r="16" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+  <circle cx="60" cy="76" r="14" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+  <circle cx="42" cy="96" r="12" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+  <circle cx="78" cy="96" r="12" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+
+  <!-- Arms (little woolly stubs) -->
+  <g class="sheep-arm-left">
+    <ellipse cx="22" cy="92" rx="9" ry="12" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+    <ellipse cx="19" cy="101" rx="6" ry="5" fill="#5a3e5a" />
+  </g>
+  <g class="sheep-arm-right">
+    <ellipse cx="98" cy="92" rx="9" ry="12" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+    <ellipse cx="101" cy="101" rx="6" ry="5" fill="#5a3e5a" />
+  </g>
+
+  <g class="sheep-head">
+    <!-- Ears -->
+    <ellipse class="sheep-ear-left" cx="35" cy="38" rx="10" ry="6" fill="#e8b89a" stroke="#d4a080" stroke-width="1" />
+    <ellipse class="sheep-ear-left" cx="35" cy="38" rx="6" ry="3.5" fill="#f5c4b0" />
+    <ellipse class="sheep-ear-right" cx="85" cy="38" rx="10" ry="6" fill="#e8b89a" stroke="#d4a080" stroke-width="1" />
+    <ellipse class="sheep-ear-right" cx="85" cy="38" rx="6" ry="3.5" fill="#f5c4b0" />
+
+    <!-- Head -->
+    <ellipse cx="60" cy="48" rx="24" ry="22" fill="url(#sheep-face-gradient)" stroke="#d4a080" stroke-width="1" />
+
+    <!-- Fluffy wool on top of head -->
+    <circle cx="48" cy="30" r="12" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+    <circle cx="60" cy="27" r="13" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+    <circle cx="72" cy="30" r="12" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+    <circle cx="54" cy="22" r="9" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+    <circle cx="66" cy="22" r="9" fill="url(#sheep-wool-gradient)" stroke="#c8d4e4" stroke-width="0.8" />
+
+    <!-- Eyes - happy ^ ^ style -->
+    <path class="sheep-eye" d="M48 46 Q52 41 56 46" stroke="#2a1a3a" stroke-width="2.2" stroke-linecap="round" fill="none" />
+    <path class="sheep-eye" d="M64 46 Q68 41 72 46" stroke="#2a1a3a" stroke-width="2.2" stroke-linecap="round" fill="none" />
+
+    <!-- Rosy cheeks -->
+    <ellipse cx="46" cy="50" rx="6" ry="4" fill="#f0a0b8" opacity="0.4" />
+    <ellipse cx="74" cy="50" rx="6" ry="4" fill="#f0a0b8" opacity="0.4" />
+
+    <!-- Nose -->
+    <ellipse cx="60" cy="53" rx="4" ry="3" fill="#d4849a" />
+
+    <!-- Smiling mouth -->
+    <path d="M54 57 Q60 62 66 57" stroke="#b86070" stroke-width="1.8" stroke-linecap="round" fill="none" />
+  </g>
+</svg>

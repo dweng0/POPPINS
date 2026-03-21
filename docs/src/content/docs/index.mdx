@@ -1,0 +1,51 @@
+---
+title: poppins
+description: Behaviour and AI Driven Development — you write the spec, the agent writes the code.
+template: splash
+hero:
+  tagline: You write the spec. The agent writes the code.
+  image:
+    file: ../../assets/cute_sheep.svg
+  actions:
+    - text: Get Started
+      link: /POPPINS/getting-started/introduction/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/dweng0/POPPINS
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## What is poppins?
+
+poppins is a **meta-framework** — not a library you install, but a pattern you adopt. You bring your spec; poppins brings the agent, the loop, and the rules that keep it honest.
+
+<CardGrid stagger>
+	<Card title="Write your spec" icon="pencil">
+		Define features and scenarios in `BDD.md` using plain Gherkin syntax. This is the only file you edit.
+	</Card>
+	<Card title="Agent builds it" icon="rocket">
+		An AI agent reads your spec, writes tests first, then writes the minimum code to make them pass.
+	</Card>
+	<Card title="Runs on autopilot" icon="setting">
+		A GitHub Actions cron fires every 8 hours. The agent picks up uncovered scenarios and implements them.
+	</Card>
+	<Card title="Works with any language" icon="open-book">
+		TypeScript, Python, Rust, Go, Java — configure your toolchain in the BDD.md frontmatter.
+	</Card>
+</CardGrid>
+
+## Supported Providers
+
+poppins auto-detects your AI provider from environment variables. Set one API key and run — no config needed.
+
+| Provider | Environment Variable | Default Model |
+|----------|---------------------|---------------|
+| **Anthropic** | `ANTHROPIC_API_KEY` | `claude-sonnet-4-5` |
+| **OpenAI** | `OPENAI_API_KEY` | `gpt-4o` |
+| **Groq** | `GROQ_API_KEY` | `llama-3.3-70b-versatile` |
+| **Alibaba / Qwen** | `DASHSCOPE_API_KEY` | `qwen-max` |
+| **Moonshot / Kimi** | `MOONSHOT_API_KEY` | `moonshot-v1-8k` |
+| **Ollama** | `OLLAMA_HOST` | _(pass `--model`)_ |
