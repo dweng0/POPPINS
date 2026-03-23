@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-poppins agent — multi-provider AI agent with tool use.
+BAADD agent — multi-provider AI agent with tool use.
 Reads a prompt from stdin, runs the agent loop, prints output.
 
 Usage:
@@ -10,15 +10,16 @@ Usage:
     OPENAI_API_KEY=sk-...     python3 scripts/agent.py < prompt.txt  # OpenAI
     GROQ_API_KEY=gsk_...      python3 scripts/agent.py < prompt.txt  # Groq
     OLLAMA_HOST=http://...    python3 scripts/agent.py --model llama3 < prompt.txt
+    CUSTOM_BASE_URL=http://...  CUSTOM_API_KEY=sk-... CUSTOM_MODEL=mymodel  python3 scripts/agent.py < prompt.txt
 
 Flags:
     --model     Override default model for the detected provider
-    --provider  Force a specific provider (anthropic|moonshot|dashscope|openai|groq|ollama)
+    --provider  Force a specific provider (anthropic|moonshot|dashscope|openai|groq|ollama|custom)
     --skills    Path to skills directory
     --mode      evolve|bootstrap (affects wrap-up reminder content)
 
 Provider priority (first key found wins):
-    ANTHROPIC_API_KEY > MOONSHOT_API_KEY > DASHSCOPE_API_KEY > OPENAI_API_KEY > GROQ_API_KEY > OLLAMA_HOST
+    ANTHROPIC_API_KEY > MOONSHOT_API_KEY > DASHSCOPE_API_KEY > OPENAI_API_KEY > GROQ_API_KEY > CUSTOM_API_KEY/CUSTOM_BASE_URL > OLLAMA_HOST
 
 Dependencies:
     pip install anthropic openai
@@ -79,6 +80,7 @@ PROVIDER_PRIORITY = [
     ("dashscope",  "DASHSCOPE_API_KEY"),
     ("openai",     "OPENAI_API_KEY"),
     ("groq",       "GROQ_API_KEY"),
+    ("custom",     "CUSTOM_API_KEY"),
 ]
 
 PROVIDER_CONFIGS = {
@@ -106,6 +108,11 @@ PROVIDER_CONFIGS = {
         "api_key_env":   "GROQ_API_KEY",
         "base_url":      "https://api.groq.com/openai/v1",
         "default_model": "llama-3.3-70b-versatile",
+    },
+    "custom": {
+        "api_key_env":   "CUSTOM_API_KEY",
+        "base_url":      None,  # resolved from CUSTOM_BASE_URL at runtime
+        "default_model": None,  # resolved from CUSTOM_MODEL at runtime
     },
     "ollama": {
         "api_key_env":   None,
@@ -206,6 +213,9 @@ def detect_provider():
     for name, env_var in PROVIDER_PRIORITY:
         if os.environ.get(env_var):
             return name
+    # Custom: base URL alone is enough (some endpoints need no auth)
+    if os.environ.get("CUSTOM_BASE_URL"):
+        return "custom"
     # Ollama: check OLLAMA_HOST or probe localhost
     if os.environ.get("OLLAMA_HOST"):
         return "ollama"
@@ -392,7 +402,7 @@ def make_wrap_up_message(iteration, max_iterations, mode):
             "Stop any new work and wrap up the bootstrap:\n"
             "1. Run the build and tests — fix any failures.\n"
             "2. Commit all changes: git add -A && git commit -m \"Bootstrap: scaffold complete\"\n"
-            "3. Create .poppins_initialized: touch .poppins_initialized && git add .poppins_initialized && git commit -m \"Bootstrap: mark initialized\"\n"
+            "3. Create .baadd_initialized: touch .baadd_initialized && git add .baadd_initialized && git commit -m \"Bootstrap: mark initialized\"\n"
             "4. Write a Day 0 journal entry to JOURNAL.md.\n"
             "5. Commit the journal: git add JOURNAL.md && git commit -m \"Bootstrap: journal entry\"\n"
             "Do not start implementing any BDD scenarios."
@@ -468,7 +478,7 @@ def run_anthropic_loop(api_key, model, system_prompt, prompt, mode):
                         print(f"\n\033[33m> {text}\033[0m", flush=True)
 
         if response.stop_reason == "end_turn":
-            print(f"\n[poppins agent done — {iteration} iterations]", flush=True)
+            print(f"\n[BAADD agent done — {iteration} iterations]", flush=True)
             break
 
         if response.stop_reason == "tool_use":
@@ -489,7 +499,7 @@ def run_anthropic_loop(api_key, model, system_prompt, prompt, mode):
             break
 
     if iteration >= max_iterations:
-        print(f"\n[poppins agent: hit iteration limit ({max_iterations})]", flush=True)
+        print(f"\n[BAADD agent: hit iteration limit ({max_iterations})]", flush=True)
 
 
 def run_openai_loop(client, model, system_prompt, prompt, mode):
@@ -535,7 +545,7 @@ def run_openai_loop(client, model, system_prompt, prompt, mode):
                     print(f"\n\033[33m> {text}\033[0m", flush=True)
 
         if choice.finish_reason == "stop":
-            print(f"\n[poppins agent done — {iteration} iterations]", flush=True)
+            print(f"\n[BAADD agent done — {iteration} iterations]", flush=True)
             break
 
         if choice.finish_reason == "tool_calls":
@@ -560,7 +570,7 @@ def run_openai_loop(client, model, system_prompt, prompt, mode):
             break
 
     if iteration >= max_iterations:
-        print(f"\n[poppins agent: hit iteration limit ({max_iterations})]", flush=True)
+        print(f"\n[BAADD agent: hit iteration limit ({max_iterations})]", flush=True)
 
 
 def main():
@@ -582,6 +592,7 @@ def main():
             "  DASHSCOPE_API_KEY  — Alibaba/Qwen\n"
             "  OPENAI_API_KEY     — OpenAI\n"
             "  GROQ_API_KEY       — Groq\n"
+            "  CUSTOM_API_KEY + CUSTOM_BASE_URL + CUSTOM_MODEL — any OpenAI-compatible endpoint\n"
             "  OLLAMA_HOST        — Ollama (local)",
             file=sys.stderr
         )
@@ -592,12 +603,22 @@ def main():
         sys.exit(1)
 
     config = PROVIDER_CONFIGS[provider]
-    model = args.model or config["default_model"]
+
+    # Resolve model: --model flag > CUSTOM_MODEL env (for custom provider) > provider default
+    if args.model:
+        model = args.model
+    elif provider == "custom":
+        model = os.environ.get("CUSTOM_MODEL") or config["default_model"]
+        if not model:
+            print("ERROR: CUSTOM_MODEL not set. Provide a model name via CUSTOM_MODEL or --model.", file=sys.stderr)
+            sys.exit(1)
+    else:
+        model = config["default_model"]
 
     api_key = None
     if config["api_key_env"]:
         api_key = os.environ.get(config["api_key_env"])
-        if not api_key:
+        if not api_key and provider != "custom":
             print(f"ERROR: {config['api_key_env']} not set", file=sys.stderr)
             sys.exit(1)
 
@@ -611,7 +632,7 @@ def main():
     if skills_text:
         system_prompt += "\n\n" + skills_text
 
-    print(f"[poppins agent starting — provider: {provider}, model: {model}]", flush=True)
+    print(f"[BAADD agent starting — provider: {provider}, model: {model}]", flush=True)
 
     if provider == "anthropic":
         run_anthropic_loop(api_key, model, system_prompt, prompt, args.mode)
@@ -629,6 +650,13 @@ def main():
         host = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
         base_url = host.rstrip("/") + "/v1"
         api_key = "ollama"  # OpenAI client requires a non-empty string
+    elif provider == "custom":
+        base_url = os.environ.get("CUSTOM_BASE_URL")
+        if not base_url:
+            print("ERROR: CUSTOM_BASE_URL not set. Provide the API base URL via CUSTOM_BASE_URL.", file=sys.stderr)
+            sys.exit(1)
+        if not api_key:
+            api_key = "custom"  # OpenAI client requires a non-empty string
 
     client_kwargs = {"api_key": api_key}
     if base_url:

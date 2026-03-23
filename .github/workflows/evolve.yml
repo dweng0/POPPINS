@@ -65,28 +65,32 @@ jobs:
 
       - name: Configure git
         run: |
-          git config user.name "poppins-agent[bot]"
-          git config user.email "poppins-agent[bot]@users.noreply.github.com"
+          git config user.name "baadd-agent[bot]"
+          git config user.email "baadd-agent[bot]@users.noreply.github.com"
 
       - name: Run session (bootstrap or evolve)
         id: attempt1
         continue-on-error: true
         env:
-          # Provider priority: Anthropic > Kimi > Alibaba > OpenAI > Groq
+          # Provider priority: Anthropic > Kimi > Alibaba > OpenAI > Groq > Custom > Ollama
           # Set whichever key(s) you have in your repo secrets — the agent picks the first available.
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           MOONSHOT_API_KEY:  ${{ secrets.MOONSHOT_API_KEY }}
           DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
           OPENAI_API_KEY:    ${{ secrets.OPENAI_API_KEY }}
           GROQ_API_KEY:      ${{ secrets.GROQ_API_KEY }}
+          # Custom OpenAI-compatible endpoint (e.g. vLLM, LM Studio, local proxy)
+          CUSTOM_API_KEY:    ${{ secrets.CUSTOM_API_KEY }}
+          CUSTOM_BASE_URL:   ${{ secrets.CUSTOM_BASE_URL }}
+          CUSTOM_MODEL:      ${{ secrets.CUSTOM_MODEL }}
           # Optional: override the model for the selected provider
-          MODEL:             ${{ secrets.POPPINS_MODEL || secrets.BAADD_MODEL }}
+          MODEL:             ${{ secrets.BAADD_MODEL }}
           REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           chmod +x scripts/bootstrap.sh scripts/evolve.sh scripts/setup_env.sh
-          if [ ! -f .poppins_initialized ] && [ ! -f .baadd_initialized ]; then
-            echo "No .poppins_initialized (or .baadd_initialized) found — running bootstrap..."
+          if [ ! -f .baadd_initialized ]; then
+            echo "No .baadd_initialized found — running bootstrap..."
             ./scripts/bootstrap.sh
           else
             ./scripts/evolve.sh
@@ -102,13 +106,16 @@ jobs:
           DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
           OPENAI_API_KEY:    ${{ secrets.OPENAI_API_KEY }}
           GROQ_API_KEY:      ${{ secrets.GROQ_API_KEY }}
-          MODEL:             ${{ secrets.POPPINS_MODEL || secrets.BAADD_MODEL }}
+          CUSTOM_API_KEY:    ${{ secrets.CUSTOM_API_KEY }}
+          CUSTOM_BASE_URL:   ${{ secrets.CUSTOM_BASE_URL }}
+          CUSTOM_MODEL:      ${{ secrets.CUSTOM_MODEL }}
+          MODEL:             ${{ secrets.BAADD_MODEL }}
           REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Waiting 15 minutes..."
           sleep 900
-          if [ ! -f .poppins_initialized ] && [ ! -f .baadd_initialized ]; then
+          if [ ! -f .baadd_initialized ]; then
             ./scripts/bootstrap.sh
           else
             ./scripts/evolve.sh
@@ -122,13 +129,16 @@ jobs:
           DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
           OPENAI_API_KEY:    ${{ secrets.OPENAI_API_KEY }}
           GROQ_API_KEY:      ${{ secrets.GROQ_API_KEY }}
-          MODEL:             ${{ secrets.POPPINS_MODEL || secrets.BAADD_MODEL }}
+          CUSTOM_API_KEY:    ${{ secrets.CUSTOM_API_KEY }}
+          CUSTOM_BASE_URL:   ${{ secrets.CUSTOM_BASE_URL }}
+          CUSTOM_MODEL:      ${{ secrets.CUSTOM_MODEL }}
+          MODEL:             ${{ secrets.BAADD_MODEL }}
           REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Waiting 45 minutes..."
           sleep 2700
-          if [ ! -f .poppins_initialized ] && [ ! -f .baadd_initialized ]; then
+          if [ ! -f .baadd_initialized ]; then
             ./scripts/bootstrap.sh
           else
             ./scripts/evolve.sh

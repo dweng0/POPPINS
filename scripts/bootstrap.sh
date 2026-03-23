@@ -26,11 +26,11 @@ echo "  Test:      $TEST_CMD"
 echo ""
 
 REPO="${REPO:-$(git remote get-url origin 2>/dev/null | sed 's/.*github.com[:/]//' | sed 's/\.git$//' || echo 'unknown/repo')}"
-MODEL="${MODEL:-claude-haiku-4-5-20251001}"
+MODEL="${MODEL:-${CUSTOM_MODEL:-claude-haiku-4-5-20251001}}"
 DATE=$(date +%Y-%m-%d)
 SESSION_TIME=$(date +%H:%M)
 
-echo "=== poppins Bootstrap ($DATE $SESSION_TIME) ==="
+echo "=== BAADD Bootstrap ($DATE $SESSION_TIME) ==="
 echo "Repo:  $REPO"
 echo "Model: $MODEL"
 echo ""
@@ -192,8 +192,8 @@ Once build and tests pass:
     git commit -m "Bootstrap: scaffold $LANGUAGE/$FRAMEWORK project"
 
 Then mark bootstrap as complete:
-    touch .poppins_initialized
-    git add .poppins_initialized
+    touch .baadd_initialized
+    git add .baadd_initialized
     git commit -m "Bootstrap: mark project as initialized"
 
 === PHASE 6: Journal ===
@@ -278,9 +278,9 @@ if [ ! -f JOURNAL_INDEX.md ]; then
 fi
 
 # ── Ensure initialized marker exists ──
-if [ ! -f .poppins_initialized ] && [ ! -f .baadd_initialized ]; then
-    touch .poppins_initialized
-    git add .poppins_initialized
+if [ ! -f .baadd_initialized ]; then
+    touch .baadd_initialized
+    git add .baadd_initialized
     git commit -m "Bootstrap: mark project as initialized" || true
 fi
 
