@@ -9,7 +9,13 @@
       "Bash(git tag:*)",
       "Bash(git push:*)",
       "Bash(gh auth:*)",
-      "Bash(find /c/projects/POPPINS -type f -name *POPPINS* -o -type d -name *POPPINS*)"
+      "Bash(find /c/projects/POPPINS -type f -name *POPPINS* -o -type d -name *POPPINS*)",
+      "Bash(npm install:*)",
+      "Bash(npm search:*)",
+      "Bash(npm run:*)",
+      "Bash(npx astro:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
