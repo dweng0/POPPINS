@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="dweng0/BAADD"
+REPO="dweng0/POPPINS"
 RAW_BASE="https://raw.githubusercontent.com/${REPO}"
 API_BASE="https://api.github.com/repos/${REPO}"
 MANIFEST_FILE=".baadd"
