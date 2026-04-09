@@ -231,15 +231,26 @@ If there IS work to do, prioritise in this order:
 
 === PHASE 5: Implement ===
 
-For each scenario you work on:
-1. Write the test FIRST — name it after the scenario
-2. Confirm the test fails (red)
-3. Write the minimum code to make it pass (green)
-4. Run: $FMT_CMD && $LINT_CMD && $BUILD_CMD && $TEST_CMD
-5. If checks fail: read the error, fix it, try again (up to 3 attempts)
-6. If still failing after 3 attempts: git checkout -- . (revert, preserve previous commits)
-7. Commit: git add -A && git commit -m "$DATE $SESSION_TIME: <short description>"
-8. Move to the next scenario
+CRITICAL ANTI-PATTERN — NEVER DO THIS:
+  ✗ Write test → commit "wrote test" → stop (leaving test failing)
+
+The correct TDD cycle — ALL steps must complete before any commit:
+  1. Write the test (name it after the scenario)
+  2. Run it — confirm it FAILS (this is your internal red check, do NOT commit yet)
+  3. Write the implementation code that makes it pass
+  4. Run: $FMT_CMD && $LINT_CMD && $BUILD_CMD && $TEST_CMD
+  5. Confirm ALL tests PASS (green) — only now may you commit
+  6. Commit: git add -A && git commit -m "$DATE $SESSION_TIME: <short description>"
+  7. Move to the next scenario
+
+If checks fail after your implementation:
+  - Read the error carefully
+  - Fix it and re-run — up to 3 attempts
+  - If still failing after 3 attempts: git checkout -- . (revert, do NOT commit broken code)
+
+You MUST NOT commit a test file while its test is still failing.
+A failing test commit is broken code, not a "red phase checkpoint".
+The red/green cycle is internal — only the green result gets committed.
 
 Repeat for as many scenarios as you can this session.
 
@@ -318,6 +329,31 @@ echo ""
 echo "=== Agent session complete ==="
 echo ""
 
+# ── Step 6.5: Detect test-only pattern ──
+# Some LLMs write tests but never implement the functions.
+# Detect: new test files added, zero implementation files changed, tests still failing.
+TEST_ONLY_DETECTED="no"
+TEST_ONLY_MSG=""
+SESSION_NEW_FILES=$(git diff --name-only "$SESSION_START_SHA"..HEAD 2>/dev/null || echo "")
+if [ -n "$SESSION_NEW_FILES" ]; then
+    NEW_TEST_COUNT=$(echo "$SESSION_NEW_FILES" | grep -cE '(test_[^/]+\.(py|js|ts|rb|go)|[^/]+_test\.(py|js|ts|rb|go)|[^/]+\.test\.(js|ts))$' || echo 0)
+    NEW_IMPL_COUNT=$(echo "$SESSION_NEW_FILES" | grep -vE '(test_[^/]+\.(py|js|ts|rb|go)|[^/]+_test\.(py|js|ts|rb|go)|[^/]+\.test\.(js|ts)|\.md$|BDD_STATUS|JOURNAL|ISSUES|ISSUE_RESPONSE|LEARNINGS)' | grep -cE '\.(py|js|ts|rb|go|java|c|cpp|rs)$' || echo 0)
+    POST_SESSION_TEST_OUT=$(eval "$TEST_CMD" 2>&1) && POST_SESSION_TESTS_PASS="yes" || POST_SESSION_TESTS_PASS="no"
+    if [ "$NEW_TEST_COUNT" -gt 0 ] && [ "$NEW_IMPL_COUNT" -eq 0 ] && [ "$POST_SESSION_TESTS_PASS" = "no" ]; then
+        TEST_ONLY_DETECTED="yes"
+        TEST_ONLY_MSG="The agent wrote $NEW_TEST_COUNT test file(s) but added NO implementation files, and tests are still FAILING.
+This is the test-only anti-pattern: tests were written but the functions they test were never implemented.
+
+Failed tests:
+$(echo "$POST_SESSION_TEST_OUT" | tail -40)
+
+Your job: implement the missing functions/modules so the new tests pass.
+Do NOT rewrite or delete the tests — they describe the correct behaviour.
+Do NOT write any new tests — only write the implementation code."
+        echo "  ⚠ TEST-ONLY PATTERN DETECTED: $NEW_TEST_COUNT test file(s), $NEW_IMPL_COUNT impl file(s), tests FAILING"
+    fi
+fi
+
 # ── Step 7: Post-session build verification ──
 ci_group "Post-session verification"
 FIX_ATTEMPTS=3
@@ -335,7 +371,15 @@ for FIX_ROUND in $(seq 1 $FIX_ATTEMPTS); do
     if [ "$FIX_ROUND" -lt "$FIX_ATTEMPTS" ]; then
         echo "  Build/test issues (attempt $FIX_ROUND/$FIX_ATTEMPTS) — asking agent to fix..."
         FIX_PROMPT=$(mktemp)
-        cat > "$FIX_PROMPT" <<FIXEOF
+        if [ "$TEST_ONLY_DETECTED" = "yes" ] && [ "$FIX_ROUND" -eq 1 ]; then
+            cat > "$FIX_PROMPT" <<FIXEOF
+$TEST_ONLY_MSG
+
+After implementing, run: $FMT_CMD && $LINT_CMD && $BUILD_CMD && $TEST_CMD
+Confirm all tests pass, then commit: git add -A && git commit -m "$DATE $SESSION_TIME: implement missing functions"
+FIXEOF
+        else
+            cat > "$FIX_PROMPT" <<FIXEOF
 Your code has errors. Fix them NOW. Do not add features.
 
 $(echo -e "$ERRORS")
@@ -347,6 +391,7 @@ Steps:
 4. Keep fixing until all pass
 5. Commit: git add -A && git commit -m "$DATE $SESSION_TIME: fix build errors"
 FIXEOF
+        fi
         ${TIMEOUT_CMD:+$TIMEOUT_CMD 300} python3 scripts/agent.py \
             --model "$MODEL" \
             --skills ./skills \
