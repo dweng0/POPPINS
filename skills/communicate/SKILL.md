@@ -11,7 +11,7 @@ tools: [write_file, read_file]
 Write at the top of JOURNAL.md after each session. Format:
 
 ```markdown
-## Day [N] — [HH:MM] — [short title]
+## YYYY-MM-DD HH:MM — [short title]
 
 [2-4 sentences: which scenarios you worked on, what passed, what failed, what's next]
 ```
@@ -24,7 +24,7 @@ Rules:
 
 Good example:
 ```
-## Day 3 — 14:00 — Comments validation (3 scenarios)
+## 2026-03-08 14:00 — Comments validation (3 scenarios)
 
 Covered all three comment validation scenarios from BDD.md — missing name,
 missing email, missing body. Tests are green and match the exact error messages
@@ -35,7 +35,7 @@ which has 2 uncovered scenarios.
 
 Bad example:
 ```
-## Day 3 — Improvements
+## 2026-03-08 — Improvements
 
 Made some improvements today. Fixed some things and added tests.
 Everything is working better now.
