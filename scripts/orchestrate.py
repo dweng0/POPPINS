@@ -53,8 +53,12 @@ def run_cmd(cmd, cwd=None, timeout=30):
     """Run a shell command, return (stdout, stderr, returncode)."""
     try:
         result = subprocess.run(
-            cmd, shell=True, capture_output=True, text=True,
-            cwd=cwd, timeout=timeout,
+            cmd,
+            shell=True,
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+            timeout=timeout,
         )
         return result.stdout.strip(), result.stderr.strip(), result.returncode
     except subprocess.TimeoutExpired:
@@ -63,8 +67,8 @@ def run_cmd(cmd, cwd=None, timeout=30):
 
 def scenario_to_slug(name):
     slug = name.lower()
-    slug = re.sub(r'[^a-z0-9]', '-', slug)
-    slug = re.sub(r'-+', '-', slug).strip('-')
+    slug = re.sub(r"[^a-z0-9]", "-", slug)
+    slug = re.sub(r"-+", "-", slug).strip("-")
     return slug[:60]
 
 
@@ -102,12 +106,12 @@ def read_file_safe(path):
 def detect_provider():
     """Detect available LLM provider from environment, mirroring agent.py priority."""
     priority = [
-        ("anthropic",  "ANTHROPIC_API_KEY"),
-        ("moonshot",   "MOONSHOT_API_KEY"),
-        ("dashscope",  "DASHSCOPE_API_KEY"),
-        ("openai",     "OPENAI_API_KEY"),
-        ("groq",       "GROQ_API_KEY"),
-        ("custom",     "CUSTOM_API_KEY"),
+        ("anthropic", "ANTHROPIC_API_KEY"),
+        ("moonshot", "MOONSHOT_API_KEY"),
+        ("dashscope", "DASHSCOPE_API_KEY"),
+        ("openai", "OPENAI_API_KEY"),
+        ("groq", "GROQ_API_KEY"),
+        ("custom", "CUSTOM_API_KEY"),
     ]
     for name, env_var in priority:
         if os.environ.get(env_var):
@@ -118,6 +122,7 @@ def detect_provider():
         return "ollama"
     try:
         import urllib.request
+
         urllib.request.urlopen("http://localhost:11434", timeout=1)
         return "ollama"
     except Exception:
@@ -129,40 +134,44 @@ def resolve_model_and_client(provider, model_override=None):
     """Return (model_name, callable) where callable(prompt) -> response text.
     Supports all providers agent.py supports."""
     defaults = {
-        "anthropic":  "claude-haiku-4-5-20251001",
-        "moonshot":   "kimi-latest",
-        "dashscope":  "qwen-max",
-        "openai":     "gpt-4o",
-        "groq":       "llama-3.3-70b-versatile",
-        "ollama":     "llama3.2",
-        "custom":     os.environ.get("CUSTOM_MODEL", ""),
+        "anthropic": "claude-haiku-4-5-20251001",
+        "moonshot": "kimi-latest",
+        "dashscope": "qwen-max",
+        "openai": "gpt-4o",
+        "groq": "llama-3.3-70b-versatile",
+        "ollama": "llama3.2",
+        "custom": os.environ.get("CUSTOM_MODEL", ""),
     }
     base_urls = {
-        "moonshot":  "https://api.moonshot.cn/v1",
+        "moonshot": "https://api.moonshot.cn/v1",
         "dashscope": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
-        "groq":      "https://api.groq.com/openai/v1",
+        "groq": "https://api.groq.com/openai/v1",
     }
     api_key_envs = {
         "anthropic": "ANTHROPIC_API_KEY",
-        "moonshot":  "MOONSHOT_API_KEY",
+        "moonshot": "MOONSHOT_API_KEY",
         "dashscope": "DASHSCOPE_API_KEY",
-        "openai":    "OPENAI_API_KEY",
-        "groq":      "GROQ_API_KEY",
-        "custom":    "CUSTOM_API_KEY",
+        "openai": "OPENAI_API_KEY",
+        "groq": "GROQ_API_KEY",
+        "custom": "CUSTOM_API_KEY",
     }
 
     model = model_override or os.environ.get("MODEL") or defaults.get(provider, "")
 
     if provider == "anthropic":
         api_key = os.environ.get("ANTHROPIC_API_KEY")
+
         def call(prompt):
             import anthropic
+
             client = anthropic.Anthropic(api_key=api_key)
             response = client.messages.create(
-                model=model, max_tokens=2048,
+                model=model,
+                max_tokens=2048,
                 messages=[{"role": "user", "content": prompt}],
             )
             return response.content[0].text.strip()
+
         return model, call
 
     # All other providers via OpenAI-compatible client
@@ -178,10 +187,18 @@ def resolve_model_and_client(provider, model_override=None):
         host = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
         base_url = host.rstrip("/") + "/v1"
         api_key = "ollama"
-        model = model_override or os.environ.get("MODEL") or os.environ.get("CUSTOM_MODEL", "llama3.2")
+        model = (
+            model_override
+            or os.environ.get("MODEL")
+            or os.environ.get("CUSTOM_MODEL", "llama3.2")
+        )
     elif provider == "custom":
         base_url = os.environ.get("CUSTOM_BASE_URL")
-        model = model_override or os.environ.get("MODEL") or os.environ.get("CUSTOM_MODEL", "")
+        model = (
+            model_override
+            or os.environ.get("MODEL")
+            or os.environ.get("CUSTOM_MODEL", "")
+        )
         if not api_key:
             api_key = "custom"
 
@@ -192,7 +209,8 @@ def resolve_model_and_client(provider, model_override=None):
 
     def call(prompt):
         response = oai_client.chat.completions.create(
-            model=model, max_tokens=2048,
+            model=model,
+            max_tokens=2048,
             messages=[{"role": "user", "content": prompt}],
         )
         return response.choices[0].message.content.strip()
@@ -240,7 +258,7 @@ No explanation, no markdown, just the JSON array. Example:
         model, call = resolve_model_and_client(provider, model_override)
         print(f"  Planning with {provider} / {model}", flush=True)
         text = call(prompt)
-        match = re.search(r'\[.*\]', text, re.DOTALL)
+        match = re.search(r"\[.*\]", text, re.DOTALL)
         if match:
             ordered = json.loads(match.group())
             if set(ordered) == set(scenario_names):
@@ -262,7 +280,8 @@ def create_worktree(scenario_slug, main_dir):
 
     stdout, stderr, rc = run_cmd(
         f'git worktree add "{wt_path}" -b "{branch}"',
-        cwd=main_dir, timeout=30,
+        cwd=main_dir,
+        timeout=30,
     )
     if rc != 0:
         return None, None
@@ -281,7 +300,10 @@ def remove_worktree(wt_path, branch, main_dir):
 def run_worker(scenario_name, wt_path, branch, main_dir, config):
     """Run a single agent worker for one scenario. Returns a result dict."""
     agent_config = config.get("agent", {})
-    model = os.environ.get("MODEL", agent_config.get("default_model", "claude-haiku-4-5-20251001"))
+    model = os.environ.get(
+        "MODEL", agent_config.get("default_model", "claude-haiku-4-5-20251001")
+    )
+    provider = agent_config.get("provider")
     timeout = agent_config.get("session_timeout", 3600)
 
     # Read BDD.md config for build/test commands
@@ -347,7 +369,9 @@ Now begin. Read IDENTITY.md first, then BDD.md.
 """
 
     # Write prompt to temp file
-    prompt_file = f"/tmp/baadd-prompt-{scenario_to_slug(scenario_name)}-{os.getpid()}.txt"
+    prompt_file = (
+        f"/tmp/baadd-prompt-{scenario_to_slug(scenario_name)}-{os.getpid()}.txt"
+    )
     with open(prompt_file, "w") as f:
         f.write(prompt)
 
@@ -359,10 +383,11 @@ Now begin. Read IDENTITY.md first, then BDD.md.
 
     # Run the agent
     event_log = os.path.join(wt_path, "agent_events.jsonl")
+    provider_flag = f'--provider "{provider}" ' if provider else ""
     agent_cmd = (
         f'cd "{wt_path}" && '
         f'timeout {timeout} python3 "{main_dir}/scripts/agent.py" '
-        f'--model "{model}" --event-log "{event_log}" '
+        f'{provider_flag}--model "{model}" --event-log "{event_log}" '
         f'< "{prompt_file}" 2>&1'
     )
 
@@ -379,13 +404,17 @@ Now begin. Read IDENTITY.md first, then BDD.md.
     # Check if the agent made any commits
     commits_out, _, _ = run_cmd(
         f'git log --oneline HEAD.."{branch}" 2>/dev/null | wc -l',
-        cwd=main_dir, timeout=10,
+        cwd=main_dir,
+        timeout=10,
     )
     commit_count = int(commits_out.strip()) if commits_out.strip().isdigit() else 0
 
     # Check if tests pass in the worktree
-    _, _, test_rc = run_cmd("eval \"$(python3 scripts/parse_bdd_config.py BDD.md)\" && eval \"$TEST_CMD\"",
-                            cwd=wt_path, timeout=120)
+    _, _, test_rc = run_cmd(
+        'eval "$(python3 scripts/parse_bdd_config.py BDD.md)" && eval "$TEST_CMD"',
+        cwd=wt_path,
+        timeout=120,
+    )
 
     return {
         "scenario": scenario_name,
@@ -395,6 +424,7 @@ Now begin. Read IDENTITY.md first, then BDD.md.
         "tests_pass": test_rc == 0,
         "elapsed_s": round(elapsed),
         "rc": rc,
+        "stdout": stdout[:2000] if stdout else "",
     }
 
 
@@ -417,35 +447,44 @@ def merge_worker_result(result, main_dir):
     merge_msg = f"{date} {session_time}: merge scenario '{scenario}'"
     stdout, stderr, rc = run_cmd(
         f'git merge --no-ff "{branch}" -m "{merge_msg}"',
-        cwd=main_dir, timeout=30,
+        cwd=main_dir,
+        timeout=30,
     )
 
     if rc != 0:
         # Try auto-resolve: prefer ours for management files
-        run_cmd('git checkout --ours BDD_STATUS.md JOURNAL_INDEX.md 2>/dev/null; git add -A', cwd=main_dir)
+        run_cmd(
+            "git checkout --ours BDD_STATUS.md JOURNAL_INDEX.md 2>/dev/null; git add -A",
+            cwd=main_dir,
+        )
         stdout, stderr, rc = run_cmd(
-            f'git commit -m "{date} {session_time}: merge \'{scenario}\' (auto-resolved)"',
-            cwd=main_dir, timeout=15,
+            f"git commit -m \"{date} {session_time}: merge '{scenario}' (auto-resolved)\"",
+            cwd=main_dir,
+            timeout=15,
         )
         if rc != 0:
             print(f"    Merge failed — aborting", flush=True)
-            run_cmd('git merge --abort', cwd=main_dir)
+            run_cmd("git merge --abort", cwd=main_dir)
             return False
 
     # Post-merge verification
-    stdout_bdd, _, _ = run_cmd("python3 scripts/parse_bdd_config.py BDD.md", cwd=main_dir)
+    stdout_bdd, _, _ = run_cmd(
+        "python3 scripts/parse_bdd_config.py BDD.md", cwd=main_dir
+    )
     _, _, build_rc = run_cmd(
         f'eval "$(python3 scripts/parse_bdd_config.py BDD.md)" && eval "$BUILD_CMD"',
-        cwd=main_dir, timeout=120,
+        cwd=main_dir,
+        timeout=120,
     )
     _, _, test_rc = run_cmd(
         f'eval "$(python3 scripts/parse_bdd_config.py BDD.md)" && eval "$TEST_CMD"',
-        cwd=main_dir, timeout=120,
+        cwd=main_dir,
+        timeout=120,
     )
 
     if build_rc != 0 or test_rc != 0:
         print(f"    Post-merge verification FAILED — reverting merge", flush=True)
-        run_cmd('git reset --hard HEAD~1', cwd=main_dir)
+        run_cmd("git reset --hard HEAD~1", cwd=main_dir)
         return False
 
     # Fold JOURNAL_ENTRY.md into JOURNAL.md if present
@@ -457,12 +496,17 @@ def merge_worker_result(result, main_dir):
             journal_content = read_file_safe(journal_md)
             if journal_content:
                 lines = journal_content.splitlines(True)
-                new_content = lines[0] + "\n" + entry_content + "\n" + "".join(lines[1:])
+                new_content = (
+                    lines[0] + "\n" + entry_content + "\n" + "".join(lines[1:])
+                )
             else:
                 new_content = "# Journal\n\n" + entry_content
             with open(journal_md, "w") as f:
                 f.write(new_content)
-        run_cmd(f'git rm -f JOURNAL_ENTRY.md 2>/dev/null; rm -f JOURNAL_ENTRY.md', cwd=main_dir)
+        run_cmd(
+            f"git rm -f JOURNAL_ENTRY.md 2>/dev/null; rm -f JOURNAL_ENTRY.md",
+            cwd=main_dir,
+        )
 
     print(f"    Merged successfully", flush=True)
     return True
@@ -470,16 +514,26 @@ def merge_worker_result(result, main_dir):
 
 def main():
     parser = argparse.ArgumentParser(description="BAADD Orchestrator")
-    parser.add_argument("--max-agents", type=int, default=None,
-                        help="Override max parallel agents from poppins.yml")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="Show the plan but don't execute")
-    parser.add_argument("--bdd", default="BDD.md",
-                        help="Path to BDD.md")
-    parser.add_argument("--model", default=None,
-                        help="Override model for the orchestrator planning call")
-    parser.add_argument("--provider", default=None,
-                        help="Force provider: anthropic|openai|groq|ollama|moonshot|dashscope|custom")
+    parser.add_argument(
+        "--max-agents",
+        type=int,
+        default=None,
+        help="Override max parallel agents from poppins.yml",
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Show the plan but don't execute"
+    )
+    parser.add_argument("--bdd", default="BDD.md", help="Path to BDD.md")
+    parser.add_argument(
+        "--model",
+        default=None,
+        help="Override model for the orchestrator planning call",
+    )
+    parser.add_argument(
+        "--provider",
+        default=None,
+        help="Force provider: anthropic|openai|groq|ollama|moonshot|dashscope|custom",
+    )
     args = parser.parse_args()
 
     config = get_config()
@@ -501,9 +555,12 @@ def main():
             # Set the appropriate key env var based on provider
             cfg_provider = section.get("provider", "")
             key_env = {
-                "anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY",
-                "groq": "GROQ_API_KEY", "moonshot": "MOONSHOT_API_KEY",
-                "dashscope": "DASHSCOPE_API_KEY", "custom": "CUSTOM_API_KEY",
+                "anthropic": "ANTHROPIC_API_KEY",
+                "openai": "OPENAI_API_KEY",
+                "groq": "GROQ_API_KEY",
+                "moonshot": "MOONSHOT_API_KEY",
+                "dashscope": "DASHSCOPE_API_KEY",
+                "custom": "CUSTOM_API_KEY",
             }.get(cfg_provider, "CUSTOM_API_KEY")
             if not os.environ.get(key_env):
                 os.environ[key_env] = api_key
@@ -528,8 +585,14 @@ def main():
 
     print(f"=== BAADD Orchestrator ({date} {session_time}) ===", flush=True)
     print(f"  Max parallel agents: {max_agents}", flush=True)
-    print(f"  Provider:            {provider or 'none (will use BDD.md order)'}", flush=True)
-    print(f"  Orchestrator model:  {model_orch_override or 'provider default'}", flush=True)
+    print(
+        f"  Provider:            {provider or 'none (will use BDD.md order)'}",
+        flush=True,
+    )
+    print(
+        f"  Orchestrator model:  {model_orch_override or 'provider default'}",
+        flush=True,
+    )
     print("", flush=True)
 
     # Step 1: Find uncovered scenarios
@@ -546,7 +609,9 @@ def main():
     # Step 2: AI-powered ordering
     print("  Ordering scenarios...", flush=True)
     bdd_content = read_file_safe(args.bdd)
-    ordered_names = plan_scenario_order(uncovered, bdd_content, provider, model_orch_override)
+    ordered_names = plan_scenario_order(
+        uncovered, bdd_content, provider, model_orch_override
+    )
     print(f"  Execution order:", flush=True)
     for i, name in enumerate(ordered_names, 1):
         print(f"    {i}. {name}", flush=True)
@@ -562,7 +627,7 @@ def main():
     batch_num = 0
 
     for batch_start in range(0, len(ordered_names), max_agents):
-        batch = ordered_names[batch_start:batch_start + max_agents]
+        batch = ordered_names[batch_start : batch_start + max_agents]
         batch_num += 1
         print(f"  === Batch {batch_num} ({len(batch)} agent(s)) ===", flush=True)
 
@@ -588,7 +653,12 @@ def main():
             futures = {}
             for scenario_name, (wt_path, branch) in workers.items():
                 future = executor.submit(
-                    run_worker, scenario_name, wt_path, branch, main_dir, config,
+                    run_worker,
+                    scenario_name,
+                    wt_path,
+                    branch,
+                    main_dir,
+                    config,
                 )
                 futures[future] = scenario_name
 
@@ -598,23 +668,39 @@ def main():
                 try:
                     result = future.result()
                     batch_results.append(result)
-                    status = "OK" if result["tests_pass"] and result["commits"] > 0 else "FAIL"
-                    print(f"    [{status}] {scenario_name} — {result['commits']} commit(s), {result['elapsed_s']}s", flush=True)
+                    status = (
+                        "OK"
+                        if result["tests_pass"] and result["commits"] > 0
+                        else "FAIL"
+                    )
+                    print(
+                        f"    [{status}] {scenario_name} — {result['commits']} commit(s), {result['elapsed_s']}s",
+                        flush=True,
+                    )
+                    if status == "FAIL" and result.get("stdout"):
+                        stdout_preview = result["stdout"].strip()[:500]
+                        if stdout_preview:
+                            print(f"      Output: {stdout_preview}", flush=True)
                 except Exception as e:
                     print(f"    [ERROR] {scenario_name}: {e}", flush=True)
-                    batch_results.append({
-                        "scenario": scenario_name,
-                        "branch": workers[scenario_name][1],
-                        "wt_path": workers[scenario_name][0],
-                        "commits": 0,
-                        "tests_pass": False,
-                        "elapsed_s": 0,
-                        "rc": 1,
-                    })
+                    batch_results.append(
+                        {
+                            "scenario": scenario_name,
+                            "branch": workers[scenario_name][1],
+                            "wt_path": workers[scenario_name][0],
+                            "commits": 0,
+                            "tests_pass": False,
+                            "elapsed_s": 0,
+                            "rc": 1,
+                            "stdout": str(e),
+                        }
+                    )
 
         # Step 4: Merge results sequentially (in the planned order)
         print(f"\n  Merging batch {batch_num}...", flush=True)
-        for result in sorted(batch_results, key=lambda r: ordered_names.index(r["scenario"])):
+        for result in sorted(
+            batch_results, key=lambda r: ordered_names.index(r["scenario"])
+        ):
             print(f"  [{result['scenario']}]", flush=True)
             merged = merge_worker_result(result, main_dir)
             results.append({**result, "merged": merged})
@@ -627,9 +713,14 @@ def main():
 
     # Step 5: Final wrap-up
     print("  Updating coverage...", flush=True)
-    run_cmd("python3 scripts/check_bdd_coverage.py BDD.md > BDD_STATUS.md", cwd=main_dir)
-    run_cmd('git add -A && git diff --cached --quiet || git commit -m "' +
-            f'{date} {session_time}: orchestrator wrap-up"', cwd=main_dir)
+    run_cmd(
+        "python3 scripts/check_bdd_coverage.py BDD.md > BDD_STATUS.md", cwd=main_dir
+    )
+    run_cmd(
+        'git add -A && git diff --cached --quiet || git commit -m "'
+        + f'{date} {session_time}: orchestrator wrap-up"',
+        cwd=main_dir,
+    )
 
     # Summary
     merged_count = sum(1 for r in results if r.get("merged"))
@@ -646,21 +737,29 @@ def main():
     # Write orchestrator event log
     event_log_path = os.path.join(main_dir, "orchestrator_events.jsonl")
     with open(event_log_path, "a") as f:
-        f.write(json.dumps({
-            "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-            "event": "orchestration_complete",
-            "scenarios_attempted": len(results),
-            "merged": merged_count,
-            "failed": failed_count,
-            "total_agent_time_s": total_time,
-            "results": [{
-                "scenario": r["scenario"],
-                "commits": r["commits"],
-                "tests_pass": r["tests_pass"],
-                "merged": r.get("merged", False),
-                "elapsed_s": r["elapsed_s"],
-            } for r in results],
-        }) + "\n")
+        f.write(
+            json.dumps(
+                {
+                    "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                    "event": "orchestration_complete",
+                    "scenarios_attempted": len(results),
+                    "merged": merged_count,
+                    "failed": failed_count,
+                    "total_agent_time_s": total_time,
+                    "results": [
+                        {
+                            "scenario": r["scenario"],
+                            "commits": r["commits"],
+                            "tests_pass": r["tests_pass"],
+                            "merged": r.get("merged", False),
+                            "elapsed_s": r["elapsed_s"],
+                        }
+                        for r in results
+                    ],
+                }
+            )
+            + "\n"
+        )
 
 
 if __name__ == "__main__":
