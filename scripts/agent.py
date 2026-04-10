@@ -69,6 +69,7 @@ CONTEXT_WINDOW_LIMIT = _POPPINS_CFG.get("context_window_limit", 100000)
 MAX_ITERATIONS = _POPPINS_CFG.get("max_iterations", 75)
 WRAP_UP_AT = _POPPINS_CFG.get("wrap_up_at", 70)
 
+
 # Apply poppins.yml provider config as env var defaults (env vars take priority).
 # This lets users set provider/base_url/api_key once in poppins.yml.
 def _apply_poppins_provider_config(cfg):
@@ -83,9 +84,12 @@ def _apply_poppins_provider_config(cfg):
 
     if api_key:
         key_env = {
-            "anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY",
-            "groq": "GROQ_API_KEY", "moonshot": "MOONSHOT_API_KEY",
-            "dashscope": "DASHSCOPE_API_KEY", "custom": "CUSTOM_API_KEY",
+            "anthropic": "ANTHROPIC_API_KEY",
+            "openai": "OPENAI_API_KEY",
+            "groq": "GROQ_API_KEY",
+            "moonshot": "MOONSHOT_API_KEY",
+            "dashscope": "DASHSCOPE_API_KEY",
+            "custom": "CUSTOM_API_KEY",
         }.get(provider, "CUSTOM_API_KEY")
         if not os.environ.get(key_env):
             os.environ[key_env] = api_key
@@ -95,6 +99,7 @@ def _apply_poppins_provider_config(cfg):
         if model:
             os.environ["CUSTOM_MODEL"] = model
 
+
 _apply_poppins_provider_config(_POPPINS_CFG)
 
 # Detect GitHub Actions for log grouping
@@ -102,13 +107,14 @@ IN_CI = os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "t
 
 # Icons for tool types (plain-text, no emoji to keep CI logs clean)
 TOOL_ICONS = {
-    "bash":         "$",
-    "read_file":    "<-",
-    "write_file":   "->",
-    "edit_file":    "~~",
-    "list_files":   "ls",
+    "bash": "$",
+    "read_file": "<-",
+    "write_file": "->",
+    "edit_file": "~~",
+    "list_files": "ls",
     "search_files": "??",
 }
+
 
 class EventLogger:
     """Writes structured JSON Lines to a log file for observability."""
@@ -138,13 +144,18 @@ class EventLogger:
         self._write("session_start", provider=provider, model=model, mode=mode)
 
     def iteration_start(self, iteration, max_iterations):
-        self._write("iteration_start", iteration=iteration, max_iterations=max_iterations)
+        self._write(
+            "iteration_start", iteration=iteration, max_iterations=max_iterations
+        )
 
     def agent_text(self, text, iteration):
         self._write("agent_text", iteration=iteration, text=text[:500])
 
     def tool_call(self, name, input_data, iteration):
-        preview = {k: (v[:200] if isinstance(v, str) and len(v) > 200 else v) for k, v in input_data.items()}
+        preview = {
+            k: (v[:200] if isinstance(v, str) and len(v) > 200 else v)
+            for k, v in input_data.items()
+        }
         self._write("tool_call", iteration=iteration, tool=name, input=preview)
 
     def tool_result(self, name, result, duration_ms, iteration):
@@ -191,11 +202,18 @@ def estimate_tokens(text):
     return len(str(text)) // 4
 
 
+def _get_msg_attr(msg, attr, default=None):
+    """Get attribute from message - works for both dict and Pydantic objects."""
+    if hasattr(msg, attr):
+        return getattr(msg, attr, default)
+    return msg.get(attr, default)
+
+
 def estimate_messages_tokens(messages):
     """Estimate total tokens across all messages."""
     total = 0
     for msg in messages:
-        content = msg.get("content", "")
+        content = _get_msg_attr(msg, "content", "")
         if isinstance(content, str):
             total += estimate_tokens(content)
         elif isinstance(content, list):
@@ -206,7 +224,7 @@ def estimate_messages_tokens(messages):
                 else:
                     total += estimate_tokens(str(item))
         else:
-            total += estimate_tokens(str(content))
+            total += estimate_tokens(str(content) if content else "")
     return total
 
 
@@ -230,7 +248,7 @@ def trim_context(messages, limit):
     trimmed = 0
     for i in range(1, len(messages) - protected_tail):
         msg = messages[i]
-        content = msg.get("content", "")
+        content = _get_msg_attr(msg, "content", "")
 
         # Trim tool_result lists (Anthropic format)
         if isinstance(content, list):
@@ -238,66 +256,78 @@ def trim_context(messages, limit):
                 if isinstance(item, dict) and item.get("type") == "tool_result":
                     old_content = item.get("content", "")
                     if len(str(old_content)) > 500:
-                        item["content"] = str(old_content)[:200] + "\n[... trimmed by context manager]"
+                        item["content"] = (
+                            str(old_content)[:200]
+                            + "\n[... trimmed by context manager]"
+                        )
                         trimmed += 1
 
         # Trim tool role messages (OpenAI format)
-        elif msg.get("role") == "tool" and isinstance(content, str) and len(content) > 500:
-            messages[i] = dict(msg)
-            messages[i]["content"] = content[:200] + "\n[... trimmed by context manager]"
+        elif (
+            _get_msg_attr(msg, "role") == "tool"
+            and isinstance(content, str)
+            and len(content) > 500
+        ):
+            messages[i] = dict(msg) if hasattr(msg, "__dict__") else dict(msg)
+            messages[i]["content"] = (
+                content[:200] + "\n[... trimmed by context manager]"
+            )
             trimmed += 1
 
     if trimmed > 0:
         new_est = estimate_messages_tokens(messages)
-        print(f"\033[90m  [context: trimmed {trimmed} old results, ~{est}→~{new_est} tokens]\033[0m", flush=True)
+        print(
+            f"\033[90m  [context: trimmed {trimmed} old results, ~{est}→~{new_est} tokens]\033[0m",
+            flush=True,
+        )
 
     return messages
 
 
 # Provider detection — ordered by priority
 PROVIDER_PRIORITY = [
-    ("anthropic",  "ANTHROPIC_API_KEY"),
-    ("moonshot",   "MOONSHOT_API_KEY"),
-    ("dashscope",  "DASHSCOPE_API_KEY"),
-    ("openai",     "OPENAI_API_KEY"),
-    ("groq",       "GROQ_API_KEY"),
-    ("custom",     "CUSTOM_API_KEY"),
+    ("anthropic", "ANTHROPIC_API_KEY"),
+    ("moonshot", "MOONSHOT_API_KEY"),
+    ("dashscope", "DASHSCOPE_API_KEY"),
+    ("openai", "OPENAI_API_KEY"),
+    ("groq", "GROQ_API_KEY"),
+    ("custom", "CUSTOM_API_KEY"),
 ]
 
 PROVIDER_CONFIGS = {
     "anthropic": {
-        "api_key_env":   "ANTHROPIC_API_KEY",
-        "base_url":      None,
+        "api_key_env": "ANTHROPIC_API_KEY",
+        "base_url": None,
         "default_model": "claude-haiku-4-5-20251001",
     },
     "moonshot": {
-        "api_key_env":   "MOONSHOT_API_KEY",
-        "base_url":      "https://api.moonshot.cn/v1",
+        "api_key_env": "MOONSHOT_API_KEY",
+        "base_url": "https://api.moonshot.cn/v1",
         "default_model": "kimi-latest",
     },
     "dashscope": {
-        "api_key_env":   "DASHSCOPE_API_KEY",
-        "base_url":      "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+        "api_key_env": "DASHSCOPE_API_KEY",
+        "base_url": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
         "default_model": "qwen-max",
     },
     "openai": {
-        "api_key_env":   "OPENAI_API_KEY",
-        "base_url":      None,
+        "api_key_env": "OPENAI_API_KEY",
+        "base_url": None,
         "default_model": "gpt-4o",
     },
     "groq": {
-        "api_key_env":   "GROQ_API_KEY",
-        "base_url":      "https://api.groq.com/openai/v1",
+        "api_key_env": "GROQ_API_KEY",
+        "base_url": "https://api.groq.com/openai/v1",
         "default_model": "llama-3.3-70b-versatile",
     },
     "custom": {
-        "api_key_env":   "CUSTOM_API_KEY",
-        "base_url":      None,  # resolved from CUSTOM_BASE_URL at runtime
+        "api_key_env": "CUSTOM_API_KEY",
+        "base_url": None,  # resolved from CUSTOM_BASE_URL at runtime
         "default_model": None,  # resolved from CUSTOM_MODEL at runtime
     },
     "ollama": {
-        "api_key_env":   None,
-        "base_url":      None,  # resolved from OLLAMA_HOST at runtime
+        "api_key_env": None,
+        "base_url": None,  # resolved from OLLAMA_HOST at runtime
         "default_model": "llama3.2",
     },
 }
@@ -312,8 +342,8 @@ TOOLS = [
             "properties": {
                 "command": {"type": "string", "description": "Shell command to run"}
             },
-            "required": ["command"]
-        }
+            "required": ["command"],
+        },
     },
     {
         "name": "read_file",
@@ -323,20 +353,17 @@ TOOLS = [
             "properties": {
                 "path": {"type": "string", "description": "Path to the file"}
             },
-            "required": ["path"]
-        }
+            "required": ["path"],
+        },
     },
     {
         "name": "write_file",
         "description": "Write content to a file, creating it if it doesn't exist.",
         "input_schema": {
             "type": "object",
-            "properties": {
-                "path": {"type": "string"},
-                "content": {"type": "string"}
-            },
-            "required": ["path", "content"]
-        }
+            "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+            "required": ["path", "content"],
+        },
     },
     {
         "name": "edit_file",
@@ -346,10 +373,10 @@ TOOLS = [
             "properties": {
                 "path": {"type": "string"},
                 "old_str": {"type": "string", "description": "Exact string to find"},
-                "new_str": {"type": "string", "description": "Replacement string"}
+                "new_str": {"type": "string", "description": "Replacement string"},
             },
-            "required": ["path", "old_str", "new_str"]
-        }
+            "required": ["path", "old_str", "new_str"],
+        },
     },
     {
         "name": "list_files",
@@ -357,9 +384,12 @@ TOOLS = [
         "input_schema": {
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Directory to list (default: .)"}
-            }
-        }
+                "path": {
+                    "type": "string",
+                    "description": "Directory to list (default: .)",
+                }
+            },
+        },
     },
     {
         "name": "search_files",
@@ -368,11 +398,14 @@ TOOLS = [
             "type": "object",
             "properties": {
                 "pattern": {"type": "string", "description": "Text to search for"},
-                "path": {"type": "string", "description": "Directory to search (default: .)"}
+                "path": {
+                    "type": "string",
+                    "description": "Directory to search (default: .)",
+                },
             },
-            "required": ["pattern"]
-        }
-    }
+            "required": ["pattern"],
+        },
+    },
 ]
 
 # OpenAI-format version of the same tools
@@ -383,7 +416,7 @@ TOOLS_OPENAI = [
             "name": t["name"],
             "description": t["description"],
             "parameters": t["input_schema"],
-        }
+        },
     }
     for t in TOOLS
 ]
@@ -407,6 +440,7 @@ def detect_provider():
         return "ollama"
     try:
         import urllib.request
+
         urllib.request.urlopen("http://localhost:11434", timeout=1)
         return "ollama"
     except Exception:
@@ -423,7 +457,7 @@ def run_tool(name, input_data):
                 shell=True,
                 capture_output=True,
                 text=True,
-                timeout=300
+                timeout=300,
             )
             output = result.stdout
             if result.stderr:
@@ -439,7 +473,10 @@ def run_tool(name, input_data):
             with open(path) as f:
                 content = f.read()
             if len(content) > TOOL_OUTPUT_LIMIT:
-                content = content[:TOOL_OUTPUT_LIMIT] + f"\n[... truncated at {TOOL_OUTPUT_LIMIT} chars]"
+                content = (
+                    content[:TOOL_OUTPUT_LIMIT]
+                    + f"\n[... truncated at {TOOL_OUTPUT_LIMIT} chars]"
+                )
             return content
 
         elif name == "write_file":
@@ -469,12 +506,26 @@ def run_tool(name, input_data):
         elif name == "list_files":
             path = input_data.get("path", ".")
             result = subprocess.run(
-                ["find", path, "-type", "f",
-                 "-not", "-path", "*/.git/*",
-                 "-not", "-path", "*/node_modules/*",
-                 "-not", "-path", "*/target/*",
-                 "-not", "-path", "*/__pycache__/*"],
-                capture_output=True, text=True
+                [
+                    "find",
+                    path,
+                    "-type",
+                    "f",
+                    "-not",
+                    "-path",
+                    "*/.git/*",
+                    "-not",
+                    "-path",
+                    "*/node_modules/*",
+                    "-not",
+                    "-path",
+                    "*/target/*",
+                    "-not",
+                    "-path",
+                    "*/__pycache__/*",
+                ],
+                capture_output=True,
+                text=True,
             )
             output = result.stdout.strip()
             return output[:TOOL_OUTPUT_LIMIT] if output else "(empty)"
@@ -484,16 +535,20 @@ def run_tool(name, input_data):
             path = input_data.get("path", ".")
             result = subprocess.run(
                 ["grep", "-r", "--include=*", "-l", pattern, path],
-                capture_output=True, text=True
+                capture_output=True,
+                text=True,
             )
             files = result.stdout.strip()
             if not files:
                 return f"No files found containing: {pattern}"
             result2 = subprocess.run(
                 ["grep", "-r", "-n", "--include=*", pattern, path],
-                capture_output=True, text=True
+                capture_output=True,
+                text=True,
             )
-            return (files + "\n\nMatching lines:\n" + result2.stdout)[:TOOL_OUTPUT_LIMIT]
+            return (files + "\n\nMatching lines:\n" + result2.stdout)[
+                :TOOL_OUTPUT_LIMIT
+            ]
 
     except subprocess.TimeoutExpired:
         return "ERROR: command timed out after 300s"
@@ -506,10 +561,12 @@ def _ci_group(title):
     if IN_CI:
         print(f"::group::{title}", flush=True)
 
+
 def _ci_endgroup():
     """End a collapsible group in GitHub Actions logs."""
     if IN_CI:
         print("::endgroup::", flush=True)
+
 
 def _result_summary(result):
     """Return a short one-line summary of a tool result."""
@@ -522,7 +579,7 @@ def _result_summary(result):
         return " | ".join(l.strip() for l in lines if l.strip())
     # Otherwise just the first line + count
     first = lines[0].strip()[:100]
-    return f"{first}  (+{len(lines)-1} lines)"
+    return f"{first}  (+{len(lines) - 1} lines)"
 
 
 def print_tool_call(name, input_data, result, iteration=None, max_iterations=None):
@@ -587,10 +644,10 @@ def make_wrap_up_message(iteration, max_iterations, mode):
             f"⚠️ You have used {iteration} of {max_iterations} allowed iterations. "
             "Stop any new work and wrap up the bootstrap:\n"
             "1. Run the build and tests — fix any failures.\n"
-            "2. Commit all changes: git add -A && git commit -m \"Bootstrap: scaffold complete\"\n"
-            "3. Create .baadd_initialized: touch .baadd_initialized && git add .baadd_initialized && git commit -m \"Bootstrap: mark initialized\"\n"
+            '2. Commit all changes: git add -A && git commit -m "Bootstrap: scaffold complete"\n'
+            '3. Create .baadd_initialized: touch .baadd_initialized && git add .baadd_initialized && git commit -m "Bootstrap: mark initialized"\n'
             "4. Write a Day 0 journal entry to JOURNAL.md.\n"
-            "5. Commit the journal: git add JOURNAL.md && git commit -m \"Bootstrap: journal entry\"\n"
+            '5. Commit the journal: git add JOURNAL.md && git commit -m "Bootstrap: journal entry"\n'
             "Do not start implementing any BDD scenarios."
         )
     return (
@@ -609,7 +666,9 @@ def load_skills(skills_dir):
     if not skills_dir or not os.path.isdir(skills_dir):
         return ""
     skill_texts = []
-    for skill_file in sorted(globmod.glob(os.path.join(skills_dir, "**", "SKILL.md"), recursive=True)):
+    for skill_file in sorted(
+        globmod.glob(os.path.join(skills_dir, "**", "SKILL.md"), recursive=True)
+    ):
         try:
             with open(skill_file) as f:
                 skill_texts.append(f.read())
@@ -622,7 +681,10 @@ def run_anthropic_loop(api_key, model, system_prompt, prompt, mode, event_log):
     try:
         import anthropic
     except ImportError:
-        print("ERROR: anthropic package not installed. Run: pip install anthropic", file=sys.stderr)
+        print(
+            "ERROR: anthropic package not installed. Run: pip install anthropic",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     client = anthropic.Anthropic(api_key=api_key)
@@ -636,8 +698,16 @@ def run_anthropic_loop(api_key, model, system_prompt, prompt, mode, event_log):
         event_log.iteration_start(iteration, MAX_ITERATIONS)
 
         if iteration >= WRAP_UP_AT and not wrap_up_injected:
-            print(f"\n\033[33m[agent: iteration {iteration}/{MAX_ITERATIONS} — injecting wrap-up reminder]\033[0m", flush=True)
-            messages.append({"role": "user", "content": make_wrap_up_message(iteration, MAX_ITERATIONS, mode)})
+            print(
+                f"\n\033[33m[agent: iteration {iteration}/{MAX_ITERATIONS} — injecting wrap-up reminder]\033[0m",
+                flush=True,
+            )
+            messages.append(
+                {
+                    "role": "user",
+                    "content": make_wrap_up_message(iteration, MAX_ITERATIONS, mode),
+                }
+            )
             wrap_up_injected = True
             event_log.wrap_up(iteration)
 
@@ -646,7 +716,7 @@ def run_anthropic_loop(api_key, model, system_prompt, prompt, mode, event_log):
             max_tokens=MAX_TOKENS,
             system=system_prompt,
             tools=TOOLS,
-            messages=messages
+            messages=messages,
         )
 
         # Log token usage from the API response
@@ -663,7 +733,9 @@ def run_anthropic_loop(api_key, model, system_prompt, prompt, mode, event_log):
                 if text:
                     event_log.agent_text(text, iteration)
                     if IN_CI:
-                        _ci_group(f"Agent [{iteration}/{MAX_ITERATIONS}]: {text[:80]}...")
+                        _ci_group(
+                            f"Agent [{iteration}/{MAX_ITERATIONS}]: {text[:80]}..."
+                        )
                         print(text, flush=True)
                         _ci_endgroup()
                     else:
@@ -683,12 +755,16 @@ def run_anthropic_loop(api_key, model, system_prompt, prompt, mode, event_log):
                     result = run_tool(block.name, block.input)
                     duration_ms = (time.time() - t0) * 1000
                     event_log.tool_result(block.name, result, duration_ms, iteration)
-                    print_tool_call(block.name, block.input, result, iteration, MAX_ITERATIONS)
-                    tool_results.append({
-                        "type": "tool_result",
-                        "tool_use_id": block.id,
-                        "content": str(result)
-                    })
+                    print_tool_call(
+                        block.name, block.input, result, iteration, MAX_ITERATIONS
+                    )
+                    tool_results.append(
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": block.id,
+                            "content": str(result),
+                        }
+                    )
             messages.append({"role": "assistant", "content": response.content})
             messages.append({"role": "user", "content": tool_results})
             messages = trim_context(messages, CONTEXT_WINDOW_LIMIT)
@@ -706,7 +782,7 @@ def run_openai_loop(client, model, system_prompt, prompt, mode, event_log):
     """Agent loop for any OpenAI-compatible provider (Kimi, Alibaba, Groq, OpenAI, Ollama)."""
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user",   "content": prompt},
+        {"role": "user", "content": prompt},
     ]
 
     iteration = 0
@@ -717,8 +793,16 @@ def run_openai_loop(client, model, system_prompt, prompt, mode, event_log):
         event_log.iteration_start(iteration, MAX_ITERATIONS)
 
         if iteration >= WRAP_UP_AT and not wrap_up_injected:
-            print(f"\n\033[33m[agent: iteration {iteration}/{MAX_ITERATIONS} — injecting wrap-up reminder]\033[0m", flush=True)
-            messages.append({"role": "user", "content": make_wrap_up_message(iteration, MAX_ITERATIONS, mode)})
+            print(
+                f"\n\033[33m[agent: iteration {iteration}/{MAX_ITERATIONS} — injecting wrap-up reminder]\033[0m",
+                flush=True,
+            )
+            messages.append(
+                {
+                    "role": "user",
+                    "content": make_wrap_up_message(iteration, MAX_ITERATIONS, mode),
+                }
+            )
             wrap_up_injected = True
             event_log.wrap_up(iteration)
 
@@ -772,11 +856,13 @@ def run_openai_loop(client, model, system_prompt, prompt, mode, event_log):
                 duration_ms = (time.time() - t0) * 1000
                 event_log.tool_result(name, result, duration_ms, iteration)
                 print_tool_call(name, input_data, result, iteration, MAX_ITERATIONS)
-                messages.append({
-                    "role":         "tool",
-                    "tool_call_id": tool_call.id,
-                    "content":      str(result),
-                })
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": str(result),
+                    }
+                )
             messages = trim_context(messages, CONTEXT_WINDOW_LIMIT)
         else:
             print(f"\n[stopped: {choice.finish_reason}]", flush=True)
@@ -790,14 +876,21 @@ def run_openai_loop(client, model, system_prompt, prompt, mode, event_log):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model",    default=None,
-                        help="Override default model for the detected provider")
-    parser.add_argument("--provider", default=None,
-                        help="Force provider: anthropic|moonshot|dashscope|openai|groq|ollama")
-    parser.add_argument("--skills",   default=None)
-    parser.add_argument("--mode",     default="evolve", choices=["evolve", "bootstrap"])
-    parser.add_argument("--event-log", default=None,
-                        help="Path for JSON Lines event log (default: agent_events.jsonl)")
+    parser.add_argument(
+        "--model", default=None, help="Override default model for the detected provider"
+    )
+    parser.add_argument(
+        "--provider",
+        default=None,
+        help="Force provider: anthropic|moonshot|dashscope|openai|groq|ollama",
+    )
+    parser.add_argument("--skills", default=None)
+    parser.add_argument("--mode", default="evolve", choices=["evolve", "bootstrap"])
+    parser.add_argument(
+        "--event-log",
+        default=None,
+        help="Path for JSON Lines event log (default: agent_events.jsonl)",
+    )
     args = parser.parse_args()
 
     provider = args.provider or detect_provider()
@@ -811,12 +904,15 @@ def main():
             "  GROQ_API_KEY       — Groq\n"
             "  CUSTOM_API_KEY + CUSTOM_BASE_URL + CUSTOM_MODEL — any OpenAI-compatible endpoint\n"
             "  OLLAMA_HOST        — Ollama (local)",
-            file=sys.stderr
+            file=sys.stderr,
         )
         sys.exit(1)
 
     if provider not in PROVIDER_CONFIGS:
-        print(f"ERROR: Unknown provider '{provider}'. Valid: {', '.join(PROVIDER_CONFIGS)}", file=sys.stderr)
+        print(
+            f"ERROR: Unknown provider '{provider}'. Valid: {', '.join(PROVIDER_CONFIGS)}",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     config = PROVIDER_CONFIGS[provider]
@@ -827,7 +923,10 @@ def main():
     elif provider == "custom":
         model = os.environ.get("CUSTOM_MODEL") or config["default_model"]
         if not model:
-            print("ERROR: CUSTOM_MODEL not set. Provide a model name via CUSTOM_MODEL or --model.", file=sys.stderr)
+            print(
+                "ERROR: CUSTOM_MODEL not set. Provide a model name via CUSTOM_MODEL or --model.",
+                file=sys.stderr,
+            )
             sys.exit(1)
     else:
         model = config["default_model"]
@@ -863,7 +962,10 @@ def main():
     event_log_path = args.event_log if args.event_log else "agent_events.jsonl"
     event_log = EventLogger(event_log_path)
 
-    print(f"[BAADD agent starting — provider: {provider}, model: {model}, event log: {event_log_path}]", flush=True)
+    print(
+        f"[BAADD agent starting — provider: {provider}, model: {model}, event log: {event_log_path}]",
+        flush=True,
+    )
     event_log.session_start(provider, model, args.mode)
 
     if provider == "anthropic":
@@ -874,7 +976,10 @@ def main():
     try:
         from openai import OpenAI
     except ImportError:
-        print("ERROR: openai package not installed. Run: pip install openai", file=sys.stderr)
+        print(
+            "ERROR: openai package not installed. Run: pip install openai",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     base_url = config["base_url"]
@@ -885,7 +990,10 @@ def main():
     elif provider == "custom":
         base_url = os.environ.get("CUSTOM_BASE_URL")
         if not base_url:
-            print("ERROR: CUSTOM_BASE_URL not set. Provide the API base URL via CUSTOM_BASE_URL.", file=sys.stderr)
+            print(
+                "ERROR: CUSTOM_BASE_URL not set. Provide the API base URL via CUSTOM_BASE_URL.",
+                file=sys.stderr,
+            )
             sys.exit(1)
         if not api_key:
             api_key = "custom"  # OpenAI client requires a non-empty string
