@@ -49,7 +49,7 @@ When the user asks to "evolve", "run an evolution session", or "implement the ne
      - If no lock exists (or was just cleared), write `locks/<slug>.lock` with: `TOKEN=<session-uuid>`, `SCENARIO=<name>`, `DATE=<YYYY-MM-DD HH:MM>`
      - Break — this is your scenario for the session
    - If all uncovered scenarios have live locks, tell the user and stop.
-5. Write the test first — name it after the scenario — confirm it fails
+5. Write the test first — name it after the scenario — include a BDD marker comment on the line above: `# BDD: <exact scenario name>` (Python) or `// BDD: <exact scenario name>` (JS/TS/Go/Rust/Java) — confirm it fails
 6. Write the minimum code to make it pass
 7. Run build and tests: check the commands from BDD.md frontmatter
 8. If checks fail: fix, try again up to 3 times; revert if still broken

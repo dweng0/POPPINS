@@ -1,5 +1,5 @@
 {
-  "version": "v1.4.6",
+  "version": "v1.5.0",
   "files": [
     "install.sh",
     "IDENTITY.md",
@@ -14,6 +14,11 @@
     "scripts/setup_env.sh",
     "scripts/format_issues.py",
     "scripts/verify_issue_trust.py",
+    "scripts/parse_poppins_config.py",
+    "scripts/orchestrate.py",
+    "scripts/add_bdd_markers.py",
+    "poppins.yml",
+    ".gitignore",
     ".github/workflows/evolve.yml",
     "skills/evolve/SKILL.md",
     "skills/communicate/SKILL.md",

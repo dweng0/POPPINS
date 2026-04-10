@@ -31,6 +31,7 @@ import json
 import subprocess
 import argparse
 import glob as globmod
+import time
 
 
 def load_dotenv(path=".env"):
@@ -57,8 +58,16 @@ def load_dotenv(path=".env"):
 
 load_dotenv()
 
-MAX_TOKENS = 8192
-TOOL_OUTPUT_LIMIT = 12000
+# Import poppins config (lives alongside this script)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from parse_poppins_config import get_config as _get_poppins_config
+
+_POPPINS_CFG = _get_poppins_config().get("agent", {})
+MAX_TOKENS = _POPPINS_CFG.get("max_tokens_per_response", 8192)
+TOOL_OUTPUT_LIMIT = _POPPINS_CFG.get("tool_output_limit", 12000)
+CONTEXT_WINDOW_LIMIT = _POPPINS_CFG.get("context_window_limit", 100000)
+MAX_ITERATIONS = _POPPINS_CFG.get("max_iterations", 75)
+WRAP_UP_AT = _POPPINS_CFG.get("wrap_up_at", 70)
 
 # Detect GitHub Actions for log grouping
 IN_CI = os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true"
@@ -72,6 +81,150 @@ TOOL_ICONS = {
     "list_files":   "ls",
     "search_files": "??",
 }
+
+class EventLogger:
+    """Writes structured JSON Lines to a log file for observability."""
+
+    def __init__(self, path):
+        self._path = path
+        self._file = None
+        self._session_start = time.time()
+        self._total_input_tokens = 0
+        self._total_output_tokens = 0
+        if path:
+            self._file = open(path, "a")
+
+    def _write(self, event, **data):
+        if not self._file:
+            return
+        record = {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            "elapsed_s": round(time.time() - self._session_start, 2),
+            "event": event,
+            **data,
+        }
+        self._file.write(json.dumps(record, default=str) + "\n")
+        self._file.flush()
+
+    def session_start(self, provider, model, mode):
+        self._write("session_start", provider=provider, model=model, mode=mode)
+
+    def iteration_start(self, iteration, max_iterations):
+        self._write("iteration_start", iteration=iteration, max_iterations=max_iterations)
+
+    def agent_text(self, text, iteration):
+        self._write("agent_text", iteration=iteration, text=text[:500])
+
+    def tool_call(self, name, input_data, iteration):
+        preview = {k: (v[:200] if isinstance(v, str) and len(v) > 200 else v) for k, v in input_data.items()}
+        self._write("tool_call", iteration=iteration, tool=name, input=preview)
+
+    def tool_result(self, name, result, duration_ms, iteration):
+        result_str = str(result)
+        self._write(
+            "tool_result",
+            iteration=iteration,
+            tool=name,
+            duration_ms=round(duration_ms),
+            result_length=len(result_str),
+            result_preview=result_str[:300],
+        )
+
+    def api_response(self, input_tokens, output_tokens, iteration):
+        self._total_input_tokens += input_tokens or 0
+        self._total_output_tokens += output_tokens or 0
+        self._write(
+            "api_response",
+            iteration=iteration,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            cumulative_input_tokens=self._total_input_tokens,
+            cumulative_output_tokens=self._total_output_tokens,
+        )
+
+    def wrap_up(self, iteration):
+        self._write("wrap_up_injected", iteration=iteration)
+
+    def session_end(self, iterations_used, reason):
+        self._write(
+            "session_end",
+            iterations_used=iterations_used,
+            reason=reason,
+            total_input_tokens=self._total_input_tokens,
+            total_output_tokens=self._total_output_tokens,
+        )
+        if self._file:
+            self._file.close()
+            self._file = None
+
+
+def estimate_tokens(text):
+    """Rough token estimate: ~4 chars per token for English/code."""
+    return len(str(text)) // 4
+
+
+def estimate_messages_tokens(messages):
+    """Estimate total tokens across all messages."""
+    total = 0
+    for msg in messages:
+        content = msg.get("content", "")
+        if isinstance(content, str):
+            total += estimate_tokens(content)
+        elif isinstance(content, list):
+            for item in content:
+                if isinstance(item, dict):
+                    total += estimate_tokens(item.get("content", ""))
+                    total += estimate_tokens(item.get("text", ""))
+                else:
+                    total += estimate_tokens(str(item))
+        else:
+            total += estimate_tokens(str(content))
+    return total
+
+
+def trim_context(messages, limit):
+    """Trim older tool results when estimated tokens exceed limit.
+
+    Strategy: walk from oldest to newest. For tool result messages older than
+    the most recent 6 exchanges, replace long content with a truncated summary.
+    Preserves the last 6 message pairs (12 messages) untouched so the agent
+    has full context for its current work.
+    """
+    est = estimate_messages_tokens(messages)
+    if est <= limit:
+        return messages
+
+    # Keep the first message (initial prompt) and the last 12 messages intact
+    protected_tail = 12
+    if len(messages) <= protected_tail + 1:
+        return messages
+
+    trimmed = 0
+    for i in range(1, len(messages) - protected_tail):
+        msg = messages[i]
+        content = msg.get("content", "")
+
+        # Trim tool_result lists (Anthropic format)
+        if isinstance(content, list):
+            for item in content:
+                if isinstance(item, dict) and item.get("type") == "tool_result":
+                    old_content = item.get("content", "")
+                    if len(str(old_content)) > 500:
+                        item["content"] = str(old_content)[:200] + "\n[... trimmed by context manager]"
+                        trimmed += 1
+
+        # Trim tool role messages (OpenAI format)
+        elif msg.get("role") == "tool" and isinstance(content, str) and len(content) > 500:
+            messages[i] = dict(msg)
+            messages[i]["content"] = content[:200] + "\n[... trimmed by context manager]"
+            trimmed += 1
+
+    if trimmed > 0:
+        new_est = estimate_messages_tokens(messages)
+        print(f"\033[90m  [context: trimmed {trimmed} old results, ~{est}→~{new_est} tokens]\033[0m", flush=True)
+
+    return messages
+
 
 # Provider detection — ordered by priority
 PROVIDER_PRIORITY = [
@@ -432,7 +585,7 @@ def load_skills(skills_dir):
     return "\n\n---\n\n".join(skill_texts) if skill_texts else ""
 
 
-def run_anthropic_loop(api_key, model, system_prompt, prompt, mode):
+def run_anthropic_loop(api_key, model, system_prompt, prompt, mode, event_log):
     try:
         import anthropic
     except ImportError:
@@ -443,17 +596,17 @@ def run_anthropic_loop(api_key, model, system_prompt, prompt, mode):
     messages = [{"role": "user", "content": prompt}]
 
     iteration = 0
-    max_iterations = 75
-    wrap_up_at = 70
     wrap_up_injected = False
 
-    while iteration < max_iterations:
+    while iteration < MAX_ITERATIONS:
         iteration += 1
+        event_log.iteration_start(iteration, MAX_ITERATIONS)
 
-        if iteration >= wrap_up_at and not wrap_up_injected:
-            print(f"\n\033[33m[agent: iteration {iteration}/{max_iterations} — injecting wrap-up reminder]\033[0m", flush=True)
-            messages.append({"role": "user", "content": make_wrap_up_message(iteration, max_iterations, mode)})
+        if iteration >= WRAP_UP_AT and not wrap_up_injected:
+            print(f"\n\033[33m[agent: iteration {iteration}/{MAX_ITERATIONS} — injecting wrap-up reminder]\033[0m", flush=True)
+            messages.append({"role": "user", "content": make_wrap_up_message(iteration, MAX_ITERATIONS, mode)})
             wrap_up_injected = True
+            event_log.wrap_up(iteration)
 
         response = client.messages.create(
             model=model,
@@ -463,6 +616,11 @@ def run_anthropic_loop(api_key, model, system_prompt, prompt, mode):
             messages=messages
         )
 
+        # Log token usage from the API response
+        input_tokens = getattr(response.usage, "input_tokens", None)
+        output_tokens = getattr(response.usage, "output_tokens", None)
+        event_log.api_response(input_tokens, output_tokens, iteration)
+
         # Print agent reasoning text
         has_text = False
         for block in response.content:
@@ -470,8 +628,9 @@ def run_anthropic_loop(api_key, model, system_prompt, prompt, mode):
                 has_text = True
                 text = block.text.strip()
                 if text:
+                    event_log.agent_text(text, iteration)
                     if IN_CI:
-                        _ci_group(f"Agent [{iteration}/{max_iterations}]: {text[:80]}...")
+                        _ci_group(f"Agent [{iteration}/{MAX_ITERATIONS}]: {text[:80]}...")
                         print(text, flush=True)
                         _ci_endgroup()
                     else:
@@ -479,14 +638,19 @@ def run_anthropic_loop(api_key, model, system_prompt, prompt, mode):
 
         if response.stop_reason == "end_turn":
             print(f"\n[BAADD agent done — {iteration} iterations]", flush=True)
+            event_log.session_end(iteration, "end_turn")
             break
 
         if response.stop_reason == "tool_use":
             tool_results = []
             for block in response.content:
                 if block.type == "tool_use":
+                    event_log.tool_call(block.name, block.input, iteration)
+                    t0 = time.time()
                     result = run_tool(block.name, block.input)
-                    print_tool_call(block.name, block.input, result, iteration, max_iterations)
+                    duration_ms = (time.time() - t0) * 1000
+                    event_log.tool_result(block.name, result, duration_ms, iteration)
+                    print_tool_call(block.name, block.input, result, iteration, MAX_ITERATIONS)
                     tool_results.append({
                         "type": "tool_result",
                         "tool_use_id": block.id,
@@ -494,15 +658,18 @@ def run_anthropic_loop(api_key, model, system_prompt, prompt, mode):
                     })
             messages.append({"role": "assistant", "content": response.content})
             messages.append({"role": "user", "content": tool_results})
+            messages = trim_context(messages, CONTEXT_WINDOW_LIMIT)
         else:
             print(f"\n[stopped: {response.stop_reason}]", flush=True)
+            event_log.session_end(iteration, response.stop_reason)
             break
 
-    if iteration >= max_iterations:
-        print(f"\n[BAADD agent: hit iteration limit ({max_iterations})]", flush=True)
+    if iteration >= MAX_ITERATIONS:
+        print(f"\n[BAADD agent: hit iteration limit ({MAX_ITERATIONS})]", flush=True)
+        event_log.session_end(iteration, "iteration_limit")
 
 
-def run_openai_loop(client, model, system_prompt, prompt, mode):
+def run_openai_loop(client, model, system_prompt, prompt, mode, event_log):
     """Agent loop for any OpenAI-compatible provider (Kimi, Alibaba, Groq, OpenAI, Ollama)."""
     messages = [
         {"role": "system", "content": system_prompt},
@@ -510,17 +677,17 @@ def run_openai_loop(client, model, system_prompt, prompt, mode):
     ]
 
     iteration = 0
-    max_iterations = 75
-    wrap_up_at = 70
     wrap_up_injected = False
 
-    while iteration < max_iterations:
+    while iteration < MAX_ITERATIONS:
         iteration += 1
+        event_log.iteration_start(iteration, MAX_ITERATIONS)
 
-        if iteration >= wrap_up_at and not wrap_up_injected:
-            print(f"\n\033[33m[agent: iteration {iteration}/{max_iterations} — injecting wrap-up reminder]\033[0m", flush=True)
-            messages.append({"role": "user", "content": make_wrap_up_message(iteration, max_iterations, mode)})
+        if iteration >= WRAP_UP_AT and not wrap_up_injected:
+            print(f"\n\033[33m[agent: iteration {iteration}/{MAX_ITERATIONS} — injecting wrap-up reminder]\033[0m", flush=True)
+            messages.append({"role": "user", "content": make_wrap_up_message(iteration, MAX_ITERATIONS, mode)})
             wrap_up_injected = True
+            event_log.wrap_up(iteration)
 
         response = client.chat.completions.create(
             model=model,
@@ -533,10 +700,17 @@ def run_openai_loop(client, model, system_prompt, prompt, mode):
         choice = response.choices[0]
         msg = choice.message
 
+        # Log token usage (OpenAI-compatible APIs report usage at the response level)
+        usage = getattr(response, "usage", None)
+        input_tokens = getattr(usage, "prompt_tokens", None) if usage else None
+        output_tokens = getattr(usage, "completion_tokens", None) if usage else None
+        event_log.api_response(input_tokens, output_tokens, iteration)
+
         # Print agent reasoning text
         if msg.content:
             text = msg.content.strip()
             if text:
+                event_log.agent_text(text, iteration)
                 if IN_CI:
                     _ci_group(f"Agent [{iteration}/{max_iterations}]: {text[:80]}...")
                     print(text, flush=True)
@@ -546,6 +720,7 @@ def run_openai_loop(client, model, system_prompt, prompt, mode):
 
         if choice.finish_reason == "stop":
             print(f"\n[BAADD agent done — {iteration} iterations]", flush=True)
+            event_log.session_end(iteration, "stop")
             break
 
         if choice.finish_reason == "tool_calls":
@@ -558,19 +733,26 @@ def run_openai_loop(client, model, system_prompt, prompt, mode):
                     input_data = json.loads(tool_call.function.arguments)
                 except json.JSONDecodeError:
                     input_data = {}
+                event_log.tool_call(name, input_data, iteration)
+                t0 = time.time()
                 result = run_tool(name, input_data)
-                print_tool_call(name, input_data, result, iteration, max_iterations)
+                duration_ms = (time.time() - t0) * 1000
+                event_log.tool_result(name, result, duration_ms, iteration)
+                print_tool_call(name, input_data, result, iteration, MAX_ITERATIONS)
                 messages.append({
                     "role":         "tool",
                     "tool_call_id": tool_call.id,
                     "content":      str(result),
                 })
+            messages = trim_context(messages, CONTEXT_WINDOW_LIMIT)
         else:
             print(f"\n[stopped: {choice.finish_reason}]", flush=True)
+            event_log.session_end(iteration, choice.finish_reason)
             break
 
-    if iteration >= max_iterations:
-        print(f"\n[BAADD agent: hit iteration limit ({max_iterations})]", flush=True)
+    if iteration >= MAX_ITERATIONS:
+        print(f"\n[BAADD agent: hit iteration limit ({MAX_ITERATIONS})]", flush=True)
+        event_log.session_end(iteration, "iteration_limit")
 
 
 def main():
@@ -581,6 +763,8 @@ def main():
                         help="Force provider: anthropic|moonshot|dashscope|openai|groq|ollama")
     parser.add_argument("--skills",   default=None)
     parser.add_argument("--mode",     default="evolve", choices=["evolve", "bootstrap"])
+    parser.add_argument("--event-log", default=None,
+                        help="Path for JSON Lines event log (default: agent_events.jsonl)")
     args = parser.parse_args()
 
     provider = args.provider or detect_provider()
@@ -643,10 +827,14 @@ def main():
     if skills_text:
         system_prompt += "\n\n" + skills_text
 
-    print(f"[BAADD agent starting — provider: {provider}, model: {model}]", flush=True)
+    event_log_path = args.event_log if args.event_log else "agent_events.jsonl"
+    event_log = EventLogger(event_log_path)
+
+    print(f"[BAADD agent starting — provider: {provider}, model: {model}, event log: {event_log_path}]", flush=True)
+    event_log.session_start(provider, model, args.mode)
 
     if provider == "anthropic":
-        run_anthropic_loop(api_key, model, system_prompt, prompt, args.mode)
+        run_anthropic_loop(api_key, model, system_prompt, prompt, args.mode, event_log)
         return
 
     # All other providers use the OpenAI-compatible client
@@ -674,7 +862,7 @@ def main():
         client_kwargs["base_url"] = base_url
 
     client = OpenAI(**client_kwargs)
-    run_openai_loop(client, model, system_prompt, prompt, args.mode)
+    run_openai_loop(client, model, system_prompt, prompt, args.mode, event_log)
 
 
 if __name__ == "__main__":

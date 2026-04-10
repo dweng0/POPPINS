@@ -109,25 +109,46 @@ def find_test_files():
     return sorted(test_files)
 
 
-def check_coverage(scenario_name, test_files, test_contents):
-    """Return True if any test file references this scenario."""
+def check_marker(scenario_name, test_contents):
+    """Check for explicit BDD marker comment: '# BDD: Scenario name' or '// BDD: Scenario name'.
+    Returns the file path if found, None otherwise."""
+    # Match case-insensitively, allowing # or // prefix
+    pattern = re.compile(
+        r'(?:#|//)\s*BDD:\s*' + re.escape(scenario_name),
+        re.IGNORECASE,
+    )
+    for path, content in test_contents.items():
+        if pattern.search(content):
+            return path
+    return None
+
+
+def check_coverage_heuristic(scenario_name, test_contents):
+    """Fallback heuristic: match scenario name via substring/word matching."""
     full = normalize(scenario_name)
     partial = normalize_partial(scenario_name)
 
     for path, content in test_contents.items():
         content_lower = content.lower()
-        # Try full snake_case match
         if full in content_lower:
             return True
-        # Try partial match (first 6 words)
         if partial and partial in content_lower:
             return True
-        # Try each word of the scenario (all significant words present)
         words = [w for w in re.sub(r"[^a-z0-9\s]", "", scenario_name.lower()).split() if len(w) > 3]
         if len(words) >= 3 and all(w in content_lower for w in words[:4]):
             return True
 
     return False
+
+
+def check_coverage(scenario_name, test_files, test_contents):
+    """Return True if any test file references this scenario.
+    Prefers explicit BDD markers, falls back to heuristic matching."""
+    # Prefer explicit marker
+    if check_marker(scenario_name, test_contents):
+        return True
+    # Fallback to heuristic
+    return check_coverage_heuristic(scenario_name, test_contents)
 
 
 def main():

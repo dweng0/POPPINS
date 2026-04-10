@@ -68,12 +68,13 @@ if [ -f .env ]; then
   set +o allexport
 fi
 
-# ── Step 1: Load config from BDD.md ──
+# ── Step 1: Load config from BDD.md + poppins.yml ──
 eval "$(python3 scripts/parse_bdd_config.py BDD.md)"
+eval "$(python3 scripts/parse_poppins_config.py)"
 
 REPO="${REPO:-$(git remote get-url origin 2>/dev/null | sed 's/.*github.com[:/]//' | sed 's/\.git$//' || echo 'unknown/repo')}"
-MODEL="${MODEL:-${CUSTOM_MODEL:-claude-haiku-4-5-20251001}}"
-TIMEOUT="${TIMEOUT:-3600}"
+MODEL="${MODEL:-${CUSTOM_MODEL:-${POPPINS_AGENT_DEFAULT_MODEL:-claude-haiku-4-5-20251001}}}"
+TIMEOUT="${TIMEOUT:-${POPPINS_AGENT_SESSION_TIMEOUT:-3600}}"
 DATE=$(date +%Y-%m-%d)
 SESSION_TIME=$(date +%H:%M)
 
@@ -312,7 +313,11 @@ CRITICAL ANTI-PATTERN — NEVER DO THIS:
   ✗ Write test → commit "wrote test" → stop (leaving test failing)
 
 The correct TDD cycle — ALL steps must complete before any commit:
-  1. Write the test (name it after the scenario)
+  1. Write the test (name it after the scenario). Include a BDD marker comment
+     on the line above the test: "# BDD: <exact scenario name>" (Python) or
+     "// BDD: <exact scenario name>" (JS/TS/Go/Rust/Java). This marker is how
+     the coverage checker links tests to scenarios — without it, coverage may
+     not be detected.
   2. Run it — confirm it FAILS (this is your internal red check, do NOT commit yet)
   3. Write the implementation code that makes it pass
   4. Run: $FMT_CMD && $LINT_CMD && $BUILD_CMD && $TEST_CMD
@@ -475,7 +480,11 @@ CRITICAL ANTI-PATTERN — NEVER DO THIS:
   ✗ Write test → commit "wrote test" → stop (leaving test failing)
 
 The correct TDD cycle — ALL steps must complete before any commit:
-  1. Write the test (name it after the scenario)
+  1. Write the test (name it after the scenario). Include a BDD marker comment
+     on the line above the test: "# BDD: <exact scenario name>" (Python) or
+     "// BDD: <exact scenario name>" (JS/TS/Go/Rust/Java). This marker is how
+     the coverage checker links tests to scenarios — without it, coverage may
+     not be detected.
   2. Run it — confirm it FAILS (this is your internal red check, do NOT commit yet)
   3. Write the implementation code that makes it pass
   4. Run: $FMT_CMD && $LINT_CMD && $BUILD_CMD && $TEST_CMD
@@ -799,6 +808,37 @@ Commit: $(git rev-parse --short HEAD)" 2>/dev/null; then
     rm -f ISSUE_RESPONSE.md
     ci_endgroup
 fi
+
+# ── Step 12.5: Post-merge build verification ──
+# Verify the final state of main passes build+tests before pushing.
+# This catches breakage introduced by merge conflict resolution or
+# journal/status commits that accidentally corrupt the tree.
+ci_group "Post-merge verification"
+PM_BUILD_OUT=$(eval "$BUILD_CMD" 2>&1) && PM_BUILD_OK="yes" || PM_BUILD_OK="no"
+PM_TEST_OUT=$(eval "$TEST_CMD" 2>&1)   && PM_TEST_OK="yes"  || PM_TEST_OK="no"
+
+if [ "$PM_BUILD_OK" = "yes" ] && [ "$PM_TEST_OK" = "yes" ]; then
+    echo "  Post-merge build: PASS"
+    echo "  Post-merge tests: PASS"
+else
+    echo "  Post-merge build: $([ "$PM_BUILD_OK" = "yes" ] && echo PASS || echo FAIL)"
+    echo "  Post-merge tests: $([ "$PM_TEST_OK" = "yes" ] && echo PASS || echo FAIL)"
+    echo ""
+    echo "  ⚠ Main is broken after merge. Reverting to pre-session state."
+    [ "$PM_BUILD_OK" = "no" ] && echo "$PM_BUILD_OUT" | tail -20
+    [ "$PM_TEST_OK" = "no" ]  && echo "$PM_TEST_OUT"  | tail -20
+    git reset --hard "$SESSION_START_SHA"
+    echo "  Reverted to $SESSION_START_SHA. Push skipped."
+    ci_endgroup
+
+    echo ""
+    echo "=== Session FAILED — main reverted ==="
+    echo "  Scenario: ${TARGET_SCENARIO:-n/a}"
+    echo "  Reason:   post-merge build/test failure"
+    echo "======================="
+    exit 1
+fi
+ci_endgroup
 
 # ── Step 13: Push ──
 git push || echo "  Push failed (check remote/auth)"

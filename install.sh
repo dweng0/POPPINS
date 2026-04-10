@@ -50,7 +50,7 @@ download() {
 }
 
 # Files that should never overwrite a user's existing copy
-NO_CLOBBER_FILES=("BDD_STATUS.md" "BDD.md")
+NO_CLOBBER_FILES=("BDD_STATUS.md" "BDD.md" "poppins.yml" ".gitignore")
 
 read_manifest_files() {
   python3 -c "import json; [print(f) for f in json.load(open('${MANIFEST_FILE}'))['files']]"

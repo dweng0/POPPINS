@@ -1,4 +1,6 @@
 ISSUE_RESPONSE.md
+agent_events.jsonl
+orchestrator_events.jsonl
 locks/
 __pycache__/
 *.pyc

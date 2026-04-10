@@ -2,6 +2,8 @@
 <div align="center">
 <img src="cute_sheep.svg" width="180" alt="poppins mascot"/>
 
+*BDD.md drives everything.*
+
 </div>
 
 ## Supported Models
@@ -122,6 +124,28 @@ birth_date: 2026-01-01      # project start date (used for day counter)
 
 Then write your features and scenarios below the frontmatter.
 
+### 2b. Configure poppins.yml (optional)
+
+`poppins.yml` controls how the agent runs — parallel workers, token limits, timeouts. The defaults work out of the box, but you can tune them:
+
+```yaml
+# poppins.yml — HOW to build (BDD.md defines WHAT to build)
+orchestration:
+  max_parallel_agents: 3                    # workers per orchestrator run
+  model_orchestrator: claude-haiku-4-5-20251001  # model for scenario ordering
+
+agent:
+  max_iterations: 75          # tool-call rounds per session
+  wrap_up_at: 70              # when to inject wrap-up reminder
+  max_tokens_per_response: 8192
+  tool_output_limit: 12000    # max chars per tool result
+  session_timeout: 3600       # seconds
+  context_window_limit: 100000 # auto-trims older results past this
+  default_model: claude-haiku-4-5-20251001
+```
+
+This file is not overwritten on framework updates.
+
 ### 3. Add your API key
 
 In your GitHub repo: **Settings → Secrets and variables → Actions → New repository secret**
@@ -181,12 +205,49 @@ python3 -m py_compile pyken.py  # or whatever your build_cmd is
 .venv/bin/pytest tests/  # or whatever your test_cmd is
 ```
 
+### Parallel evolution (orchestrator)
+
+```bash
+# Run the orchestrator — orders scenarios with AI, spawns parallel agents
+ANTHROPIC_API_KEY=sk-... python3 scripts/orchestrate.py
+
+# Preview the plan without executing
+python3 scripts/orchestrate.py --dry-run
+
+# Override max parallel agents
+python3 scripts/orchestrate.py --max-agents 2
+```
+
 ### Interactive evolution (Claude Code only)
 
 ```bash
 # Run evolution sessions interactively with Claude Code
 /evolve
 ```
+
+### BDD coverage markers
+
+```bash
+# Dry run — see which tests would get markers
+python3 scripts/add_bdd_markers.py BDD.md
+
+# Apply markers to existing test files
+python3 scripts/add_bdd_markers.py BDD.md --apply
+```
+
+Tests should include a BDD marker comment linking them to their scenario:
+
+```python
+# BDD: Successful login
+def test_successful_login():
+```
+
+```typescript
+// BDD: Successful login
+test('successful login', () => {
+```
+
+The coverage checker uses these markers for exact matching, falling back to heuristic name matching for unmarked tests.
 
 ### Useful tools
 
@@ -208,15 +269,19 @@ cat .poppins | python3 -c "import sys,json; print(json.load(sys.stdin)['version'
 | File | Purpose |
 |------|---------|
 | `BDD.md` | The spec — edit this to drive development |
+| `poppins.yml` | Agent/orchestrator config — edit to tune behaviour |
 | `IDENTITY.md` | Agent constitution — do not modify |
 | `JOURNAL.md` | Agent's full session logs — auto-written |
 | `JOURNAL_INDEX.md` | One-line-per-session summary index — auto-generated |
 | `LEARNINGS.md` | Agent's cached research — auto-written |
 | `BDD_STATUS.md` | Scenario coverage status — auto-generated |
 | `scripts/evolve.sh` | Main evolution loop — do not modify |
+| `scripts/orchestrate.py` | Parallel orchestrator — AI-ordered, multi-agent |
 | `scripts/agent.py` | The AI agent runner |
-| `scripts/check_bdd_coverage.py` | Scenario coverage checker |
+| `scripts/check_bdd_coverage.py` | Scenario coverage checker (supports BDD markers) |
+| `scripts/add_bdd_markers.py` | Upgrade tool — adds BDD markers to existing tests |
 | `scripts/parse_bdd_config.py` | BDD.md frontmatter parser |
+| `scripts/parse_poppins_config.py` | poppins.yml config parser |
 | `scripts/setup_env.sh` | Language-aware toolchain installer |
 
 ---
