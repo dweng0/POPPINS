@@ -484,12 +484,42 @@ def main():
 
     config = get_config()
     orch_config = config.get("orchestration", {})
+    agent_config = config.get("agent", {})
     max_agents = args.max_agents or orch_config.get("max_parallel_agents", 3)
 
-    provider = args.provider or detect_provider()
-    # model_orch from poppins.yml is the default; --model overrides it
-    model_orch_default = orch_config.get("model_orchestrator", None)
-    model_orch_override = args.model or model_orch_default
+    # Apply poppins.yml config as env var defaults (env vars take priority)
+    # This lets users configure their LLM once in poppins.yml
+    for section, prefix_map in [
+        (orch_config, [("base_url", "CUSTOM_BASE_URL"), ("api_key", None)]),
+        (agent_config, [("base_url", "CUSTOM_BASE_URL"), ("api_key", None)]),
+    ]:
+        base_url = section.get("base_url")
+        api_key = section.get("api_key")
+        if base_url and not os.environ.get("CUSTOM_BASE_URL"):
+            os.environ["CUSTOM_BASE_URL"] = base_url
+        if api_key:
+            # Set the appropriate key env var based on provider
+            cfg_provider = section.get("provider", "")
+            key_env = {
+                "anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY",
+                "groq": "GROQ_API_KEY", "moonshot": "MOONSHOT_API_KEY",
+                "dashscope": "DASHSCOPE_API_KEY", "custom": "CUSTOM_API_KEY",
+            }.get(cfg_provider, "CUSTOM_API_KEY")
+            if not os.environ.get(key_env):
+                os.environ[key_env] = api_key
+
+    # Set OLLAMA_HOST from base_url if provider is ollama
+    for section in [orch_config, agent_config]:
+        if section.get("provider") == "ollama":
+            base_url = section.get("base_url")
+            if base_url and not os.environ.get("OLLAMA_HOST"):
+                # Strip /v1 suffix if present — OLLAMA_HOST is the root
+                os.environ["OLLAMA_HOST"] = base_url.rstrip("/").removesuffix("/v1")
+
+    # Provider: CLI flag > poppins.yml > env var detection
+    provider = args.provider or orch_config.get("provider") or detect_provider()
+    # Model: CLI flag > poppins.yml orchestrator model > provider default
+    model_orch_override = args.model or orch_config.get("model_orchestrator") or None
 
     main_dir = os.getcwd()
     date = time.strftime("%Y-%m-%d")

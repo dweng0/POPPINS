@@ -69,6 +69,34 @@ CONTEXT_WINDOW_LIMIT = _POPPINS_CFG.get("context_window_limit", 100000)
 MAX_ITERATIONS = _POPPINS_CFG.get("max_iterations", 75)
 WRAP_UP_AT = _POPPINS_CFG.get("wrap_up_at", 70)
 
+# Apply poppins.yml provider config as env var defaults (env vars take priority).
+# This lets users set provider/base_url/api_key once in poppins.yml.
+def _apply_poppins_provider_config(cfg):
+    provider = cfg.get("provider", "")
+    base_url = cfg.get("base_url")
+    api_key = cfg.get("api_key")
+
+    if provider == "ollama" and base_url and not os.environ.get("OLLAMA_HOST"):
+        os.environ["OLLAMA_HOST"] = base_url.rstrip("/").removesuffix("/v1")
+    elif base_url and not os.environ.get("CUSTOM_BASE_URL"):
+        os.environ["CUSTOM_BASE_URL"] = base_url
+
+    if api_key:
+        key_env = {
+            "anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY",
+            "groq": "GROQ_API_KEY", "moonshot": "MOONSHOT_API_KEY",
+            "dashscope": "DASHSCOPE_API_KEY", "custom": "CUSTOM_API_KEY",
+        }.get(provider, "CUSTOM_API_KEY")
+        if not os.environ.get(key_env):
+            os.environ[key_env] = api_key
+
+    if provider == "custom" and not os.environ.get("CUSTOM_MODEL"):
+        model = cfg.get("default_model")
+        if model:
+            os.environ["CUSTOM_MODEL"] = model
+
+_apply_poppins_provider_config(_POPPINS_CFG)
+
 # Detect GitHub Actions for log grouping
 IN_CI = os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true"
 
@@ -362,7 +390,12 @@ TOOLS_OPENAI = [
 
 
 def detect_provider():
-    """Return the first provider whose API key env var is set, or ollama if host is available."""
+    """Return provider from poppins.yml config, then env var detection, then ollama probe."""
+    # poppins.yml takes priority over env var detection (but _apply_poppins_provider_config
+    # has already set env vars from config, so this mostly handles the 'provider' key directly)
+    cfg_provider = _POPPINS_CFG.get("provider")
+    if cfg_provider:
+        return cfg_provider
     for name, env_var in PROVIDER_PRIORITY:
         if os.environ.get(env_var):
             return name
