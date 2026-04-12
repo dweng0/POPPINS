@@ -1,0 +1,2 @@
+## 2026-04-12 13:10 — Exclude non-source directories from test search
+I implemented the functionality to prevent tests in non-source, excluded directories (like .git or node_modules) from being included in the file search. I updated `find_test_files()` within `scripts/check_bdd_coverage.py` by correctly leveraging path splitting and checking against the defined list of exclusions (`EXCLUDE_DIRS`). The test suite passed successfully, confirming that excluded files are successfully ignored during the file discovery process.
