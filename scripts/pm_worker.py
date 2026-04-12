@@ -306,14 +306,13 @@ Branch: {branch}
 
 === ACCEPT CRITERIA ===
 
-ACCEPT when all of these hold:
+ACCEPT when ALL of these hold:
   - Check A (marker) is PASS
+  - Check B (test run) is PASS — all tests must pass; failing tests are a hard blocker
   - Check C (coverage) is PASS
   - Check D (design compliance) is PASS
-  - Check B (test run) may be PASS or FAIL — failing tests are acceptable here;
-    the outer orchestrator decides whether to merge
 
-REJECT if any of A, C, or D is FAIL.
+REJECT if ANY of A, B, C, or D is FAIL.
 
 === IF YOU ACCEPT ===
 

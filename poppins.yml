@@ -3,7 +3,7 @@
 
 orchestration:
   # Maximum number of parallel worker agents (each gets its own worktree)
-  max_parallel_agents: 4
+  max_parallel_agents: 6
 
   # Number of sequential rounds to run (each round spawns max_parallel_agents workers)
   max_rounds: 5

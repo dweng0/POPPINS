@@ -512,7 +512,10 @@ def merge_worker_result(result, main_dir):
         return False
 
     if not result["tests_pass"]:
-        print("    Tests failing in worktree — merging anyway", flush=True)
+        print(
+            "    → THROWN AWAY (tests failing in worktree — PM rejected)", flush=True
+        )
+        return False
 
     # Merge
     merge_msg = f"{date} {session_time}: merge scenario '{scenario}'"
@@ -541,9 +544,6 @@ def merge_worker_result(result, main_dir):
             return False
 
     # Post-merge verification
-    stdout_bdd, _, _ = run_cmd(
-        "python3 scripts/parse_bdd_config.py BDD.md", cwd=main_dir
-    )
     _, _, build_rc = run_cmd(
         'eval "$(python3 scripts/parse_bdd_config.py BDD.md)" && eval "$BUILD_CMD"',
         cwd=main_dir,
@@ -557,9 +557,12 @@ def merge_worker_result(result, main_dir):
 
     if build_rc != 0 or test_rc != 0:
         print(
-            "    Post-merge verification FAILED — keeping merge (investigate manually)",
+            "    Post-merge verification FAILED — reverting merge (PM rejected)",
             flush=True,
         )
+        run_cmd("git revert --no-edit HEAD", cwd=main_dir, timeout=30)
+        print("    → THROWN AWAY (post-merge tests failed — reverted)", flush=True)
+        return False
 
     # Fold JOURNAL_ENTRY.md into JOURNAL.md if present
     journal_entry = os.path.join(main_dir, "JOURNAL_ENTRY.md")
@@ -582,12 +585,7 @@ def merge_worker_result(result, main_dir):
             cwd=main_dir,
         )
 
-    verdict = (
-        "MERGED (tests failed — investigate)"
-        if (not result["tests_pass"] or build_rc != 0 or test_rc != 0)
-        else "MERGED"
-    )
-    print(f"    → {verdict}", flush=True)
+    print("    → MERGED", flush=True)
     return True
 
 
