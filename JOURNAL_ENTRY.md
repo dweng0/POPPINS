@@ -1,0 +1,3 @@
+## 2026-04-12 14:21 — Handle BDD.md with only frontmatter
+
+The design required implementing a heuristic matching function to link test functions to BDD scenarios based on naming conventions. The SE successfully implemented this logic as part of handling BDD markdown files containing only frontmatter. QA confirmed that the implementation satisfies all acceptance criteria, including marker presence, successful test runs, and full coverage.
