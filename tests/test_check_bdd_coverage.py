@@ -6,7 +6,55 @@ import sys
 import tempfile
 
 sys.path.insert(0, "scripts")
-from check_bdd_coverage import parse_scenarios
+from check_bdd_coverage import parse_scenarios, find_test_files
+
+
+# BDD: Find test files in project
+def test_find_test_files_in_project():
+    """Test that find_test_files() returns all test files matching expected patterns."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Create test file structure
+        os.makedirs(os.path.join(tmpdir, "tests"))
+        os.makedirs(os.path.join(tmpdir, "src"))
+        os.makedirs(os.path.join(tmpdir, "src", "nested"))
+        
+        # Create test files with various patterns (relative paths since find_test_files returns relative)
+        test_files = [
+            "tests/test_example.py",
+            "tests/example_test.py",
+            "src/mytest.py",
+            "src/nested/test_nested.py",
+            "src/nested/nested_test.py",
+        ]
+        
+        # Create non-test files (should not be included)
+        non_test_files = [
+            "src/main.py",
+            "src/utils.py",
+            "README.md",
+        ]
+        
+        for f in test_files + non_test_files:
+            full_path = os.path.join(tmpdir, f)
+            with open(full_path, "w") as fh:
+                fh.write("# test file\n" if f in test_files else "# source file\n")
+        
+        # Change to temp directory and run find_test_files
+        original_cwd = os.getcwd()
+        try:
+            os.chdir(tmpdir)
+            result = find_test_files()
+            
+            # Verify all test files are found
+            result_set = set(result)
+            for tf in test_files:
+                assert tf in result_set, f"Expected test file {tf} not found in {result_set}"
+            
+            # Verify non-test files are not included
+            for ntf in non_test_files:
+                assert ntf not in result_set, f"Non-test file {ntf} should not be included"
+        finally:
+            os.chdir(original_cwd)
 
 
 # BDD: Extract all scenarios from BDD.md
