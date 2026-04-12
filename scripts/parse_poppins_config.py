@@ -23,6 +23,7 @@ import json
 DEFAULTS = {
     "orchestration": {
         "max_parallel_agents": 3,
+        "max_rounds": 1,
         "model_orchestrator": "claude-haiku-4-5-20251001",
     },
     "agent": {

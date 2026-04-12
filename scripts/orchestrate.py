@@ -564,12 +564,19 @@ def main():
         default=None,
         help="Force provider: anthropic|openai|groq|ollama|moonshot|dashscope|custom",
     )
+    parser.add_argument(
+        "--max-rounds",
+        type=int,
+        default=None,
+        help="Override number of sequential rounds from poppins.yml",
+    )
     args = parser.parse_args()
 
     config = get_config()
     orch_config = config.get("orchestration", {})
     agent_config = config.get("agent", {})
     max_agents = args.max_agents or orch_config.get("max_parallel_agents", 3)
+    max_rounds = args.max_rounds if args.max_rounds is not None else orch_config.get("max_rounds", 1)
 
     # Apply poppins.yml config as env var defaults (env vars take priority)
     # This lets users configure their LLM once in poppins.yml
@@ -615,6 +622,7 @@ def main():
 
     print(f"=== BAADD Orchestrator ({date} {session_time}) ===", flush=True)
     print(f"  Max parallel agents: {max_agents}", flush=True)
+    print(f"  Max rounds: {max_rounds}", flush=True)
     print(
         f"  Provider:            {provider or 'none (will use BDD.md order)'}",
         flush=True,
@@ -648,108 +656,129 @@ def main():
     print("", flush=True)
 
     if args.dry_run:
-        print("  [dry-run] Would spawn agents for the above scenarios.", flush=True)
+        total_slots = max_rounds * max_agents
+        for round_num in range(1, max_rounds + 1):
+            start = (round_num - 1) * max_agents
+            round_scenarios = ordered_names[start : start + max_agents]
+            if not round_scenarios:
+                break
+            print(f"  Round {round_num}/{max_rounds}: {len(round_scenarios)} scenario(s)", flush=True)
+            for name in round_scenarios:
+                print(f"    - {name}", flush=True)
+        truly_deferred = ordered_names[total_slots:]
+        if truly_deferred:
+            print(f"\n  {len(truly_deferred)} scenario(s) deferred beyond {max_rounds} round(s).", flush=True)
+        print(f"  [dry-run] Would spawn agents across {max_rounds} round(s).", flush=True)
         return
 
-    # Step 3: Select only the top N scenarios to run this session
-    selected_names = ordered_names[:max_agents]
-    if len(ordered_names) > max_agents:
+    # Rounds loop: each round picks the next max_agents scenarios from the ordered list
+    all_results = []
+    all_selected_names = []
+    remaining_names = list(ordered_names)
+
+    for round_num in range(1, max_rounds + 1):
+        if not remaining_names:
+            print(f"\n  All scenarios exhausted before round {round_num}. Stopping.", flush=True)
+            break
+
+        selected_names = remaining_names[:max_agents]
+        remaining_names = remaining_names[max_agents:]
+        all_selected_names.extend(selected_names)
+
+        if max_rounds > 1:
+            print(f"\n=== Round {round_num}/{max_rounds} — {len(selected_names)} scenario(s) ===", flush=True)
+
+        # Create worktrees for this round's scenarios
         print(
-            f"  Selecting top {max_agents} scenario(s) to run this session "
-            f"({len(ordered_names) - max_agents} deferred to next run):",
+            f"\n  Creating worktrees for {len(selected_names)} scenario(s)...", flush=True
+        )
+        workers = {}
+        for scenario_name in selected_names:
+            slug = scenario_to_slug(scenario_name)
+            wt_path, branch = create_worktree(slug, main_dir)
+            if not wt_path:
+                print(
+                    f"  [WARN] Failed to create worktree for: {scenario_name}", flush=True
+                )
+                continue
+            workers[scenario_name] = (wt_path, branch)
+            print(f"  {scenario_name[:50]} → {wt_path}", flush=True)
+
+        if not workers:
+            print("  No worktrees created for this round. Skipping.", flush=True)
+            continue
+
+        # Run agents in parallel
+        print(
+            f"\n  Running {len(workers)} agents (max {max_agents} concurrent)...",
             flush=True,
         )
-        for i, name in enumerate(selected_names, 1):
-            print(f"    {i}. {name}", flush=True)
-        print("", flush=True)
+        results = []
 
-    # Step 4: Create worktrees for selected scenarios only
-    print(
-        f"\n  Creating worktrees for {len(selected_names)} scenario(s)...", flush=True
-    )
-    workers = {}
-    for scenario_name in selected_names:
-        slug = scenario_to_slug(scenario_name)
-        wt_path, branch = create_worktree(slug, main_dir)
-        if not wt_path:
-            print(
-                f"  [WARN] Failed to create worktree for: {scenario_name}", flush=True
-            )
-            continue
-        workers[scenario_name] = (wt_path, branch)
-        print(f"  {scenario_name[:50]} → {wt_path}", flush=True)
+        with ThreadPoolExecutor(max_workers=max_agents) as executor:
+            futures = {}
+            for scenario_name, (wt_path, branch) in workers.items():
+                future = executor.submit(
+                    run_worker,
+                    scenario_name,
+                    wt_path,
+                    branch,
+                    main_dir,
+                    config,
+                )
+                futures[future] = scenario_name
 
-    if not workers:
-        print("  No worktrees created. Exiting.", flush=True)
-        return
+            for future in as_completed(futures):
+                scenario_name = futures[future]
+                try:
+                    result = future.result()
+                    results.append(result)
+                    commits = result["commits"]
+                    tests_pass = result["tests_pass"]
+                    if commits == 0:
+                        status_str = "[FAIL: no commits]"
+                    elif not tests_pass:
+                        status_str = "[WARN: tests failing]"
+                    else:
+                        status_str = "[OK]"
+                    print(
+                        f"  {status_str} {scenario_name} — {commits} commit(s), {result['elapsed_s']}s",
+                        flush=True,
+                    )
+                except Exception as e:
+                    print(f"  [ERROR] {scenario_name}: {e}", flush=True)
+                    results.append(
+                        {
+                            "scenario": scenario_name,
+                            "branch": workers[scenario_name][1],
+                            "wt_path": workers[scenario_name][0],
+                            "commits": 0,
+                            "tests_pass": False,
+                            "elapsed_s": 0,
+                            "rc": 1,
+                            "stdout": str(e),
+                        }
+                    )
 
-    # Step 4: Run all agents in parallel (ThreadPoolExecutor handles concurrency limit)
-    print(
-        f"\n  Running {len(workers)} agents (max {max_agents} concurrent)...",
-        flush=True,
-    )
-    results = []
+        # Merge results in planned order
+        print(f"\n  Merging {len(results)} results in order...", flush=True)
+        for result in sorted(results, key=lambda r: selected_names.index(r["scenario"])):
+            scenario = result["scenario"]
+            commits = result["commits"]
+            tests = "tests pass" if result["tests_pass"] else "tests failing"
+            print(f"  [{scenario[:50]}] — {commits} commit(s), {tests}", flush=True)
+            merged = merge_worker_result(result, main_dir)
+            result["merged"] = merged
 
-    with ThreadPoolExecutor(max_workers=max_agents) as executor:
-        futures = {}
+        # Clean up worktrees for this round
+        print(f"\n  Cleaning up {len(workers)} worktrees...", flush=True)
         for scenario_name, (wt_path, branch) in workers.items():
-            future = executor.submit(
-                run_worker,
-                scenario_name,
-                wt_path,
-                branch,
-                main_dir,
-                config,
-            )
-            futures[future] = scenario_name
+            remove_worktree(wt_path, branch, main_dir)
 
-        # Collect results as they complete (merge happens later in order)
-        for future in as_completed(futures):
-            scenario_name = futures[future]
-            try:
-                result = future.result()
-                results.append(result)
-                commits = result["commits"]
-                tests_pass = result["tests_pass"]
-                if commits == 0:
-                    status_str = "[FAIL: no commits]"
-                elif not tests_pass:
-                    status_str = "[WARN: tests failing]"
-                else:
-                    status_str = "[OK]"
-                print(
-                    f"  {status_str} {scenario_name} — {commits} commit(s), {result['elapsed_s']}s",
-                    flush=True,
-                )
-            except Exception as e:
-                print(f"  [ERROR] {scenario_name}: {e}", flush=True)
-                results.append(
-                    {
-                        "scenario": scenario_name,
-                        "branch": workers[scenario_name][1],
-                        "wt_path": workers[scenario_name][0],
-                        "commits": 0,
-                        "tests_pass": False,
-                        "elapsed_s": 0,
-                        "rc": 1,
-                        "stdout": str(e),
-                    }
-                )
+        all_results.extend(results)
 
-    # Step 5: Merge all results in the planned order (sequential, but doesn't block spawning)
-    print(f"\n  Merging {len(results)} results in order...", flush=True)
-    for result in sorted(results, key=lambda r: selected_names.index(r["scenario"])):
-        scenario = result["scenario"]
-        commits = result["commits"]
-        tests = "tests pass" if result["tests_pass"] else "tests failing"
-        print(f"  [{scenario[:50]}] — {commits} commit(s), {tests}", flush=True)
-        merged = merge_worker_result(result, main_dir)
-        result["merged"] = merged
-
-    # Clean up worktrees
-    print(f"\n  Cleaning up {len(workers)} worktrees...", flush=True)
-    for scenario_name, (wt_path, branch) in workers.items():
-        remove_worktree(wt_path, branch, main_dir)
+    results = all_results
+    deferred = remaining_names
 
     # Step 5: Final wrap-up
     print("  Updating coverage...", flush=True)
@@ -767,8 +796,6 @@ def main():
     failed_count = sum(1 for r in results if not r.get("merged"))
     total_time = sum(r.get("elapsed_s", 0) for r in results)
 
-    deferred = ordered_names[max_agents:]
-
     print("\n=== Orchestrator complete ===", flush=True)
     print(f"  Scenarios attempted: {len(results)}", flush=True)
     print(f"  Merged:             {merged_count}", flush=True)
@@ -778,7 +805,7 @@ def main():
     col = 42
     print(f"  {'Scenario':<{col}} {'Commits':>7}  {'Tests':>6}  Outcome", flush=True)
     print(f"  {'-' * col}  {'-' * 7}  {'-' * 6}  {'-' * 30}", flush=True)
-    for r in sorted(results, key=lambda r: selected_names.index(r["scenario"])):
+    for r in sorted(results, key=lambda r: all_selected_names.index(r["scenario"])):
         commits = r["commits"]
         tests = "pass" if r["tests_pass"] else ("—" if commits == 0 else "FAIL")
         if r.get("merged"):
@@ -803,7 +830,8 @@ def main():
         for i, name in enumerate(deferred, 1):
             print(f"    {i}. {name}", flush=True)
         print(
-            f"\n  python3 scripts/orchestrate.py --max-agents {max_agents}", flush=True
+            f"\n  python3 scripts/orchestrate.py --max-agents {max_agents} --max-rounds {max_rounds}",
+            flush=True,
         )
 
     # Write orchestrator event log
@@ -846,7 +874,7 @@ def main():
     journal_content = read_file_safe(journal_md)
     orchestrator_entry = f"\n## {date} {session_time} — Orchestrator session\n\n"
     orchestrator_entry += (
-        f"Ran {len(results)} agents in parallel (max {max_agents} concurrent). "
+        f"Ran {len(results)} agents across {max_rounds} round(s) (max {max_agents} concurrent per round). "
     )
     orchestrator_entry += f"Total agent time: {total_time}s.\n\n"
     if merged_names:

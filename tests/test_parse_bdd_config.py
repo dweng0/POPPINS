@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
-"""Tests for parse_bdd_config.py"""
+"""Tests for parse_bdd_config.py, parse_poppins_config.py, and orchestrate.py"""
 
 import os
 import subprocess
+import sys
+import tempfile
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
+from parse_poppins_config import get_config
 import tempfile
 
 
@@ -76,3 +81,115 @@ def test_parse_frontmatter_with_quoted_values():
         assert "TEST_CMD='npm test'" in output
 
         os.unlink(f.name)
+
+
+# BDD: Default max_rounds is 1
+def test_default_max_rounds_is_1():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        orig = os.getcwd()
+        os.chdir(tmpdir)
+        try:
+            config = get_config()
+        finally:
+            os.chdir(orig)
+    assert config["orchestration"]["max_rounds"] == 1
+
+
+# BDD: Read max_rounds from poppins.yml
+def test_read_max_rounds_from_poppins_yml():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        poppins_path = os.path.join(tmpdir, "poppins.yml")
+        with open(poppins_path, "w") as f:
+            f.write("orchestration:\n")
+            f.write("  max_rounds: 3\n")
+        orig = os.getcwd()
+        os.chdir(tmpdir)
+        try:
+            config = get_config()
+        finally:
+            os.chdir(orig)
+    assert config["orchestration"]["max_rounds"] == 3
+
+
+# BDD: Override max rounds via CLI
+def test_override_max_rounds_via_cli():
+    # Use a minimal temp BDD.md and strip API keys so no live AI call is made
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
+        f.write("---\nlanguage: python\ntest_cmd: python3 -m pytest tests/\n---\n\n")
+        f.write("    Feature: Rounds Test\n")
+        for i in range(1, 6):
+            f.write(f"        Scenario: Fake scenario {i}\n")
+            f.write("            Given something\n")
+            f.write("            When it runs\n")
+            f.write("            Then it works\n\n")
+        f.flush()
+        bdd_path = f.name
+    no_provider_env = {
+        k: v for k, v in os.environ.items()
+        if k not in {
+            "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GROQ_API_KEY",
+            "CUSTOM_API_KEY", "MOONSHOT_API_KEY", "DASHSCOPE_API_KEY",
+            "OLLAMA_HOST", "CUSTOM_BASE_URL", "CUSTOM_MODEL",
+        }
+    }
+    try:
+        result = subprocess.run(
+            [
+                "python3",
+                "scripts/orchestrate.py",
+                "--dry-run",
+                "--max-rounds=4",
+                "--max-agents=1",
+                f"--bdd={bdd_path}",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env=no_provider_env,
+        )
+        assert "Max rounds: 4" in result.stdout
+    finally:
+        os.unlink(bdd_path)
+
+
+# BDD: Run orchestrator N rounds sequentially
+def test_run_orchestrator_n_rounds_sequentially():
+    # Use a minimal temp BDD.md with 9 uncovered scenarios; strip API keys
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
+        f.write("---\nlanguage: python\ntest_cmd: python3 -m pytest tests/\n---\n\n")
+        f.write("    Feature: Rounds Test\n")
+        for i in range(1, 10):
+            f.write(f"        Scenario: Fake scenario {i}\n")
+            f.write("            Given something\n")
+            f.write("            When it runs\n")
+            f.write("            Then it works\n\n")
+        f.flush()
+        bdd_path = f.name
+    no_provider_env = {
+        k: v for k, v in os.environ.items()
+        if k not in {
+            "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GROQ_API_KEY",
+            "CUSTOM_API_KEY", "MOONSHOT_API_KEY", "DASHSCOPE_API_KEY",
+            "OLLAMA_HOST", "CUSTOM_BASE_URL", "CUSTOM_MODEL",
+        }
+    }
+    try:
+        result = subprocess.run(
+            [
+                "python3",
+                "scripts/orchestrate.py",
+                "--dry-run",
+                "--max-rounds=3",
+                "--max-agents=2",
+                f"--bdd={bdd_path}",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env=no_provider_env,
+        )
+        assert "Round 1/3" in result.stdout
+        assert "Round 2/3" in result.stdout
+        assert "Round 3/3" in result.stdout
+    finally:
+        os.unlink(bdd_path)

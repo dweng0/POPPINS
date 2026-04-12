@@ -397,6 +397,11 @@ System: BAADD (Behaviour and AI Driven Development) — a framework where an AI 
             When get_config() merges
             Then orchestration.max_parallel_agents is 5, but agent defaults remain
 
+        Scenario: Default max_rounds is 1
+            Given no poppins.yml file exists
+            When parse_poppins_config.py runs
+            Then orchestration.max_rounds defaults to 1
+
         Scenario: Get single config value via dot notation
             Given poppins.yml with nested config
             When parse_poppins_config.py --get agent.max_iterations runs
@@ -761,6 +766,21 @@ System: BAADD (Behaviour and AI Driven Development) — a framework where an AI 
             Given 10 scenarios with max_agents=3
             When orchestration completes
             Then it prints remaining 7 scenarios for next run
+
+        Scenario: Read max_rounds from poppins.yml
+            Given poppins.yml with orchestration.max_rounds: 3
+            When orchestrate.py resolves configuration
+            Then it runs 3 sequential rounds
+
+        Scenario: Run orchestrator N rounds sequentially
+            Given max_rounds=3 and max_parallel_agents=2 with 9 uncovered scenarios
+            When orchestrate.py executes
+            Then it runs 3 rounds: round 1 picks top 2, round 2 picks next 2 from remaining, round 3 picks next 2
+
+        Scenario: Override max rounds via CLI
+            Given --max-rounds=4 flag passed to orchestrate.py
+            When orchestrate.py resolves max_rounds
+            Then it runs 4 rounds instead of poppins.yml config
 
         Scenario: Write orchestrator event log
             Given orchestration session completes
