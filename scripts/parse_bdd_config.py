@@ -21,6 +21,7 @@ DEFAULTS = {
     "birth_date": "2026-01-01",
 }
 
+
 def parse_frontmatter(path):
     try:
         with open(path) as f:
@@ -53,8 +54,10 @@ def parse_frontmatter(path):
 
     return result
 
+
 def shell_escape(value):
     return "'" + value.replace("'", "'\\''") + "'"
+
 
 def main():
     path = sys.argv[1] if len(sys.argv) > 1 else "BDD.md"
@@ -64,6 +67,7 @@ def main():
         value = config.get(key, default)
         shell_key = key.upper().replace("-", "_")
         print(f"export {shell_key}={shell_escape(value)}")
+
 
 if __name__ == "__main__":
     main()

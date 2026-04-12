@@ -78,7 +78,7 @@ def parse_yaml_simple(path):
                 if value.startswith("#"):
                     value = ""
                 elif "#" in value:
-                    value = value[:value.index("#")].strip()
+                    value = value[: value.index("#")].strip()
 
                 if value.lower() in ("true", "yes"):
                     value = True
@@ -140,6 +140,7 @@ def shell_escape(value):
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     parser.add_argument("--get", type=str, help="Get a single dot-notation key")

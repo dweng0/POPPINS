@@ -17,7 +17,8 @@ def get_label_applier(repo, issue_number, label_name):
     try:
         result = subprocess.run(
             [
-                "gh", "api",
+                "gh",
+                "api",
                 f"repos/{repo}/issues/{issue_number}/events",
                 "--jq",
                 f'[.[] | select(.event=="labeled" and .label.name=="{label_name}")] | last | .actor.login',

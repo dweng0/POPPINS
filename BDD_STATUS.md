@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 217 scenario(s) across 1 test file(s).
+Checked 217 scenario(s) across 2 test file(s).
 
 
 ## Feature: BDD Specification Parser
@@ -8,7 +8,7 @@ Checked 217 scenario(s) across 1 test file(s).
 - [x] Parse YAML frontmatter from BDD.md
 - [x] Handle missing frontmatter gracefully
 - [x] Parse frontmatter with quoted values
-- [ ] UNCOVERED: Extract all scenarios from BDD.md
+- [x] Extract all scenarios from BDD.md
 - [ ] UNCOVERED: Parse scenario outline syntax
 - [ ] UNCOVERED: Skip frontmatter when parsing scenarios
 
@@ -287,10 +287,9 @@ Checked 217 scenario(s) across 1 test file(s).
 - [ ] UNCOVERED: Issue response file format parsing
 
 ---
-**5/217 scenarios covered.**
+**6/217 scenarios covered.**
 
-212 scenario(s) need tests:
-- Extract all scenarios from BDD.md
+211 scenario(s) need tests:
 - Parse scenario outline syntax
 - Skip frontmatter when parsing scenarios
 - Find test files in project

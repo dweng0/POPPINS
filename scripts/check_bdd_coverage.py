@@ -36,7 +36,7 @@ TEST_FILE_PATTERNS = [
     "**/*.spec.jsx",
     "**/*.test.tsx",
     "**/*.spec.tsx",
-    "**/src/**/*.rs",       # Rust inline tests
+    "**/src/**/*.rs",  # Rust inline tests
     "**/*_test.go",
     "**/test/**/*.java",
     "**/*Test.java",
@@ -46,7 +46,15 @@ TEST_FILE_PATTERNS = [
     "**/tests/**/*.js",
 ]
 
-EXCLUDE_DIRS = {".git", "node_modules", "target", "dist", "build", ".venv", "__pycache__"}
+EXCLUDE_DIRS = {
+    ".git",
+    "node_modules",
+    "target",
+    "dist",
+    "build",
+    ".venv",
+    "__pycache__",
+}
 
 
 def normalize(text):
@@ -84,7 +92,9 @@ def parse_scenarios(bdd_path):
     for line in lines[start:]:
         stripped = line.strip()
         feature_match = re.match(r"Feature:\s*(.+)", stripped, re.IGNORECASE)
-        scenario_match = re.match(r"Scenario(?:\s+Outline)?:\s*(.+)", stripped, re.IGNORECASE)
+        scenario_match = re.match(
+            r"Scenario(?:\s+Outline)?:\s*(.+)", stripped, re.IGNORECASE
+        )
 
         if feature_match:
             current_feature = feature_match.group(1).strip()
@@ -114,7 +124,7 @@ def check_marker(scenario_name, test_contents):
     Returns the file path if found, None otherwise."""
     # Match case-insensitively, allowing # or // prefix
     pattern = re.compile(
-        r'(?:#|//)\s*BDD:\s*' + re.escape(scenario_name),
+        r"(?:#|//)\s*BDD:\s*" + re.escape(scenario_name),
         re.IGNORECASE,
     )
     for path, content in test_contents.items():
@@ -134,7 +144,11 @@ def check_coverage_heuristic(scenario_name, test_contents):
             return True
         if partial and partial in content_lower:
             return True
-        words = [w for w in re.sub(r"[^a-z0-9\s]", "", scenario_name.lower()).split() if len(w) > 3]
+        words = [
+            w
+            for w in re.sub(r"[^a-z0-9\s]", "", scenario_name.lower()).split()
+            if len(w) > 3
+        ]
         if len(words) >= 3 and all(w in content_lower for w in words[:4]):
             return True
 
@@ -176,7 +190,10 @@ def main():
     uncovered = []
     current_feature = None
 
-    lines = ["# BDD Status\n", f"Checked {len(scenarios)} scenario(s) across {len(test_files)} test file(s).\n"]
+    lines = [
+        "# BDD Status\n",
+        f"Checked {len(scenarios)} scenario(s) across {len(test_files)} test file(s).\n",
+    ]
 
     for feature, scenario in scenarios:
         if feature != current_feature:
