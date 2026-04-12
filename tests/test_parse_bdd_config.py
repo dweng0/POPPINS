@@ -152,6 +152,38 @@ def test_override_max_rounds_via_cli():
         os.unlink(bdd_path)
 
 
+# BDD: Search parent directories for poppins.yml
+def test_search_parent_directories_for_poppins_yml():
+    """Test that find_config() searches parent directories for poppins.yml"""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Create poppins.yml in the root of tmpdir
+        poppins_path = os.path.join(tmpdir, "poppins.yml")
+        with open(poppins_path, "w") as f:
+            f.write("orchestration:\n")
+            f.write("  max_rounds: 5\n")
+        
+        # Create a subdirectory and change into it
+        subdir = os.path.join(tmpdir, "subdir")
+        os.makedirs(subdir)
+        
+        orig = os.getcwd()
+        os.chdir(subdir)
+        try:
+            # poppins.yml is NOT in subdir, but is in parent (tmpdir)
+            config_path = None
+            # Import here to get fresh find_config
+            import importlib
+            import scripts.parse_poppins_config as ppm
+            importlib.reload(ppm)
+            config_path = ppm.find_config()
+            
+            # Should find poppins.yml in parent directory
+            assert config_path is not None, "find_config() should find poppins.yml in parent"
+            assert config_path == poppins_path, f"Should find {poppins_path}, got {config_path}"
+        finally:
+            os.chdir(orig)
+
+
 # BDD: Run orchestrator N rounds sequentially
 def test_run_orchestrator_n_rounds_sequentially():
     # Use a minimal temp BDD.md with 9 uncovered scenarios; strip API keys
