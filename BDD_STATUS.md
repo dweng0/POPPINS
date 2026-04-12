@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 221 scenario(s) across 4 test file(s).
+Checked 221 scenario(s) across 7 test file(s).
 
 
 ## Feature: BDD Specification Parser
@@ -28,17 +28,17 @@ Checked 221 scenario(s) across 4 test file(s).
 
 ## Feature: Multi-Provider AI Agent
 
-- [ ] UNCOVERED: Detect Anthropic provider from API key
-- [ ] UNCOVERED: Detect OpenAI provider from API key
-- [ ] UNCOVERED: Detect Groq provider from API key
-- [ ] UNCOVERED: Detect Ollama provider from localhost probe
-- [ ] UNCOVERED: Detect custom provider from base URL
+- [x] Detect Anthropic provider from API key
+- [x] Detect OpenAI provider from API key
+- [x] Detect Groq provider from API key
+- [x] Detect Ollama provider from localhost probe
+- [x] Detect custom provider from base URL
 - [ ] UNCOVERED: Provider priority order
 - [x] Use provider default model
 - [ ] UNCOVERED: Override model via MODEL environment variable
 - [x] Load provider config from poppins.yml
-- [ ] UNCOVERED: Environment variables override poppins.yml config
-- [ ] UNCOVERED: Set OLLAMA_HOST from poppins.yml base_url
+- [x] Environment variables override poppins.yml config
+- [x] Set OLLAMA_HOST from poppins.yml base_url
 - [ ] UNCOVERED: No provider detected error message
 - [ ] UNCOVERED: CUSTOM_MODEL required for custom provider without --model
 - [ ] UNCOVERED: Unknown provider error
@@ -92,7 +92,7 @@ Checked 221 scenario(s) across 4 test file(s).
 
 ## Feature: Poppins Configuration Parser
 
-- [ ] UNCOVERED: Parse poppins.yml with agent section
+- [x] Parse poppins.yml with agent section
 - [x] Apply defaults when poppins.yml missing
 - [ ] UNCOVERED: Deep merge file config with defaults
 - [x] Default max_rounds is 1
@@ -219,10 +219,10 @@ Checked 221 scenario(s) across 4 test file(s).
 
 ## Feature: Dotenv Loading
 
-- [ ] UNCOVERED: Load .env file into environment
+- [x] Load .env file into environment
 - [x] Handle quoted values in .env
 - [x] Skip comment lines in .env
-- [ ] UNCOVERED: Environment variables override .env
+- [x] Environment variables override .env
 
 ## Feature: CI/CD Integration
 
@@ -276,8 +276,8 @@ Checked 221 scenario(s) across 4 test file(s).
 - [x] Handle test file that cannot be read
 - [ ] UNCOVERED: Tool output formatting with iteration tag
 - [ ] UNCOVERED: Tool icons for different tool types
-- [ ] UNCOVERED: Detect Moonshot provider
-- [ ] UNCOVERED: Detect Dashscope provider
+- [x] Detect Moonshot provider
+- [x] Detect Dashscope provider
 - [x] Moonshot default model
 - [x] Dashscope default model
 - [x] Groq default model
@@ -291,9 +291,9 @@ Checked 221 scenario(s) across 4 test file(s).
 - [ ] UNCOVERED: Issue response file format parsing
 
 ---
-**30/221 scenarios covered.**
+**42/221 scenarios covered.**
 
-191 scenario(s) need tests:
+179 scenario(s) need tests:
 - Skip frontmatter when parsing scenarios
 - Exclude non-source directories from test search
 - Detect coverage via BDD marker comment
@@ -303,15 +303,8 @@ Checked 221 scenario(s) across 4 test file(s).
 - Report uncovered scenarios
 - Exit with error code when scenarios uncovered
 - Handle BDD.md with only frontmatter
-- Detect Anthropic provider from API key
-- Detect OpenAI provider from API key
-- Detect Groq provider from API key
-- Detect Ollama provider from localhost probe
-- Detect custom provider from base URL
 - Provider priority order
 - Override model via MODEL environment variable
-- Environment variables override poppins.yml config
-- Set OLLAMA_HOST from poppins.yml base_url
 - No provider detected error message
 - CUSTOM_MODEL required for custom provider without --model
 - Unknown provider error
@@ -348,7 +341,6 @@ Checked 221 scenario(s) across 4 test file(s).
 - Log tool result with duration
 - Log token usage per API response
 - Log session end with reason
-- Parse poppins.yml with agent section
 - Deep merge file config with defaults
 - Trust repo owner's issues directly
 - Trust community issue with agent-approved label from owner
@@ -435,8 +427,6 @@ Checked 221 scenario(s) across 4 test file(s).
 - Skip if marker already exists
 - Dry run mode shows planned changes
 - Apply mode modifies files
-- Load .env file into environment
-- Environment variables override .env
 - GitHub Actions workflow triggers on schedule
 - Manual workflow dispatch
 - Bootstrap detection in workflow
@@ -476,8 +466,6 @@ Checked 221 scenario(s) across 4 test file(s).
 - Worktree creation failure
 - Tool output formatting with iteration tag
 - Tool icons for different tool types
-- Detect Moonshot provider
-- Detect Dashscope provider
 - Custom provider requires api_key string placeholder
 - Ollama provider uses "ollama" as api_key
 - Mode flag affects wrap-up message content
