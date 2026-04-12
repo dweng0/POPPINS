@@ -6,7 +6,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, "scripts")
-from check_bdd_coverage import parse_scenarios, find_test_files
+from check_bdd_coverage import parse_scenarios, find_test_files, check_marker
 
 
 # BDD: Find test files in project
@@ -156,6 +156,64 @@ def test_skip_frontmatter_when_parsing_scenarios():
                                     "birth_date: 2026-03-05", "custom_key: custom_value", "another_key: another_value"]
 
         os.unlink(f.name)
+
+
+# BDD: Exclude non-source directories from test search
+def test_exclude_non_source_directories_from_test_search():
+    """Test that find_test_files() skips files inside excluded directories."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        original_cwd = os.getcwd()
+        try:
+            os.chdir(tmpdir)
+
+            # Create a real test file that should be found
+            os.makedirs("tests")
+            with open("tests/test_real.py", "w") as f:
+                f.write("# real test\n")
+
+            # Create test files inside excluded directories — should be ignored
+            for excluded in [".git", "node_modules", ".venv", "__pycache__", "build"]:
+                os.makedirs(excluded)
+                with open(f"{excluded}/test_ignored.py", "w") as f:
+                    f.write("# ignored test\n")
+
+            result = find_test_files()
+            result_set = set(result)
+
+            assert "tests/test_real.py" in result_set, "Real test file should be found"
+            for excluded in [".git", "node_modules", ".venv", "__pycache__", "build"]:
+                assert f"{excluded}/test_ignored.py" not in result_set, (
+                    f"File in {excluded}/ should be excluded"
+                )
+        finally:
+            os.chdir(original_cwd)
+
+
+# BDD: Detect coverage via BDD marker comment
+def test_detect_coverage_via_bdd_marker_comment():
+    """Test that check_marker() finds '# BDD: <scenario name>' in test file content."""
+    scenario = "Detect coverage via BDD marker comment"
+
+    # File containing the exact marker should be found
+    contents_with_marker = {
+        "tests/test_example.py": f"# BDD: {scenario}\ndef test_something(): pass\n"
+    }
+    result = check_marker(scenario, contents_with_marker)
+    assert result == "tests/test_example.py", "Should find file containing the BDD marker"
+
+    # File without the marker should not match
+    contents_without_marker = {
+        "tests/test_other.py": "def test_unrelated(): pass\n"
+    }
+    result = check_marker(scenario, contents_without_marker)
+    assert result is None, "Should return None when marker is absent"
+
+    # JS/TS style '// BDD:' marker should also be detected
+    contents_js_marker = {
+        "src/example.test.ts": f"// BDD: {scenario}\ntest('x', () => {{}});\n"
+    }
+    result = check_marker(scenario, contents_js_marker)
+    assert result == "src/example.test.ts", "Should find JS-style // BDD: marker"
 
 
 # BDD: Handle empty BDD.md with no scenarios

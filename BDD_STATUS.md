@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 221 scenario(s) across 9 test file(s).
+Checked 221 scenario(s) across 10 test file(s).
 
 
 ## Feature: BDD Specification Parser
@@ -15,10 +15,10 @@ Checked 221 scenario(s) across 9 test file(s).
 ## Feature: Test Coverage Detection
 
 - [x] Find test files in project
-- [ ] UNCOVERED: Exclude non-source directories from test search
-- [ ] UNCOVERED: Detect coverage via BDD marker comment
-- [ ] UNCOVERED: Detect coverage via marker with different comment style
-- [ ] UNCOVERED: Detect coverage via heuristic name matching
+- [x] Exclude non-source directories from test search
+- [x] Detect coverage via BDD marker comment
+- [x] Detect coverage via marker with different comment style
+- [x] Detect coverage via heuristic name matching
 - [ ] UNCOVERED: Detect coverage via partial name matching
 - [ ] UNCOVERED: Report uncovered scenarios
 - [ ] UNCOVERED: Exit with error code when scenarios uncovered
@@ -64,7 +64,7 @@ Checked 221 scenario(s) across 9 test file(s).
 - [ ] UNCOVERED: Edit file fails when string not found
 - [ ] UNCOVERED: Edit file replaces only first occurrence
 - [ ] UNCOVERED: List files excludes git and node_modules
-- [ ] UNCOVERED: Search files finds pattern
+- [x] Search files finds pattern
 - [ ] UNCOVERED: Search files handles no matches
 
 ## Feature: Agent Loop and Iteration Management
@@ -111,7 +111,7 @@ Checked 221 scenario(s) across 9 test file(s).
 - [ ] UNCOVERED: Format issue as markdown
 - [ ] UNCOVERED: Truncate long issue body
 - [ ] UNCOVERED: Sort issues by reaction count
-- [ ] UNCOVERED: Mark user content with boundaries
+- [x] Mark user content with boundaries
 - [ ] UNCOVERED: Warn about untrusted content
 
 ## Feature: Bootstrap Script
@@ -144,7 +144,7 @@ Checked 221 scenario(s) across 9 test file(s).
 - [ ] UNCOVERED: Comment and close implemented issues
 - [ ] UNCOVERED: Push changes after session
 - [ ] UNCOVERED: Track session start SHA for rollback
-- [ ] UNCOVERED: Exclude management files from worktree commits
+- [x] Exclude management files from worktree commits
 - [ ] UNCOVERED: Branch naming convention with timestamp
 - [ ] UNCOVERED: Calculate has_work flag
 - [ ] UNCOVERED: Guard warning for minimal work with uncovered scenarios
@@ -291,13 +291,9 @@ Checked 221 scenario(s) across 9 test file(s).
 - [ ] UNCOVERED: Issue response file format parsing
 
 ---
-**45/221 scenarios covered.**
+**52/221 scenarios covered.**
 
-176 scenario(s) need tests:
-- Exclude non-source directories from test search
-- Detect coverage via BDD marker comment
-- Detect coverage via marker with different comment style
-- Detect coverage via heuristic name matching
+169 scenario(s) need tests:
 - Detect coverage via partial name matching
 - Report uncovered scenarios
 - Exit with error code when scenarios uncovered
@@ -324,7 +320,6 @@ Checked 221 scenario(s) across 9 test file(s).
 - Edit file fails when string not found
 - Edit file replaces only first occurrence
 - List files excludes git and node_modules
-- Search files finds pattern
 - Search files handles no matches
 - Agent stops at max iterations
 - Wrap-up reminder injected at threshold
@@ -348,7 +343,6 @@ Checked 221 scenario(s) across 9 test file(s).
 - Format issue as markdown
 - Truncate long issue body
 - Sort issues by reaction count
-- Mark user content with boundaries
 - Warn about untrusted content
 - Scaffold TypeScript React project
 - Scaffold Python project
@@ -374,7 +368,6 @@ Checked 221 scenario(s) across 9 test file(s).
 - Comment and close implemented issues
 - Push changes after session
 - Track session start SHA for rollback
-- Exclude management files from worktree commits
 - Branch naming convention with timestamp
 - Calculate has_work flag
 - Guard warning for minimal work with uncovered scenarios

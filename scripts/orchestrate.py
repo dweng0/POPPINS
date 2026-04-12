@@ -27,6 +27,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from parse_poppins_config import get_config
 from check_bdd_coverage import parse_scenarios, find_test_files, check_coverage
+from pm_worker import run_pm_pipeline, extract_scenario_block
 
 
 def load_dotenv(path=".env"):
@@ -334,14 +335,36 @@ BDD.md is your spec. Read it before doing anything else.
 === PHASE 2: Implement ===
 
 The correct TDD cycle — ALL steps must complete before any commit:
-  1. Write the test (name it after the scenario). Include a BDD marker comment
-     on the line above the test: "# BDD: {scenario_name}" (Python) or
-     "// BDD: {scenario_name}" (JS/TS/Go/Rust/Java). This marker is how
-     the coverage checker links tests to scenarios.
-  2. Run it — confirm it FAILS (do NOT commit yet)
-  3. Write the implementation code that makes it pass
-  4. Run build and tests — confirm ALL tests PASS
-  5. Only now commit:
+
+  1. Write the test (name it after the scenario).
+
+     CRITICAL — the BDD marker MUST be the line immediately above the test
+     function definition, exactly like this:
+
+       # BDD: {scenario_name}
+       def test_...(...)
+
+     For JS/TS/Go/Rust/Java use // instead of #:
+
+       // BDD: {scenario_name}
+
+     The scenario name in the marker must match EXACTLY (same capitalisation,
+     same spacing, no trailing whitespace). This marker is how the coverage
+     checker proves the scenario is tested.
+
+  2. After writing the test, VERIFY the marker was inserted correctly:
+       grep -rn "BDD: {scenario_name}" tests/
+     If grep returns no output — the marker is missing or wrong. Fix it now
+     before continuing. Do not proceed without a successful grep result.
+
+  3. Run the test — confirm it FAILS (do NOT commit yet)
+
+  4. Write the implementation code that makes it pass
+
+  5. Run build and tests — confirm ALL tests PASS:
+       eval "$(python3 scripts/parse_bdd_config.py BDD.md)" && eval "$BUILD_CMD" && eval "$TEST_CMD"
+
+  6. Only now commit:
        git add -A -- ':!BDD_STATUS.md' ':!JOURNAL.md' ':!JOURNAL_INDEX.md'
        git commit -m "{date} {session_time}: implement {scenario_name}"
 
@@ -353,7 +376,17 @@ If checks fail after your implementation:
 === PHASE 3: Verify ===
 
 Run: python3 scripts/check_bdd_coverage.py BDD.md
-Confirm "{scenario_name}" is now marked [x]. Do not commit BDD_STATUS.md.
+Confirm "{scenario_name}" is now marked [x].
+
+If it is STILL marked [ ] UNCOVERED:
+  - The marker is missing or mismatched. Check with:
+      grep -rn "BDD:" tests/
+  - Fix the marker so it matches the scenario name exactly, then re-run the
+    coverage checker until it shows [x].
+  - Do NOT write the journal entry if the scenario is still UNCOVERED.
+  - Do NOT commit if coverage still shows UNCOVERED.
+
+Do not commit BDD_STATUS.md.
 
 === PHASE 4: Journal ===
 
@@ -439,12 +472,21 @@ Now begin. Read IDENTITY.md first, then BDD.md.
         timeout=120,
     )
 
+    # Check if the BDD marker was actually added for this scenario
+    marker_grep, _, marker_rc = run_cmd(
+        f'grep -rn "BDD: {scenario_name}" tests/ scripts/ src/ 2>/dev/null || true',
+        cwd=wt_path,
+        timeout=10,
+    )
+    has_marker = bool(marker_grep.strip())
+
     return {
         "scenario": scenario_name,
         "branch": branch,
         "wt_path": wt_path,
         "commits": commit_count,
         "tests_pass": test_rc == 0,
+        "has_marker": has_marker,
         "elapsed_s": round(elapsed),
         "rc": rc,
         "stdout": stdout[:2000] if stdout else "",
@@ -460,6 +502,13 @@ def merge_worker_result(result, main_dir):
 
     if result["commits"] == 0:
         print("    → THROWN AWAY (no commits — agent made no progress)", flush=True)
+        return False
+
+    if not result.get("has_marker", True):
+        print(
+            f"    → THROWN AWAY (BDD marker '# BDD: {scenario}' not found in test files)",
+            flush=True,
+        )
         return False
 
     if not result["tests_pass"]:
@@ -701,7 +750,8 @@ def main():
                     f"  [WARN] Failed to create worktree for: {scenario_name}", flush=True
                 )
                 continue
-            workers[scenario_name] = (wt_path, branch)
+            scenario_text = extract_scenario_block(bdd_content, scenario_name)
+            workers[scenario_name] = (wt_path, branch, scenario_text)
             print(f"  {scenario_name[:50]} → {wt_path}", flush=True)
 
         if not workers:
@@ -717,10 +767,11 @@ def main():
 
         with ThreadPoolExecutor(max_workers=max_agents) as executor:
             futures = {}
-            for scenario_name, (wt_path, branch) in workers.items():
+            for scenario_name, (wt_path, branch, scenario_text) in workers.items():
                 future = executor.submit(
-                    run_worker,
+                    run_pm_pipeline,
                     scenario_name,
+                    scenario_text,
                     wt_path,
                     branch,
                     main_dir,
@@ -747,13 +798,15 @@ def main():
                     )
                 except Exception as e:
                     print(f"  [ERROR] {scenario_name}: {e}", flush=True)
+                    wt_path, branch, _ = workers[scenario_name]
                     results.append(
                         {
                             "scenario": scenario_name,
-                            "branch": workers[scenario_name][1],
-                            "wt_path": workers[scenario_name][0],
+                            "branch": branch,
+                            "wt_path": wt_path,
                             "commits": 0,
                             "tests_pass": False,
+                            "has_marker": False,
                             "elapsed_s": 0,
                             "rc": 1,
                             "stdout": str(e),
@@ -772,7 +825,7 @@ def main():
 
         # Clean up worktrees for this round
         print(f"\n  Cleaning up {len(workers)} worktrees...", flush=True)
-        for scenario_name, (wt_path, branch) in workers.items():
+        for scenario_name, (wt_path, branch, _scenario_text) in workers.items():
             remove_worktree(wt_path, branch, main_dir)
 
         all_results.extend(results)

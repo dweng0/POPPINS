@@ -1,6 +1,93 @@
 # Journal
 
 
+## 2026-04-12 14:12 — Orchestrator session
+
+Ran 1 agents across 1 round(s) (max 1 concurrent per round). Total agent time: 216s.
+
+**Merged (1):** Detect coverage via heuristic name matching
+
+Coverage: 52/221 scenarios.
+
+## 2026-04-12 14:13 — Detect coverage via heuristic name matching
+
+The PM designed a mechanism to determine test coverage by comparing unit function names against BDD scenario descriptions using substring heuristics. The SE implemented this logic in the `detect_heuristic_match` function within `scripts/coverage_checker.py`. QA confirmed that the implementation successfully meets all acceptance criteria, passing design compliance checks and achieving full required coverage.
+
+
+## 2026-04-12 13:29 — Orchestrator session
+
+Ran 2 agents across 1 round(s) (max 2 concurrent per round). Total agent time: 410s.
+
+**Merged (1):** Detect coverage via heuristic name matching
+**Failed (1):** Detect coverage via partial name matching
+
+Coverage: 51/221 scenarios.
+
+## 2026-04-12 13:30 — Detect coverage via heuristic name matching
+Implemented the fallback heuristic in `check_bdd_coverage.py` to detect test coverage when an explicit BDD marker is missing. The new logic scans for test function definitions (e.g., `test_...`) and checks if the normalized scenario name appears as a substring or partial match within the function name, successfully covering the target scenario.
+
+
+## 2026-04-12 13:10 — Orchestrator session
+
+Ran 2 agents across 1 round(s) (max 2 concurrent per round). Total agent time: 594s.
+
+**Merged (2):** Detect coverage via BDD marker comment, Exclude non-source directories from test search
+
+Coverage: 45/221 scenarios.
+
+## 2026-04-12 13:10 — Exclude non-source directories from test search
+I implemented the functionality to prevent tests in non-source, excluded directories (like .git or node_modules) from being included in the file search. I updated `find_test_files()` within `scripts/check_bdd_coverage.py` by correctly leveraging path splitting and checking against the defined list of exclusions (`EXCLUDE_DIRS`). The test suite passed successfully, confirming that excluded files are successfully ignored during the file discovery process.
+
+
+## 2026-04-12 12:42 — Orchestrator session
+
+Ran 3 agents across 1 round(s) (max 3 concurrent per round). Total agent time: 926s.
+
+**Merged (1):** Detect coverage via BDD marker comment
+**Failed (2):** Detect coverage via marker with different comment style, Exclude non-source directories from test search
+
+Coverage: 45/221 scenarios.
+
+## 2026-04-12 12:42 — Detect coverage via BDD marker comment
+I implemented the logic to detect test coverage by searching for explicit BDD marker comments within test files. I updated `scripts/check_bdd_coverage.py` to include a `check_marker` function that uses regex to find markers like `# BDD: Scenario name`. I also updated the unit tests in `tests/test_bdd_coverage.py` to correctly assert this functionality, which allowed me to verify that the scenario is now marked as covered.
+
+
+## 2026-04-12 11:56 — Orchestrator session
+
+Ran 3 agents across 1 round(s) (max 3 concurrent per round). Total agent time: 1271s.
+
+**Failed (3):** Handle missing frontmatter gracefully, Parse YAML frontmatter from BDD.md, Parse scenario outline syntax
+
+Coverage: 45/221 scenarios.
+
+
+## 2026-04-12 11:53 — Orchestrator session
+
+Ran 3 agents across 1 round(s) (max 3 concurrent per round). Total agent time: 3s.
+
+**Failed (3):** Exclude non-source directories from test search, Detect coverage via BDD marker comment, Detect coverage via marker with different comment style
+
+Coverage: 45/221 scenarios.
+
+
+## 2026-04-12 11:53 — Orchestrator session
+
+Ran 3 agents across 1 round(s) (max 3 concurrent per round). Total agent time: 3s.
+
+**Failed (3):** Exclude non-source directories from test search, Detect coverage via marker with different comment style, Detect coverage via BDD marker comment
+
+Coverage: 45/221 scenarios.
+
+
+## 2026-04-12 11:34 — Orchestrator session
+
+Ran 3 agents across 1 round(s) (max 3 concurrent per round). Total agent time: 13s.
+
+**Failed (3):** Detect coverage via BDD marker comment, Exclude non-source directories from test search, Detect coverage via marker with different comment style
+
+Coverage: 45/221 scenarios.
+
+
 ## 2026-04-12 10:54 — Orchestrator session
 
 Ran 15 agents across 3 round(s) (max 5 concurrent per round). Total agent time: 962s.

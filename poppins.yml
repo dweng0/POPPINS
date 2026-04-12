@@ -3,21 +3,22 @@
 
 orchestration:
   # Maximum number of parallel worker agents (each gets its own worktree)
-  max_parallel_agents: 5
+  max_parallel_agents: 1
 
   # Number of sequential rounds to run (each round spawns max_parallel_agents workers)
-  max_rounds: 3
+  max_rounds: 1
 
   # LLM provider for the scenario ordering call
   # Options: anthropic | openai | groq | ollama | moonshot | dashscope | custom
   provider: custom
 
   # Base URL for custom provider
-  base_url: https://coding-intl.dashscope.aliyuncs.com/v1
-
+  #  base_url: https://coding-intl.dashscope.aliyuncs.com/v1
+  base_url: http://192.168.1.112:1234/v1
   # Model used for the orchestrator's scenario ordering call
-  model_orchestrator: qwen3.5-plus
+  #  model_orchestrator: qwen3.5-plus
 
+  model_orchestrator: google/gemma-4-e4b
   # Base URL — required for ollama/custom, ignored for anthropic/openai/groq
   # base_url: http://localhost:11434
 
@@ -30,10 +31,12 @@ agent:
   provider: custom
 
   # Base URL for custom provider
-  base_url: https://coding-intl.dashscope.aliyuncs.com/v1
+  base_url: http://192.168.1.112:1234/v1
 
   # Default model (overridden by --model flag or MODEL env var)
-  default_model: qwen3.5-plus
+  #  default_model: qwen3.5-plus
+
+  default_model: google/gemma-4-e4b
 
   # Base URL — required for ollama/custom, ignored for anthropic/openai/groq
   # base_url: http://localhost:11434
