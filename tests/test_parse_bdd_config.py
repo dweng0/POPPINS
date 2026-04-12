@@ -199,6 +199,32 @@ def test_search_parent_directories_for_poppins_yml():
             os.chdir(orig)
 
 
+# BDD: Get single config value via dot notation
+def test_get_single_config_value_via_dot_notation():
+    """Test that --get flag retrieves a single config value via dot notation."""
+    script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    script_path = os.path.join(script_dir, "scripts", "parse_poppins_config.py")
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        poppins_path = os.path.join(tmpdir, "poppins.yml")
+        with open(poppins_path, "w") as f:
+            f.write("agent:\n")
+            f.write("  max_iterations: 50\n")
+        
+        orig = os.getcwd()
+        os.chdir(tmpdir)
+        try:
+            result = subprocess.run(
+                ["python3", script_path, "--get", "agent.max_iterations"],
+                capture_output=True,
+                text=True,
+            )
+            assert result.returncode == 0, f"Command failed: {result.stderr}"
+            assert result.stdout.strip() == "50", f"Expected '50', got '{result.stdout.strip()}'"
+        finally:
+            os.chdir(orig)
+
+
 # BDD: Run orchestrator N rounds sequentially
 def test_run_orchestrator_n_rounds_sequentially():
     # Use a minimal temp BDD.md with 9 uncovered scenarios; strip API keys
