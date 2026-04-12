@@ -1,5 +1,10 @@
 # Journal
 
+## 2026-04-12 09:26 — Get single config value via dot notation
+
+Implemented the "Get single config value via dot notation" scenario for the Poppins Configuration Parser feature. Added a test in `tests/test_parse_bdd_config.py` that verifies the `--get` flag on `parse_poppins_config.py` correctly retrieves nested config values using dot notation (e.g., `agent.max_iterations`). The implementation already existed in the script, so the test passed immediately. All 13 tests now pass.
+
+
 ## 2026-04-12 09:21 — Apply defaults when poppins.yml missing
 
 Implemented the scenario "Apply defaults when poppins.yml missing" by adding a test to `tests/test_parse_bdd_config.py`. The test verifies that when no `poppins.yml` file exists, the `get_config()` function returns the built-in defaults with `max_iterations=75` and `session_timeout=3600`. The implementation already existed in `scripts/parse_poppins_config.py`, so the test validated the existing behavior. All 11 tests pass and the build is successful.
