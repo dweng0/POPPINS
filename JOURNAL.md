@@ -1,5 +1,10 @@
 # Journal
 
+## 2026-04-12 10:03 — Add test coverage for custom provider detection
+
+Implemented the "Detect custom provider from base URL" scenario by adding a test in `tests/test_agent_provider.py`. The test uses a subprocess approach to isolate environment variables and verify that `detect_provider()` returns "custom" when `CUSTOM_BASE_URL` is set. The implementation already existed in `scripts/agent.py`, so this session added the missing test coverage. All 17 tests now pass.
+
+
 ## 2026-04-12 10:03 — Implement Detect Groq provider from API key
 
 Covered the "Detect Groq provider from API key" scenario from the Multi-Provider AI Agent feature. Created tests/test_agent.py with a subprocess-based test that isolates the environment, sets GROQ_API_KEY while clearing higher-priority keys, and verifies detect_provider() returns "groq". The implementation was already correct in agent.py - the PROVIDER_PRIORITY list includes groq and the detect_provider() function checks environment variables in priority order. All 17 tests pass.
