@@ -1,5 +1,14 @@
 # Journal
 
+
+## 2026-04-12 09:58 — Orchestrator session
+
+Ran 15 agents across 3 round(s) (max 5 concurrent per round). Total agent time: 3496s.
+
+**Merged (15):** Detect custom provider from base URL, Detect Anthropic provider from API key, Detect OpenAI provider from API key, Detect Groq provider from API key, Detect Ollama provider from localhost probe, and 10 more
+
+Coverage: 42/221 scenarios.
+
 ## 2026-04-12 10:15 — Set OLLAMA_HOST from poppins.yml base_url
 
 Implemented the scenario "Set OLLAMA_HOST from poppins.yml base_url" which verifies that when poppins.yml has `provider: ollama` and `base_url: http://localhost:11434/v1`, the OLLAMA_HOST environment variable is correctly set to `http://localhost:11434` (stripping the /v1 suffix).
