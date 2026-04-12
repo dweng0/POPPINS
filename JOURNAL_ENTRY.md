@@ -1,0 +1,2 @@
+## 2026-04-12 12:42 — Detect coverage via BDD marker comment
+I implemented the logic to detect test coverage by searching for explicit BDD marker comments within test files. I updated `scripts/check_bdd_coverage.py` to include a `check_marker` function that uses regex to find markers like `# BDD: Scenario name`. I also updated the unit tests in `tests/test_bdd_coverage.py` to correctly assert this functionality, which allowed me to verify that the scenario is now marked as covered.
