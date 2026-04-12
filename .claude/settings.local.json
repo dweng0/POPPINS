@@ -31,7 +31,8 @@
       "Bash(python3:*)",
       "Bash(chmod +x:*)",
       "Bash(echo \"exit: $?\")",
-      "Bash(ls /home/jay/projects/BAADD/*.md)"
+      "Bash(ls /home/jay/projects/BAADD/*.md)",
+      "Bash(git rm:*)"
     ]
   }
 }
