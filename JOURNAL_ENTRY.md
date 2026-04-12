@@ -1,0 +1,3 @@
+## 2026-04-12 10:15 — Environment variables override poppins.yml config
+
+Implemented the scenario "Environment variables override poppins.yml config" for the Multi-Provider AI Agent feature. Added a test to `tests/test_agent.py` that creates a poppins.yml with `provider: openai`, sets the `ANTHROPIC_API_KEY` environment variable, and verifies that `detect_provider()` returns "anthropic" (env takes priority over config file). The test passed immediately because the implementation in `agent.py` already checks environment variables before falling back to poppins.yml config. Fixed a merge conflict in test_agent.py that was preventing tests from running.
