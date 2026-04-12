@@ -83,6 +83,21 @@ def test_parse_frontmatter_with_quoted_values():
         os.unlink(f.name)
 
 
+# BDD: Apply defaults when poppins.yml missing
+def test_apply_defaults_when_poppins_yml_missing():
+    """Test that default values are applied when no poppins.yml file exists."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        orig = os.getcwd()
+        os.chdir(tmpdir)
+        try:
+            config = get_config()
+        finally:
+            os.chdir(orig)
+    # Verify agent defaults
+    assert config["agent"]["max_iterations"] == 75
+    assert config["agent"]["session_timeout"] == 3600
+
+
 # BDD: Default max_rounds is 1
 def test_default_max_rounds_is_1():
     with tempfile.TemporaryDirectory() as tmpdir:
