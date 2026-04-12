@@ -30,7 +30,8 @@
       "Bash(gh api:*)",
       "Bash(python3:*)",
       "Bash(chmod +x:*)",
-      "Bash(echo \"exit: $?\")"
+      "Bash(echo \"exit: $?\")",
+      "Bash(ls /home/jay/projects/BAADD/*.md)"
     ]
   }
 }

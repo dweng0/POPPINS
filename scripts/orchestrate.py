@@ -517,6 +517,51 @@ def merge_worker_result(result, main_dir):
         )
         return False
 
+    # Guard: reject if SE deleted existing files that the PM didn't explicitly
+    # approve in PLAN.md section 5.
+    merge_base_out, _, mb_rc = run_cmd(
+        f'git merge-base HEAD "{branch}"', cwd=main_dir
+    )
+    if mb_rc == 0:
+        merge_base = merge_base_out.strip()
+        deleted_out, _, _ = run_cmd(
+            f'git diff --name-only --diff-filter=D "{merge_base}"..."{branch}"',
+            cwd=main_dir,
+        )
+        deleted_files = [f for f in deleted_out.splitlines() if f.strip()]
+        if deleted_files:
+            # Parse PM-approved deletions from PLAN.md "## 5. Files to delete" section
+            approved_deletions = set()
+            plan_path = os.path.join(result["wt_path"], "PLAN.md")
+            if os.path.exists(plan_path):
+                with open(plan_path) as f:
+                    plan_text = f.read()
+                in_section = False
+                for line in plan_text.splitlines():
+                    if re.match(r"^##\s+5\.", line):
+                        in_section = True
+                        continue
+                    if in_section:
+                        if re.match(r"^##\s+", line):
+                            break
+                        # Bullet lines: "  - path/to/file — justification"
+                        m = re.match(r"^\s*[-*]\s+(\S+)", line)
+                        if m:
+                            approved_deletions.add(m.group(1))
+
+            unapproved = [f for f in deleted_files if f not in approved_deletions]
+            if unapproved:
+                print(
+                    f"    → THROWN AWAY (SE deleted files not approved in PLAN.md §5: {unapproved})",
+                    flush=True,
+                )
+                return False
+            if approved_deletions:
+                print(
+                    f"    Approved deletions (listed in PLAN.md §5): {sorted(approved_deletions & set(deleted_files))}",
+                    flush=True,
+                )
+
     # Merge
     merge_msg = f"{date} {session_time}: merge scenario '{scenario}'"
     stdout, stderr, rc = run_cmd(

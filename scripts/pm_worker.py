@@ -178,6 +178,17 @@ For each unit:
 
 List anything you decided NOT to build and why (prevents SE scope creep).
 
+## 5. Files to delete (optional)
+
+If and ONLY if this scenario explicitly requires removing an existing file, list
+each file path here, one per line, with a one-sentence justification. Leave this
+section empty (or omit the list) if no deletions are needed. The merge guard reads
+this section — any file the SE deletes that is NOT listed here will cause the work
+to be thrown away.
+
+Example (only include if deletions are actually needed):
+  - scripts/old_helper.py — superseded by the new unified loader in this scenario
+
 Use write_file to write PLAN.md now. That is your only action after reading BDD.md.
 Do not write any source code, test code, or other files. Do not commit.
 """

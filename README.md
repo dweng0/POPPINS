@@ -1,14 +1,26 @@
-# poppins — Behaviour and AI Driven Development
+# BAADD — Behaviour and AI Driven Development
 <div align="center">
-<img src="cute_sheep.svg" width="180" alt="poppins mascot"/>
+<img src="cute_sheep.svg" width="180" alt="BAADD mascot"/>
 
-*BDD.md drives everything.*
+*"BAADD"*
 
 </div>
 
-## Supported Models
+## BDD Drives everything
+Build software with AI agents that read your BDD spec, write tests first, then code to pass them — all while journaling their progress. No config needed; just set your API key and let the agent evolve your project on schedule.
 
-poppins auto-detects your provider from environment variables. Set one API key and run — no config needed.
+### Features
+- **Evolve** - the agent finds uncovered scenarios, writes tests, implements code, and commits — all automatically. via a github action cron job.
+- **Orchestrate** - for larger projects, spawn multiple agents in parallel, ordered by an AI orchestrator.
+- **Interactive mode** - run evolution sessions interactively with Claude Code, guiding the agent
+
+## Supported Models
+- BAADD supports **any LLM provider with an API** — just set the corresponding environment variable. **Local or otherwise**
+- BAADD **auto-detects your provider** from environment variables. Set one API key and run — no config needed.
+
+#### Quickstart:
+```` bash curl -fsSL https://raw.githubusercontent.com/dweng0/BAADD/main/install.sh | bash
+````
 
 | Provider | Environment Variable | Default Model | Notes |
 |----------|---------------------|---------------|-------|
@@ -18,6 +30,7 @@ poppins auto-detects your provider from environment variables. Set one API key a
 | **Alibaba / Qwen** | `DASHSCOPE_API_KEY` | `qwen-max` | OpenAI-compatible endpoint |
 | **Moonshot / Kimi** | `MOONSHOT_API_KEY` | `moonshot-v1-8k` | OpenAI-compatible endpoint |
 | **Ollama** | `OLLAMA_HOST` | _(pass `--model`_) | Local models, no API key required |
+| **Custom Provider** | `CUSTOM_API_KEY`, `CUSTOM_BASE_URL` | _(user-defined)_ | Custom integrations |
 
 Provider priority (first key found wins): `ANTHROPIC_API_KEY` > `MOONSHOT_API_KEY` > `DASHSCOPE_API_KEY` > `OPENAI_API_KEY` > `GROQ_API_KEY` > `OLLAMA_HOST`
 
@@ -27,13 +40,13 @@ Override the model at any time with `--model <name>` or force a provider with `-
 
 ## What is it?
 
-poppins is a **meta-framework / template** — not a library you install, but a pattern you adopt. You bring your spec; poppins brings the agent, the loop, and the rules that keep it honest.
+BAADD is a **meta-framework / template** — not a library you install, but a pattern you adopt. You bring your spec; BAADD brings the agent, the loop, and the rules that keep it honest.
 
 The three parts that make it work:
 
 ```mermaid
 graph TD
-    subgraph BAADD["poppins — the meta-framework"]
+    subgraph BAADD["BAADD — the meta-framework"]
         BDD["📄 BDD Spec Format\n(BDD.md + frontmatter)\nWhat to build"]
         LOOP["🔄 Evolve Loop\n(scripts/ + GitHub Actions)\nHow to build it"]
         CONTRACT["📜 Agent Behaviour Contract\n(IDENTITY.md)\nHow the agent must behave"]
@@ -101,10 +114,10 @@ flowchart TD
 
 ```bash
 mkdir my-project && cd my-project
-curl -fsSL https://raw.githubusercontent.com/dweng0/POPPINS/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/dweng0/BAADD/main/install.sh | bash
 ```
 
-This downloads all framework files, creates a `BDD.md` template, and initialises a git repo. A `.poppins` manifest is written to track the framework version — run the same command again at any time to update.
+This downloads all framework files, creates a `BDD.md` template, and initialises a git repo. A `.BAADD` manifest is written to track the framework version — run the same command again at any time to update.
 
 ### 2. Configure BDD.md
 
@@ -124,12 +137,12 @@ birth_date: 2026-01-01      # project start date (used for day counter)
 
 Then write your features and scenarios below the frontmatter.
 
-### 2b. Configure poppins.yml (optional)
+### 2b. Configure BAADD.yml (optional)
 
-`poppins.yml` controls how the agent runs — parallel workers, token limits, timeouts. The defaults work out of the box, but you can tune them:
+`BAADD.yml` controls how the agent runs — parallel workers, token limits, timeouts. The defaults work out of the box, but you can tune them:
 
 ```yaml
-# poppins.yml — HOW to build (BDD.md defines WHAT to build)
+# BAADD.yml — HOW to build (BDD.md defines WHAT to build)
 orchestration:
   max_parallel_agents: 3                    # workers per orchestrator run
   model_orchestrator: claude-haiku-4-5-20251001  # model for scenario ordering
@@ -179,13 +192,13 @@ Trigger manually: **Actions tab → Evolution → Run workflow**.
 ### Project initialization and updates
 
 ```bash
-# Initialize poppins in a new project
-curl -fsSL https://raw.githubusercontent.com/dweng0/POPPINS/main/install.sh | bash
+# Initialize BAADD in a new project
+curl -fsSL https://raw.githubusercontent.com/dweng0/BAADD/main/install.sh | bash
 
-# Update poppins framework to latest version (preserves your journals)
+# Update BAADD framework to latest version (preserves your journals)
 ./install.sh --update
 
-# Pin to a specific poppins version
+# Pin to a specific BAADD version
 ./install.sh --version v1.2.0
 ```
 
@@ -259,7 +272,7 @@ cat JOURNAL_INDEX.md
 cat JOURNAL.md
 
 # Check framework version
-cat .poppins | python3 -c "import sys,json; print(json.load(sys.stdin)['version'])"
+cat .BAADD | python3 -c "import sys,json; print(json.load(sys.stdin)['version'])"
 ```
 
 ---
@@ -269,7 +282,7 @@ cat .poppins | python3 -c "import sys,json; print(json.load(sys.stdin)['version'
 | File | Purpose |
 |------|---------|
 | `BDD.md` | The spec — edit this to drive development |
-| `poppins.yml` | Agent/orchestrator config — edit to tune behaviour |
+| `BAADD.yml` | Agent/orchestrator config — edit to tune behaviour |
 | `IDENTITY.md` | Agent constitution — do not modify |
 | `JOURNAL.md` | Agent's full session logs — auto-written |
 | `JOURNAL_INDEX.md` | One-line-per-session summary index — auto-generated |
@@ -281,7 +294,7 @@ cat .poppins | python3 -c "import sys,json; print(json.load(sys.stdin)['version'
 | `scripts/check_bdd_coverage.py` | Scenario coverage checker (supports BDD markers) |
 | `scripts/add_bdd_markers.py` | Upgrade tool — adds BDD markers to existing tests |
 | `scripts/parse_bdd_config.py` | BDD.md frontmatter parser |
-| `scripts/parse_poppins_config.py` | poppins.yml config parser |
+| `scripts/parse_BAADD_config.py` | BAADD.yml config parser |
 | `scripts/setup_env.sh` | Language-aware toolchain installer |
 
 ---
@@ -325,6 +338,30 @@ Claude Code will read the spec, pick the next uncovered scenario, write the test
 
 ---
 
+## Guardrails
+
+The orchestrator applies deterministic checks before merging any worktree branch to prevent the SE agent from causing unintended damage.
+
+### File deletion guard
+
+Before merging, the orchestrator diffs the worktree branch against the merge base and rejects any branch that deletes an existing file unless the PM explicitly approved the deletion in `PLAN.md`.
+
+The PM declares approved deletions in section 5 of `PLAN.md`:
+
+```markdown
+## 5. Files to delete (optional)
+
+- scripts/old_helper.py — superseded by the new unified loader in this scenario
+```
+
+Any file deleted by the SE that is not listed here causes the work to be thrown away. The PM is instructed to populate this section only when the scenario genuinely requires removing a file.
+
+### Considerations for improvement
+
+- **Truncation detection** — the current guard catches `git rm`-style deletions but not files that are overwritten with empty or near-empty content. A secondary check using `git diff --numstat` to flag files where all lines were removed and nothing was added would cover this case. The threshold for "suspiciously large removal" is context-dependent, which is why this has not been added yet.
+
+---
+
 ## GitHub issues
 
 Label issues with `agent-input` to have the agent pick them up.
@@ -335,6 +372,6 @@ If an issue proposes a new feature, the agent will add it to `BDD.md` as a Scena
 
 ## Links
 
-- **poppins Framework**: https://github.com/dweng0/POPPINS
+- **BAADD Framework**: https://github.com/dweng0/BAADD
 - **Documentation**: See the `CLAUDE.md` file in your project for detailed guidance
 - **GitHub Issues**: Use `agent-input` label to task the AI agent
