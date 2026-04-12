@@ -22,6 +22,7 @@ import subprocess
 import argparse
 import time
 import re
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -807,6 +808,8 @@ def main():
             flush=True,
         )
         results = []
+        completed_this_session = 0
+        progress_lock = threading.Lock()
 
         with ThreadPoolExecutor(max_workers=max_agents) as executor:
             futures = {}
@@ -835,10 +838,15 @@ def main():
                         status_str = "[WARN: tests failing]"
                     else:
                         status_str = "[OK]"
-                    print(
-                        f"  {status_str} {scenario_name} — {commits} commit(s), {result['elapsed_s']}s",
-                        flush=True,
-                    )
+                    with progress_lock:
+                        completed_this_session += 1
+                        done_total = len(all_results) + completed_this_session
+                        remaining = len(ordered_names) - done_total
+                        print(
+                            f"  {status_str} {scenario_name} — {commits} commit(s), {result['elapsed_s']}s"
+                            f"  [{done_total}/{len(ordered_names)} done, {remaining} remaining]",
+                            flush=True,
+                        )
                 except Exception as e:
                     print(f"  [ERROR] {scenario_name}: {e}", flush=True)
                     wt_path, branch, _ = workers[scenario_name]
@@ -865,6 +873,18 @@ def main():
             print(f"  [{scenario[:50]}] — {commits} commit(s), {tests}", flush=True)
             merged = merge_worker_result(result, main_dir)
             result["merged"] = merged
+
+        # Round progress summary
+        round_merged = sum(1 for r in results if r.get("merged"))
+        round_failed = len(results) - round_merged
+        done_so_far = len(all_results) + len(results)
+        remaining_after = len(ordered_names) - done_so_far
+        print(
+            f"\n  Round {round_num}/{max_rounds} complete — "
+            f"{round_merged} merged, {round_failed} thrown away. "
+            f"Progress: {done_so_far}/{len(ordered_names)} attempted, {remaining_after} remaining.",
+            flush=True,
+        )
 
         # Clean up worktrees for this round
         print(f"\n  Cleaning up {len(workers)} worktrees...", flush=True)
