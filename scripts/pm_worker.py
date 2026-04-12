@@ -28,10 +28,10 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Per-phase agent timeouts (seconds).  PM-plan and SE need more time than Tester/Accept.
-TIMEOUT_PM_PLAN   = 480
-TIMEOUT_SE        = 600
-TIMEOUT_TESTER    = 300
-TIMEOUT_PM_ACCEPT = 240
+TIMEOUT_PM_PLAN   = 720
+TIMEOUT_SE        = 900
+TIMEOUT_TESTER    = 480
+TIMEOUT_PM_ACCEPT = 360
 
 MAX_RETRIES = 3
 
