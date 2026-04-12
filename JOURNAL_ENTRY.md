@@ -1,3 +1,3 @@
-## 2026-04-12 10:03 — Add test coverage for custom provider detection
+## 2026-04-12 10:09 — Parse poppins.yml with agent section
 
-Implemented the "Detect custom provider from base URL" scenario by adding a test in `tests/test_agent_provider.py`. The test uses a subprocess approach to isolate environment variables and verify that `detect_provider()` returns "custom" when `CUSTOM_BASE_URL` is set. The implementation already existed in `scripts/agent.py`, so this session added the missing test coverage. All 17 tests now pass.
+Implemented the "Parse poppins.yml with agent section" scenario by adding a test in `tests/test_parse_poppins_config.py`. The test verifies that when poppins.yml contains `agent.max_iterations: 50`, the parse_poppins_config.py script outputs `POPPINS_AGENT_MAX_ITERATIONS='50'`. The implementation already existed in `scripts/parse_poppins_config.py`, so the test passed immediately. Also fixed merge conflict markers in `tests/test_agent.py` that were preventing tests from running.
