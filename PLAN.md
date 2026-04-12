@@ -1,20 +1,17 @@
-# PLAN.md
-
 ## 1. Units
 
-### Unit: is_partial_word_match
-*   **Signature:** `is_partial_word_match(test_name: str, scenario_description: str) -> bool`
-*   **File:** `scripts/coverage_checker.py`
-*   **Description:** Checks if the test name partially matches any word in the scenario description by performing tokenized substring comparisons.
-*   **Dependency Injection Point:** None (inputs are direct parameters).
+**Unit: resolve_llm_model(provider: str, config: LLMConfig, env_vars: dict) -> str**
+*   File: `agent/model_resolver.py`
+*   Description: Determines the final model name to be used by the agent based on provider defaults and explicit environment variable overrides.
+*   Dependency injection point: `config: LLMConfig` (to provide configured defaults), `env_vars: dict` (to inject current environment variables).
 
 ## 2. Test strategy
 
-*   **Test file path:** `tests/test_coverage_detection.py`
-*   **Exact test function name:** `test_partial_name_matching_success`
-*   **BDD marker:** `# BDD: Detect coverage via partial name matching`
-*   **What the test injects:** The required input strings (the specific test name and scenario description).
-*   **What it asserts:** That `is_partial_word_match()` returns `True` given the specific inputs.
+*   Test file path: `tests/test_llm_resolution.py`
+*   Exact test function name: `test_model_override_via_env`
+*   BDD marker: `# BDD: Override model via MODEL environment variable`
+*   What the test injects: Mocked environment variables dictionary where `MODEL='gpt-4'`, along with a mock LLM configuration.
+*   What it asserts: The function returns `'gpt-4'` as the resolved model name.
 
 ## 3. Acceptance criteria
 
@@ -26,5 +23,5 @@
 
 ## 4. Out of scope
 
-*   The full integration with the coverage detection pipeline (i.e., how test names are gathered from the filesystem).
-*   The implementation of `check_coverage()` wrapper function; only the core matching logic within it is required.
+*   Implementing the actual API call logic using the resolved model (this is a subsequent feature).
+*   Handling overrides via command-line flags, as this scenario strictly targets environment variables.
