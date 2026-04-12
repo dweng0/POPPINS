@@ -119,6 +119,45 @@ def test_parse_scenario_outline_syntax():
         os.unlink(f.name)
 
 
+# BDD: Skip frontmatter when parsing scenarios
+def test_skip_frontmatter_when_parsing_scenarios():
+    """Test that YAML frontmatter lines are not included as scenarios."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
+        # Create a BDD.md with 10 lines of YAML frontmatter
+        f.write("---\n")
+        f.write("language: python\n")
+        f.write("framework: none\n")
+        f.write("build_cmd: npm run build\n")
+        f.write("test_cmd: npm test\n")
+        f.write("lint_cmd: npm run lint\n")
+        f.write("fmt_cmd: npm run format\n")
+        f.write("birth_date: 2026-03-05\n")
+        f.write("custom_key: custom_value\n")
+        f.write("another_key: another_value\n")
+        f.write("---\n")
+        f.write("\n")
+        f.write("Feature: Test Feature\n")
+        f.write("    Scenario: A real scenario\n")
+        f.write("    Scenario: Another real scenario\n")
+        f.flush()
+
+        scenarios = parse_scenarios(f.name)
+
+        # Should only find the 2 real scenarios, not any frontmatter lines
+        assert len(scenarios) == 2, f"Expected 2 scenarios, got {len(scenarios)}: {scenarios}"
+        assert scenarios[0] == ("Test Feature", "A real scenario")
+        assert scenarios[1] == ("Test Feature", "Another real scenario")
+        
+        # Verify no frontmatter content leaked into scenarios
+        for feature, scenario in scenarios:
+            assert ":" not in scenario or "<" in scenario, f"Frontmatter line leaked into scenario: {scenario}"
+            assert scenario not in ["language: python", "framework: none", "build_cmd: npm run build",
+                                    "test_cmd: npm test", "lint_cmd: npm run lint", "fmt_cmd: npm run format",
+                                    "birth_date: 2026-03-05", "custom_key: custom_value", "another_key: another_value"]
+
+        os.unlink(f.name)
+
+
 # BDD: Handle empty BDD.md with no scenarios
 def test_handle_empty_bdd_md_with_no_scenarios():
     """Test that check_bdd_coverage.py handles BDD.md with frontmatter but no scenarios."""
