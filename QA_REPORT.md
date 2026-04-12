@@ -1,21 +1,22 @@
-# QA Report: Unknown provider error
+# QA Report: Load skills from SKILL.md files
 
 ## A. Marker check
 Status: PASS
-Detail: 13:    # BDD: Unknown provider error
+Detail: 6:    # BDD: Load skills from SKILL.md files
 
 ## B. Test run
-Status: PASS
-Exit code: 0
-Detail: All tests passed successfully.
+Status: FAIL
+Exit code: 1
+Detail: tests/test_skill_loader.py::test_load_skills_concatenates_multiple_files FAILED
+AssertionError: assert '' == 'Content of A\n\n---\nContent of B\n'
 
 ## C. Coverage check
 Status: PASS
-Detail: - [x] Unknown provider error
+Detail: - [x] Load skills from SKILL.md files
 
 ## D. Design compliance
 Status: PASS
-Detail: all units present as specified and dependency injection points are correctly implemented as parameters.
+Detail: all units present as specified
 
 ## Overall
-PASS — all checks passed
+FAIL — B
