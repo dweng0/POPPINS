@@ -117,3 +117,31 @@ def test_parse_scenario_outline_syntax():
         assert scenarios[1] == ("Authentication", "Login with <role>")
 
         os.unlink(f.name)
+
+
+# BDD: Handle empty BDD.md with no scenarios
+def test_handle_empty_bdd_md_with_no_scenarios():
+    """Test that check_bdd_coverage.py handles BDD.md with frontmatter but no scenarios."""
+    import subprocess
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
+        f.write("---\n")
+        f.write("language: python\n")
+        f.write("framework: none\n")
+        f.write("---\n")
+        f.write("\n")
+        f.write("# This BDD.md has no Feature or Scenario sections\n")
+        f.flush()
+
+        # Run check_bdd_coverage.py on the empty BDD.md
+        result = subprocess.run(
+            [sys.executable, "scripts/check_bdd_coverage.py", f.name],
+            capture_output=True,
+            text=True,
+        )
+
+        # Should output "No scenarios found in BDD.md" and exit with code 0
+        assert result.returncode == 0, f"Expected exit code 0, got {result.returncode}. stderr: {result.stderr}"
+        assert "No scenarios found in BDD.md" in result.stdout, f"Expected 'No scenarios found in BDD.md' in output. Got: {result.stdout}"
+
+        os.unlink(f.name)
