@@ -1,3 +1,0 @@
-## 2026-04-12 14:21 — Detect coverage via partial name matching
-
-The design required implementing `is_partial_word_match` to detect test coverage by partially matching test names against scenario descriptions using a specific BDD marker. The SE successfully implemented this core logic in `scripts/coverage_checker.py`. Testing confirmed that the implementation satisfied all acceptance criteria, including correct marker placement and successful partial name coverage detection.
