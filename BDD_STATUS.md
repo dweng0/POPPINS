@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 217 scenario(s) across 2 test file(s).
+Checked 221 scenario(s) across 2 test file(s).
 
 
 ## Feature: BDD Specification Parser
@@ -34,7 +34,7 @@ Checked 217 scenario(s) across 2 test file(s).
 - [ ] UNCOVERED: Detect Ollama provider from localhost probe
 - [ ] UNCOVERED: Detect custom provider from base URL
 - [ ] UNCOVERED: Provider priority order
-- [ ] UNCOVERED: Use provider default model
+- [x] Use provider default model
 - [ ] UNCOVERED: Override model via MODEL environment variable
 - [ ] UNCOVERED: Load provider config from poppins.yml
 - [ ] UNCOVERED: Environment variables override poppins.yml config
@@ -95,6 +95,7 @@ Checked 217 scenario(s) across 2 test file(s).
 - [ ] UNCOVERED: Parse poppins.yml with agent section
 - [ ] UNCOVERED: Apply defaults when poppins.yml missing
 - [ ] UNCOVERED: Deep merge file config with defaults
+- [x] Default max_rounds is 1
 - [ ] UNCOVERED: Get single config value via dot notation
 - [ ] UNCOVERED: Search parent directories for poppins.yml
 
@@ -182,6 +183,9 @@ Checked 217 scenario(s) across 2 test file(s).
 - [ ] UNCOVERED: Merge results in planned order
 - [ ] UNCOVERED: Track total agent time across workers
 - [ ] UNCOVERED: Deferred scenarios message
+- [x] Read max_rounds from poppins.yml
+- [x] Run orchestrator N rounds sequentially
+- [x] Override max rounds via CLI
 - [ ] UNCOVERED: Write orchestrator event log
 - [ ] UNCOVERED: Write orchestrator journal entry
 - [ ] UNCOVERED: Override max parallel agents via CLI
@@ -274,10 +278,10 @@ Checked 217 scenario(s) across 2 test file(s).
 - [ ] UNCOVERED: Tool icons for different tool types
 - [ ] UNCOVERED: Detect Moonshot provider
 - [ ] UNCOVERED: Detect Dashscope provider
-- [ ] UNCOVERED: Moonshot default model
-- [ ] UNCOVERED: Dashscope default model
-- [ ] UNCOVERED: Groq default model
-- [ ] UNCOVERED: Ollama default model
+- [x] Moonshot default model
+- [x] Dashscope default model
+- [x] Groq default model
+- [x] Ollama default model
 - [ ] UNCOVERED: Custom provider requires api_key string placeholder
 - [ ] UNCOVERED: Ollama provider uses "ollama" as api_key
 - [ ] UNCOVERED: Mode flag affects wrap-up message content
@@ -287,9 +291,9 @@ Checked 217 scenario(s) across 2 test file(s).
 - [ ] UNCOVERED: Issue response file format parsing
 
 ---
-**9/217 scenarios covered.**
+**18/221 scenarios covered.**
 
-208 scenario(s) need tests:
+203 scenario(s) need tests:
 - Skip frontmatter when parsing scenarios
 - Exclude non-source directories from test search
 - Detect coverage via BDD marker comment
@@ -307,7 +311,6 @@ Checked 217 scenario(s) across 2 test file(s).
 - Detect Ollama provider from localhost probe
 - Detect custom provider from base URL
 - Provider priority order
-- Use provider default model
 - Override model via MODEL environment variable
 - Load provider config from poppins.yml
 - Environment variables override poppins.yml config
@@ -487,10 +490,6 @@ Checked 217 scenario(s) across 2 test file(s).
 - Tool icons for different tool types
 - Detect Moonshot provider
 - Detect Dashscope provider
-- Moonshot default model
-- Dashscope default model
-- Groq default model
-- Ollama default model
 - Custom provider requires api_key string placeholder
 - Ollama provider uses "ollama" as api_key
 - Mode flag affects wrap-up message content
