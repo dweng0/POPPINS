@@ -1,5 +1,10 @@
 # Journal
 
+## 2026-04-12 10:09 — Detect Dashscope provider
+
+Implemented the "Detect Dashscope provider" scenario by adding a test in `tests/test_agent_provider.py`. The test verifies that when `DASHSCOPE_API_KEY` is set (with no higher-priority keys like ANTHROPIC_API_KEY or MOONSHOT_API_KEY), the `detect_provider()` function returns "dashscope" with the correct base_url "https://dashscope-intl.aliyuncs.com/compatible-mode/v1". The implementation was already present in `scripts/agent.py` (PROVIDER_PRIORITY list and PROVIDER_CONFIGS dict), so the test passed once I fixed the test script to not clear the DASHSCOPE_API_KEY env var. Also resolved a merge conflict in `tests/test_agent.py` that was blocking the test suite.
+
+
 ## 2026-04-12 10:03 — Add test coverage for custom provider detection
 
 Implemented the "Detect custom provider from base URL" scenario by adding a test in `tests/test_agent_provider.py`. The test uses a subprocess approach to isolate environment variables and verify that `detect_provider()` returns "custom" when `CUSTOM_BASE_URL` is set. The implementation already existed in `scripts/agent.py`, so this session added the missing test coverage. All 17 tests now pass.
