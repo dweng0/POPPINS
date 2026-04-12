@@ -423,12 +423,11 @@ TOOLS_OPENAI = [
 
 
 def detect_provider():
-    """Return provider from poppins.yml config, then env var detection, then ollama probe."""
-    # poppins.yml takes priority over env var detection (but _apply_poppins_provider_config
-    # has already set env vars from config, so this mostly handles the 'provider' key directly)
-    cfg_provider = _POPPINS_CFG.get("provider")
-    if cfg_provider:
-        return cfg_provider
+    """Return provider from env var detection, then poppins.yml config, then ollama probe.
+    
+    Environment variables take priority over poppins.yml config.
+    """
+    # Check environment variables first (highest priority)
     for name, env_var in PROVIDER_PRIORITY:
         if os.environ.get(env_var):
             return name
@@ -438,6 +437,11 @@ def detect_provider():
     # Ollama: check OLLAMA_HOST or probe localhost
     if os.environ.get("OLLAMA_HOST"):
         return "ollama"
+    # Fall back to poppins.yml config
+    cfg_provider = _POPPINS_CFG.get("provider")
+    if cfg_provider:
+        return cfg_provider
+    # Probe localhost for Ollama
     try:
         import urllib.request
 
