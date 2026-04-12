@@ -1,6 +1,15 @@
 # Journal
 
 
+## 2026-04-12 15:41 — Orchestrator session
+
+Ran 30 agents across 5 round(s) (max 6 concurrent per round). Total agent time: 60s.
+
+**Failed (30):** CUSTOM_MODEL required for custom provider without --model, Detect coverage via heuristic name matching, No provider detected error message, Missing anthropic package error, Report uncovered scenarios, and 25 more
+
+Coverage: 60/221 scenarios.
+
+
 ## 2026-04-12 14:21 — Orchestrator session
 
 Ran 20 agents across 5 round(s) (max 4 concurrent per round). Total agent time: 10045s.
