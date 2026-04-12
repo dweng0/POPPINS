@@ -1,5 +1,8 @@
 # Journal
 
+## 2026-04-12 13:30 — Detect coverage via heuristic name matching
+Implemented the fallback heuristic in `check_bdd_coverage.py` to detect test coverage when an explicit BDD marker is missing. The new logic scans for test function definitions (e.g., `test_...`) and checks if the normalized scenario name appears as a substring or partial match within the function name, successfully covering the target scenario.
+
 
 ## 2026-04-12 13:10 — Orchestrator session
 
