@@ -1,0 +1,3 @@
+## 2026-04-12 14:13 — Detect coverage via heuristic name matching
+
+The PM designed a mechanism to determine test coverage by comparing unit function names against BDD scenario descriptions using substring heuristics. The SE implemented this logic in the `detect_heuristic_match` function within `scripts/coverage_checker.py`. QA confirmed that the implementation successfully meets all acceptance criteria, passing design compliance checks and achieving full required coverage.
