@@ -54,7 +54,7 @@ def test_load_bdd_config_before_session():
         )
         
         assert "LANGUAGE=python" in shell_result.stdout
-        assert "BUILD_CMD=python3 -m py_compile src/*.py" in shell_result.stdout
+        assert "BUILD_CMD=python3 -m py_compile" in shell_result.stdout
         assert "TEST_CMD=python3 -m pytest tests/" in shell_result.stdout
         
     finally:

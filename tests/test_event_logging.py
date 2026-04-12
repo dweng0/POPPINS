@@ -12,10 +12,10 @@ class TestEventLogging(unittest.TestCase):
         self.mock_file_writer = MagicMock()
 
     # BDD: Custom event log path via --event-log
-def test_custom_log_path_via_cli():
+    def test_custom_log_path_via_cli(self):
         # 1. Define mocked CLI arguments
         mock_args = ['agent.py', '--event-log=/custom/path/events.jsonl']
-        
+
         # 2. Parse the arguments (This is where the path should be extracted)
         parsed_config = parse_cli_args(mock_args)
         expected_path = '/custom/path/events.jsonl'
@@ -23,7 +23,7 @@ def test_custom_log_path_via_cli():
 
         # 3. Initialize EventLogger using the parsed configuration and mock writer
         logger = EventLogger(log_path=expected_path, file_writer=self.mock_file_writer)
-        
+
         # 4. Assert that the logger initialized correctly using the custom path
         self.assertEqual(logger._log_path, expected_path, "EventLogger should be initialized with the custom CLI path.")
         # Optional: Ensure writer is set
