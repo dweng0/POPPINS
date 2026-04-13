@@ -19,10 +19,12 @@ Stdout conventions:
   Each agent's own output is prefixed with [<scenario> <ROLE>]
 """
 
+import json
 import os
 import re
 import sys
 import subprocess
+import threading
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -78,10 +80,42 @@ def run_cmd(cmd, cwd=None, timeout=30):
     return result.stdout, result.stderr, result.returncode
 
 
+def _read_event_log_tokens(event_log_path):
+    """Return cumulative_output_tokens from the latest api_response event, or 0."""
+    total = 0
+    try:
+        with open(event_log_path) as f:
+            for line in f:
+                try:
+                    rec = json.loads(line)
+                    if rec.get("event") == "api_response":
+                        total = rec.get("cumulative_output_tokens", total) or total
+                except (json.JSONDecodeError, KeyError):
+                    pass
+    except OSError:
+        pass
+    return total
+
+
+def _tps_monitor(event_log_path, stream_prefix, t0, stop_event,
+                 interval=5, min_tokens=10):
+    """Background thread: print periodic TPS status lines while an agent runs."""
+    while not stop_event.wait(timeout=interval):
+        elapsed = time.time() - t0
+        tokens = _read_event_log_tokens(event_log_path)
+        if tokens >= min_tokens and elapsed > 0:
+            tps = tokens / elapsed
+            print(
+                f"  [{stream_prefix}] {tokens} tok | {tps:.1f} TPS | {round(elapsed)}s",
+                flush=True,
+            )
+
+
 def run_agent(prompt, wt_path, main_dir, provider, model,
               log_suffix, phase_timeout, stream_prefix):
     """
-    Write prompt to a temp file, run agent.py, stream output with prefix.
+    Write prompt to a temp file, run agent.py, buffer output.
+    Prints periodic TPS status lines while running; dumps full output when done.
     Returns (stdout_str, returncode, elapsed_seconds).
     """
     slug = re.sub(r"[^a-z0-9]", "_", log_suffix.lower())[:40]
@@ -100,6 +134,14 @@ def run_agent(prompt, wt_path, main_dir, provider, model,
 
     stdout_lines = []
     t0 = time.time()
+    stop_event = threading.Event()
+    monitor = threading.Thread(
+        target=_tps_monitor,
+        args=(event_log, stream_prefix, t0, stop_event),
+        daemon=True,
+    )
+    monitor.start()
+
     try:
         proc = subprocess.Popen(
             cmd,
@@ -110,17 +152,29 @@ def run_agent(prompt, wt_path, main_dir, provider, model,
             cwd=wt_path,
         )
         for line in proc.stdout:
-            line = line.rstrip()
-            stdout_lines.append(line)
-            print(f"  [{stream_prefix}] {line}", flush=True)
+            stdout_lines.append(line.rstrip())
         proc.wait(timeout=phase_timeout + 30)
         rc = proc.returncode
     except subprocess.TimeoutExpired:
         proc.kill()
         stdout_lines.append("TIMEOUT")
         rc = 1
+    finally:
+        stop_event.set()
+        monitor.join(timeout=2)
 
     elapsed = round(time.time() - t0)
+
+    # Print final TPS line, then dump full buffered output
+    tokens = _read_event_log_tokens(event_log)
+    tps_str = f" | {tokens / elapsed:.1f} TPS" if elapsed > 0 and tokens >= 10 else ""
+    print(
+        f"  [{stream_prefix}] done — {tokens} tok{tps_str} | {elapsed}s",
+        flush=True,
+    )
+    for line in stdout_lines:
+        print(f"  [{stream_prefix}] {line}", flush=True)
+
     try:
         os.unlink(prompt_file)
     except OSError:

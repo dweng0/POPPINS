@@ -735,11 +735,18 @@ def main():
             timeout=120,
         )
         if preflight_rc != 0:
+            # Get the actual test command from BDD.md for the hint
+            _bdd_out, _, _ = run_cmd("python3 scripts/parse_bdd_config.py BDD.md", cwd=main_dir)
+            _test_cmd = "cargo test"
+            for _line in _bdd_out.splitlines():
+                if _line.startswith("export TEST_CMD="):
+                    _test_cmd = _line.split("=", 1)[1].strip().strip("'")
+                    break
             print("", flush=True)
             print("ERROR: existing tests are failing — pipeline cannot run.", flush=True)
             print("Fix the failing tests on main before starting a cycle.", flush=True)
             print("", flush=True)
-            print("  Run:  python3 -m pytest tests/ -v --tb=short", flush=True)
+            print(f"  Run:  {_test_cmd}", flush=True)
             sys.exit(1)
         print("  Pre-flight: OK", flush=True)
         print("", flush=True)

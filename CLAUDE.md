@@ -44,9 +44,11 @@ When the user asks to "evolve", "run an evolution session", or "implement the ne
    - Generate a unique session token: `python3 -c "import uuid; print(uuid.uuid4())"` — keep this for the whole session
    - For each uncovered/failing scenario (highest priority first):
      - Derive a slug: lowercase, non-alphanumeric chars replaced with `-`, max 60 chars
-     - Check if `locks/<slug>.lock` exists
-     - If it exists, check its age: `python3 -c "import os,time; age=time.time()-os.path.getmtime('locks/<slug>.lock'); print('stale' if age>3600 else 'live')"`. If stale (older than 60 minutes), delete it and claim this scenario. If live, skip to the next scenario.
-     - If no lock exists (or was just cleared), write `locks/<slug>.lock` with: `TOKEN=<session-uuid>`, `SCENARIO=<name>`, `DATE=<YYYY-MM-DD HH:MM>`
+     - If `locks/<slug>.lock` exists, check if the owning PID is still alive:
+       `python3 -c "import os; pid=next((l.split('=')[1] for l in open('locks/<slug>.lock') if l.startswith('PID=')), ''); print('live' if pid and os.path.exists(f'/proc/{pid.strip()}') else 'stale')"`
+       If live, skip to the next scenario. If stale, delete it.
+     - Atomically claim the lock using noclobber — this prevents two agents from both winning after a stale-check:
+       `bash -c 'set -o noclobber; cat > locks/<slug>.lock' <<EOF` with content `PID=<shell-pid>`, `TOKEN=<session-uuid>`, `SCENARIO=<name>`, `DATE=<YYYY-MM-DD HH:MM>`. Get the shell PID via `python3 -c "import os; print(os.getpid())"` or use `$$` in a subshell. If this command fails (exit non-zero), another agent won the race — skip to the next scenario.
      - Break — this is your scenario for the session
    - If all uncovered scenarios have live locks, tell the user and stop.
 5. Write the test first — name it after the scenario — include a BDD marker comment on the line above: `# BDD: <exact scenario name>` (Python) or `// BDD: <exact scenario name>` (JS/TS/Go/Rust/Java) — confirm it fails

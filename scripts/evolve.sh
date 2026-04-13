@@ -178,6 +178,7 @@ if [ "$HAS_WORK" = "yes" ] && [ -n "$UNCOVERED_LIST" ]; then
         slug=$(scenario_to_slug "$scenario")
         lockfile="$LOCKS_DIR/${slug}.lock"
 
+        # Clear stale lock if the owning PID is gone
         if [ -f "$lockfile" ]; then
             locked_pid=$(grep '^PID=' "$lockfile" 2>/dev/null | cut -d= -f2 || echo "")
             if [ -n "$locked_pid" ] && kill -0 "$locked_pid" 2>/dev/null; then
@@ -189,29 +190,33 @@ if [ "$HAS_WORK" = "yes" ] && [ -n "$UNCOVERED_LIST" ]; then
             fi
         fi
 
-        # Claim this scenario
-        TARGET_SCENARIO="$scenario"
-        TARGET_SLUG="$slug"
-        break
+        # Atomically claim the lock with noclobber — fails if another agent
+        # won the race between our stale-check and this write.
+        BRANCH="agent/${slug}-$(date +%Y%m%d-%H%M%S)"
+        WT_PATH="/tmp/baadd-wt-${slug}-$$"
+        if (set -o noclobber
+            cat > "$lockfile" <<LOCKEOF
+PID=$$
+HOST=$(hostname)
+DATE=$DATE
+TIME=$SESSION_TIME
+SCENARIO=$scenario
+BRANCH=$BRANCH
+WORKTREE=$WT_PATH
+LOCKEOF
+        ) 2>/dev/null; then
+            TARGET_SCENARIO="$scenario"
+            TARGET_SLUG="$slug"
+            break
+        else
+            echo "  Lost lock race — skipping: $scenario"
+        fi
     done < <(printf '%s\n' "$UNCOVERED_LIST")
 
     if [ -z "$TARGET_SCENARIO" ]; then
         echo "  All uncovered scenarios are locked by other agents. Nothing to do."
         exit 0
     fi
-
-    # Write lock file
-    BRANCH="agent/${TARGET_SLUG}-$(date +%Y%m%d-%H%M%S)"
-    WT_PATH="/tmp/baadd-wt-${TARGET_SLUG}-$$"
-    cat > "$LOCKS_DIR/${TARGET_SLUG}.lock" <<LOCKEOF
-PID=$$
-HOST=$(hostname)
-DATE=$DATE
-TIME=$SESSION_TIME
-SCENARIO=$TARGET_SCENARIO
-BRANCH=$BRANCH
-WORKTREE=$WT_PATH
-LOCKEOF
 
     echo "  Locked scenario: $TARGET_SCENARIO"
     echo "  Branch:          $BRANCH"
