@@ -33,6 +33,7 @@ import argparse
 import glob as globmod
 import time
 import threading
+from types import SimpleNamespace
 
 
 def load_dotenv(path=".env"):
@@ -864,6 +865,85 @@ def run_anthropic_loop(api_key, model, system_prompt, prompt, mode, event_log):
         event_log.session_end(iteration, "iteration_limit")
 
 
+def _stream_openai_response(client, model, messages):
+    """Stream a chat completion, show live token progress, return assembled result.
+
+    Returns (finish_reason, text, tool_calls, input_tokens, output_tokens).
+    tool_calls is a list of SimpleNamespace(id, function=SimpleNamespace(name, arguments))
+    or None if the response was text-only.
+    """
+    text_chunks = []
+    tool_buf = {}   # index -> {id, name, arguments}
+    finish_reason = None
+    input_tokens = output_tokens = None
+    tok = 0
+
+    try:
+        stream = client.chat.completions.create(
+            model=model,
+            max_tokens=MAX_TOKENS,
+            messages=messages,
+            tools=TOOLS_OPENAI,
+            tool_choice="auto",
+            stream=True,
+        )
+        for chunk in stream:
+            if not chunk.choices:
+                # some providers send a trailing usage-only chunk
+                usage = getattr(chunk, "usage", None)
+                if usage:
+                    input_tokens = getattr(usage, "prompt_tokens", None)
+                    output_tokens = getattr(usage, "completion_tokens", None)
+                continue
+
+            choice = chunk.choices[0]
+            if choice.finish_reason:
+                finish_reason = choice.finish_reason
+            delta = choice.delta
+
+            if delta.content:
+                text_chunks.append(delta.content)
+                tok += 1
+                if not IN_CI:
+                    preview = "".join(text_chunks).lstrip().splitlines()[0][:60]
+                    print(f"\r\033[90m  [generating... {tok} tok] {preview}\033[0m",
+                          end="", flush=True)
+
+            if delta.tool_calls:
+                tok += 1
+                if not IN_CI:
+                    print(f"\r\033[90m  [generating... {tok} tok]\033[0m",
+                          end="", flush=True)
+                for tc in delta.tool_calls:
+                    idx = tc.index
+                    if idx not in tool_buf:
+                        tool_buf[idx] = {"id": "", "name": "", "arguments": ""}
+                    if tc.id:
+                        tool_buf[idx]["id"] = tc.id
+                    if tc.function:
+                        if tc.function.name:
+                            tool_buf[idx]["name"] += tc.function.name
+                        if tc.function.arguments:
+                            tool_buf[idx]["arguments"] += tc.function.arguments
+    finally:
+        if not IN_CI:
+            print("\r\033[K", end="", flush=True)
+
+    text = "".join(text_chunks).strip()
+    tool_calls = [
+        SimpleNamespace(
+            id=tool_buf[i]["id"],
+            function=SimpleNamespace(
+                name=tool_buf[i]["name"],
+                arguments=tool_buf[i]["arguments"],
+            ),
+        )
+        for i in sorted(tool_buf)
+    ] or None
+
+    return finish_reason, text, tool_calls, input_tokens, output_tokens
+
+
 def run_openai_loop(client, model, system_prompt, prompt, mode, event_log):
     """Agent loop for any OpenAI-compatible provider (Kimi, Alibaba, Groq, OpenAI, Ollama)."""
     messages = [
@@ -892,54 +972,46 @@ def run_openai_loop(client, model, system_prompt, prompt, mode, event_log):
             wrap_up_injected = True
             event_log.wrap_up(iteration)
 
-        heartbeat = Heartbeat(event_log._path, interval=15)
-        heartbeat.start()
         try:
-            response = client.chat.completions.create(
-                model=model,
-                max_tokens=MAX_TOKENS,
-                messages=messages,
-                tools=TOOLS_OPENAI,
-                tool_choice="auto",
-            )
+            finish_reason, text, tool_calls, input_tokens, output_tokens = \
+                _stream_openai_response(client, model, messages)
         except Exception as api_err:
             print(f"\n[BAADD agent: API error — {api_err}]", flush=True)
             event_log.session_end(iteration, f"api_error: {api_err}")
             sys.exit(1)
-        finally:
-            heartbeat.stop()
 
-        choice = response.choices[0]
-        msg = choice.message
-
-        # Log token usage (OpenAI-compatible APIs report usage at the response level)
-        usage = getattr(response, "usage", None)
-        input_tokens = getattr(usage, "prompt_tokens", None) if usage else None
-        output_tokens = getattr(usage, "completion_tokens", None) if usage else None
         event_log.api_response(input_tokens, output_tokens, iteration)
 
-        # Print agent reasoning text
-        if msg.content:
-            text = msg.content.strip()
-            if text:
-                event_log.agent_text(text, iteration)
-                if IN_CI:
-                    _ci_group(f"Agent [{iteration}/{max_iterations}]: {text[:80]}...")
-                    print(text, flush=True)
-                    _ci_endgroup()
-                else:
-                    print(f"\n\033[33m> {text}\033[0m", flush=True)
+        if text:
+            event_log.agent_text(text, iteration)
+            if IN_CI:
+                _ci_group(f"Agent [{iteration}/{MAX_ITERATIONS}]: {text[:80]}...")
+                print(text, flush=True)
+                _ci_endgroup()
+            else:
+                print(f"\n\033[33m> {text}\033[0m", flush=True)
 
-        if choice.finish_reason == "stop":
+        if finish_reason == "stop":
             print(f"\n[BAADD agent done — {iteration} iterations]", flush=True)
             event_log.session_end(iteration, "stop")
             break
 
-        if choice.finish_reason == "tool_calls":
-            # Append assistant message (includes tool_calls metadata)
-            messages.append(msg)
+        if finish_reason == "tool_calls":
+            # Reconstruct an assistant message with tool_calls for the history
+            messages.append({
+                "role": "assistant",
+                "content": text or None,
+                "tool_calls": [
+                    {
+                        "id": tc.id,
+                        "type": "function",
+                        "function": {"name": tc.function.name, "arguments": tc.function.arguments},
+                    }
+                    for tc in tool_calls
+                ],
+            })
 
-            for tool_call in msg.tool_calls:
+            for tool_call in tool_calls:
                 name = tool_call.function.name
                 try:
                     input_data = json.loads(tool_call.function.arguments)
@@ -960,8 +1032,8 @@ def run_openai_loop(client, model, system_prompt, prompt, mode, event_log):
                 )
             messages = trim_context(messages, CONTEXT_WINDOW_LIMIT)
         else:
-            print(f"\n[stopped: {choice.finish_reason}]", flush=True)
-            event_log.session_end(iteration, choice.finish_reason)
+            print(f"\n[stopped: {finish_reason}]", flush=True)
+            event_log.session_end(iteration, finish_reason)
             break
 
     if iteration >= MAX_ITERATIONS:
