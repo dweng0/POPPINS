@@ -982,7 +982,17 @@ def main():
         "  5. Only now commit.\n\n"
         "NEVER commit a failing test. A failing test commit is broken code, not a 'red phase checkpoint'.\n"
         "NEVER write tests without also writing the implementation in the same session.\n"
-        "If you add a test file, you MUST also add or modify the source file(s) it tests."
+        "If you add a test file, you MUST also add or modify the source file(s) it tests.\n\n"
+        "TOOL USE IS MANDATORY:\n"
+        "- EVERY response MUST include a tool call. Never output text without tools.\n"
+        "- DO NOT narrate what you 'will do' or 'have done' — actually DO it with tools.\n"
+        "- Never say 'I implemented...' without first calling write_file or edit_file.\n"
+        "- Never say 'I ran tests...' without first calling bash with the test command.\n"
+        "- Never say 'I committed...' without first calling bash with git add/commit.\n"
+        "- If you haven't called a tool, you haven't done the action. Stop claiming it.\n"
+        "- If edit_file fails with 'string not found', immediately read_file to see current content, then try again with the exact string.\n"
+        "- NEVER retry the same failed edit more than 2 times without reading the file first.\n"
+        "- If you make 3 failed edit attempts, use write_file to rewrite the whole file instead."
     )
     if skills_text:
         system_prompt += "\n\n" + skills_text
