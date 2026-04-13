@@ -32,7 +32,8 @@
       "Bash(chmod +x:*)",
       "Bash(echo \"exit: $?\")",
       "Bash(ls /home/jay/projects/BAADD/*.md)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(curl -s http://192.168.1.112:1234/v1/models)"
     ]
   }
 }
