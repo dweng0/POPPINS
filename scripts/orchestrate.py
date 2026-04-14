@@ -32,24 +32,32 @@ from check_bdd_coverage import parse_scenarios, find_test_files, check_coverage
 from pm_worker import run_pm_pipeline, extract_scenario_block
 
 
+_PHASES_PER_SCENARIO = 4  # PM-PLAN + SE + TESTER + PM-ACCEPT
+
+
 def _read_total_iterations(wt_paths):
-    """Sum the latest iteration number across all event logs in all active worktrees."""
+    """Sum each phase log's peak iteration across all active worktrees.
+
+    Each phase (PM-PLAN, SE, TESTER, PM-ACCEPT) writes its own event log with
+    iteration numbers starting from 1.  Summing the peak per log gives a
+    monotonically increasing total that spans all completed and in-progress phases.
+    """
     total = 0
     for wt_path in wt_paths:
-        wt_max = 0
         for log_path in glob(os.path.join(wt_path, "agent_events_*.jsonl")):
+            phase_max = 0
             try:
                 with open(log_path) as f:
                     for raw in f:
                         try:
                             rec = json.loads(raw)
                             if rec.get("event") == "iteration_start":
-                                wt_max = max(wt_max, rec.get("iteration", 0))
+                                phase_max = max(phase_max, rec.get("iteration", 0))
                         except (json.JSONDecodeError, KeyError):
                             pass
             except OSError:
                 pass
-        total += wt_max
+            total += phase_max
     return total
 
 
@@ -58,7 +66,7 @@ def _progress_bar(wt_paths, max_iter_per_agent, num_agents, stop_event, interval
     if not sys.stdout.isatty():
         return
     bar_width = 28
-    total_max = max_iter_per_agent * num_agents
+    total_max = max_iter_per_agent * _PHASES_PER_SCENARIO * num_agents
     last_len = 0
     while not stop_event.wait(timeout=interval):
         total_iter = _read_total_iterations(wt_paths)
