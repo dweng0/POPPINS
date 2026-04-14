@@ -906,7 +906,7 @@ def _stream_openai_response(client, model, messages):
             if delta.content:
                 text_chunks.append(delta.content)
                 tok += 1
-                if not IN_CI:
+                if not IN_CI and sys.stdout.isatty():
                     spin = _SPINNER[tok % len(_SPINNER)]
                     elapsed = time.time() - stream_start
                     tps = tok / elapsed if elapsed > 0 else 0.0
@@ -916,7 +916,7 @@ def _stream_openai_response(client, model, messages):
 
             if delta.tool_calls:
                 tok += 1
-                if not IN_CI:
+                if not IN_CI and sys.stdout.isatty():
                     spin = _SPINNER[tok % len(_SPINNER)]
                     elapsed = time.time() - stream_start
                     tps = tok / elapsed if elapsed > 0 else 0.0
@@ -934,7 +934,7 @@ def _stream_openai_response(client, model, messages):
                         if tc.function.arguments:
                             tool_buf[idx]["arguments"] += tc.function.arguments
     finally:
-        if not IN_CI:
+        if not IN_CI and sys.stdout.isatty():
             print("\r\033[K", end="", flush=True)
 
     text = "".join(text_chunks).strip()
