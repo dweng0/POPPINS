@@ -1021,6 +1021,11 @@ def main():
         for scenario_name, (wt_path, branch, _scenario_text) in workers.items():
             remove_worktree(wt_path, branch, main_dir)
 
+        # Put thrown-away scenarios back so they appear in the remaining list
+        # and can be retried in a future session.
+        thrown_away = [r["scenario"] for r in results if not r.get("merged")]
+        remaining_names = thrown_away + remaining_names
+
         all_results.extend(results)
 
     results = all_results
