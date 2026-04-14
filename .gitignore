@@ -9,6 +9,7 @@ FAILED_PIPELINES.md
 agent_events_*.jsonl
 agent_events.jsonl
 orchestrator_events.jsonl
+orchestrator_events_*.jsonl
 locks/
 __pycache__/
 *.pyc
