@@ -125,10 +125,12 @@ def run_agent(prompt, wt_path, main_dir, provider, model,
 
     event_log = os.path.join(wt_path, f"agent_events_{slug}.jsonl")
     provider_flag = f'--provider "{provider}" ' if provider else ""
+    skills_dir = os.path.join(main_dir, "skills")
+    skills_flag = f'--skills "{skills_dir}" ' if os.path.isdir(skills_dir) else ""
     cmd = (
         f'cd "{wt_path}" && '
         f'timeout {phase_timeout} python3 "{main_dir}/scripts/agent.py" '
-        f'{provider_flag}--model "{model}" --event-log "{event_log}" '
+        f'{provider_flag}{skills_flag}--model "{model}" --event-log "{event_log}" '
         f'< "{prompt_file}" 2>&1'
     )
 
@@ -240,14 +242,37 @@ The SE and Tester will copy these commands verbatim. Do not paraphrase.
 
 ## 1. Units
 
-List each discrete piece of code needed (function, class, constant, etc.).
-For each unit:
+Design using Hexagonal Architecture (Ports and Adapters). Classify every unit as
+one of three roles — this determines where it lives and what it may import:
+
+  PORT — an abstract interface (Python Protocol or ABC) that the domain calls.
+    - Lives in src/ports/<name>.py
+    - Contains only abstract method signatures, no logic
+    - Example: a FileReader Protocol with a `read(path) -> str` method
+
+  ADAPTER — a concrete class that implements a port for one specific technology.
+    - Lives in src/adapters/<technology>/<name>.py
+    - Imports the port it implements plus whatever library it needs (os, subprocess, etc.)
+    - Never imported by domain or application code — wired up at the entry point only
+
+  DOMAIN/APPLICATION — pure logic; the heart of the feature.
+    - Lives in src/ or scripts/ as appropriate
+    - Imports only ports, never adapters or external libraries directly
+    - All external dependencies arrive via injected port parameters
+
+For each unit list:
+  - Role (PORT / ADAPTER / DOMAIN)
   - Name and exact signature (the SE will copy this verbatim — be precise)
   - File it lives in
   - One-sentence description
   - Dependency injection point: any external dependency (filesystem, subprocess,
-    clock, network, random) MUST be a parameter with a sensible default, not
-    hardcoded. This is mandatory — it is what makes the unit testable in isolation.
+    clock, network, random) MUST be a port parameter with a sensible default
+    adapter, not a raw library call. This is mandatory — it is what makes the
+    unit testable in isolation.
+
+If the scenario is simple enough that a port/adapter split would be over-engineering
+(e.g. a pure data-transformation function with no I/O), note this explicitly and
+omit the port layer — but justify the decision.
 
 ## 2. Test strategy
 
