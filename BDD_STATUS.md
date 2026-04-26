@@ -20,7 +20,7 @@ Checked 333 scenario(s) across 19 test file(s).
 - [x] Detect coverage via marker with different comment style
 - [x] Detect coverage via heuristic name matching
 - [x] Detect coverage via partial name matching
-- [ ] UNCOVERED: Report uncovered scenarios
+- [x] Report uncovered scenarios
 - [x] Exit with error code when scenarios uncovered
 - [x] Exit with success when all scenarios covered
 - [x] Handle empty BDD.md with no scenarios
@@ -436,10 +436,9 @@ Checked 333 scenario(s) across 19 test file(s).
 - [ ] UNCOVERED: stdout reader thread sets a threading.Event when subprocess stdout is exhausted
 
 ---
-**63/333 scenarios covered.**
+**64/333 scenarios covered.**
 
-270 scenario(s) need tests:
-- Report uncovered scenarios
+269 scenario(s) need tests:
 - Provider priority order
 - No provider detected error message
 - CUSTOM_MODEL required for custom provider without --model
