@@ -1,6 +1,15 @@
 # Journal
 
 
+## 2026-04-26 22:00 — Orchestrator session
+
+Ran 4 agents across 1 round(s) (max 4 concurrent per round). Total agent time: 4s.
+
+**Failed (4):** Missing anthropic package error, Exit with error code when scenarios uncovered, CUSTOM_MODEL required for custom provider without --model, No provider detected error message
+
+Coverage: 65/333 scenarios.
+
+
 ## 2026-04-26 20:37 — Orchestrator session
 
 Ran 4 agents across 1 round(s) (max 4 concurrent per round). Total agent time: 4113s.
