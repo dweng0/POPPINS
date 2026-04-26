@@ -6,7 +6,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, "scripts")
-from check_bdd_coverage import parse_scenarios, find_test_files, check_marker
+from check_bdd_coverage import parse_scenarios, find_test_files, check_marker, check_coverage
 
 
 # BDD: Find test files in project
@@ -214,6 +214,16 @@ def test_detect_coverage_via_bdd_marker_comment():
     }
     result = check_marker(scenario, contents_js_marker)
     assert result == "src/example.test.ts", "Should find JS-style // BDD: marker"
+
+
+# BDD: Detect coverage via heuristic name matching
+def test_detect_coverage_via_heuristic_name_matching():
+    """check_coverage() returns True when a test function name matches via heuristic."""
+    test_contents = {
+        "tests/test_auth.py": "def test_login_with_valid_credentials():\n    pass\n"
+    }
+    result = check_coverage("Login with valid credentials", [], test_contents)
+    assert result is True
 
 
 # BDD: Handle empty BDD.md with no scenarios
