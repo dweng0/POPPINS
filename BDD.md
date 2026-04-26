@@ -1226,3 +1226,687 @@ System: BAADD (Behaviour and AI Driven Development) — a framework where an AI 
             Given ISSUE_RESPONSE.md with multiple issue blocks
             When evolve.sh parses for gh issue comment
             Then it extracts issue_number, status, comment for each block
+
+    Feature: Dashboard — scripts/dashboard.py (Python, Rich TUI)
+        As a developer running orchestrate.py
+        I want a live terminal dashboard in scripts/dashboard.py written in Python using the Rich library
+        So that I can monitor all agents in real time without reading interleaved log output
+
+        The dashboard is implemented in scripts/dashboard.py using ONLY the rich library
+        (pip install rich). It uses rich.live.Live as the outer refresh loop,
+        rich.panel.Panel for each agent box, rich.console.Console for output,
+        rich.text.Text for styled strings, and rich.console.Group to stack panels vertically.
+        Progress bars are built manually as unicode strings using "█" (filled) and "░" (empty)
+        characters — NOT rich.progress.Progress (which is for foreground tasks, not inline display).
+        No other TUI library (textual, curses, urwid, blessed) is used.
+
+        Scenario: Dashboard file exists at scripts/dashboard.py
+            Given the dashboard feature is implemented
+            When "python3 scripts/dashboard.py --help" is run
+            Then it exits without error and prints usage including "--watch" and "--refresh"
+
+        Scenario: Rich is the only third-party import in dashboard.py
+            Given scripts/dashboard.py source is read
+            When all import statements are inspected
+            Then the only third-party package imported is "rich" — no textual, urwid, curses, blessed
+
+        Scenario: Running "python3 scripts/dashboard.py" opens the Rich TUI immediately
+            Given scripts/dashboard.py is executed without --watch
+            When the process starts
+            Then a rich.live.Live display opens in the terminal immediately (before orchestrate.py produces any output)
+            And it begins polling for worktrees and rendering panels every 2 seconds
+
+        Scenario: The dashboard is only for scripts/orchestrate.py — not evolve.sh or agent.py
+            Given scripts/dashboard.py is read
+            When the subprocess command is inspected
+            Then it only ever spawns ["python3", "scripts/orchestrate.py", ...] — never evolve.sh, agent.py, or any other script
+
+        Scenario: dashboard.py defines a main() function called from __main__
+            Given scripts/dashboard.py is read
+            When the bottom of the file is checked
+            Then it contains: if __name__ == "__main__": main()
+
+        Scenario: Live refresh loop uses rich.live.Live with refresh_per_second
+            Given scripts/dashboard.py is read
+            When the Live usage is inspected
+            Then it instantiates rich.live.Live(renderable, console=Console(), refresh_per_second=0.5)
+            And calls live.update(build_renderable()) inside the polling loop
+
+        Scenario: Each agent is rendered as a rich.panel.Panel
+            Given build_agent_panel(state) is called with a valid AgentState
+            When the return value is inspected
+            Then it is an instance of rich.panel.Panel
+            And the panel title is the scenario_name string
+
+        Scenario: Overall renderable is a rich.console.Group of Panels stacked vertically
+            Given build_renderable(states, log_buffer, session_elapsed) is called with 2 AgentState objects
+            When the return value is inspected
+            Then it is a rich.console.Group containing one Panel per agent plus a header Panel and a log Panel
+
+    Feature: Dashboard Worktree Discovery
+        As a developer watching orchestrate.py run
+        I want the dashboard to discover active agent worktrees automatically
+        So that it can display one panel per running agent
+
+        discover_worktrees(main_dir) runs: subprocess.run(["git", "worktree", "list", "--porcelain"], ...)
+        and returns a list of absolute paths that start with "/tmp/baadd-wt-".
+
+        Scenario: discover_worktrees returns baadd worktree paths from git worktree list output
+            Given git worktree list --porcelain output includes a "worktree /tmp/baadd-wt-my-scenario-1234" line
+            When discover_worktrees("/home/user/project") is called
+            Then it returns ["/tmp/baadd-wt-my-scenario-1234"]
+
+        Scenario: discover_worktrees excludes the main worktree
+            Given git worktree list output includes "worktree /home/user/project" (the main dir) and "worktree /tmp/baadd-wt-foo-99"
+            When discover_worktrees("/home/user/project") is called
+            Then it returns ["/tmp/baadd-wt-foo-99"] only — the main dir path is excluded
+
+        Scenario: discover_worktrees returns empty list when no baadd worktrees exist
+            Given git worktree list output contains only the main worktree line
+            When discover_worktrees() is called
+            Then it returns []
+
+        Scenario: discover_worktrees returns empty list when git command fails
+            Given subprocess.run raises an OSError or returns non-zero exit code
+            When discover_worktrees() is called
+            Then it returns [] without raising an exception
+
+        Scenario: slug_to_name converts hyphenated path slug to display name
+            Given wt_path is "/tmp/baadd-wt-enable-verbose-mode-5678"
+            When slug_to_name(wt_path) is called
+            Then it strips the "/tmp/baadd-wt-" prefix, strips the trailing "-<digits>" pid suffix
+            And replaces remaining hyphens with spaces, returning "enable verbose mode"
+
+        Scenario: slug_to_name handles path with no trailing digits
+            Given wt_path is "/tmp/baadd-wt-my-feature"
+            When slug_to_name(wt_path) is called
+            Then it returns "my feature" without error
+
+        Scenario: resolve_display_name prefers explicit wt_map entry over slug
+            Given wt_map = {"/tmp/baadd-wt-foo-1": "Foo Bar Baz"}
+            When resolve_display_name("/tmp/baadd-wt-foo-1", wt_map) is called
+            Then it returns "Foo Bar Baz" — not the slug-derived fallback
+
+        Scenario: resolve_display_name falls back to slug_to_name when path not in wt_map
+            Given wt_map = {} (empty)
+            When resolve_display_name("/tmp/baadd-wt-my-scenario-42", wt_map) is called
+            Then it returns "my scenario" (slug fallback)
+
+    Feature: JSONL Event Log Reading
+        As a developer watching orchestrate.py run
+        I want the dashboard to parse agent_events_*.jsonl files in each worktree
+        So that it shows accurate phase, iteration, tokens, and recent tool calls
+
+        read_wt_state(wt_path) globs for all agent_events_*.jsonl files in wt_path.
+        It identifies phase from the filename prefix using this mapping:
+          "pm_plan" → "PM-PLAN", "se" → "SE", "tester" → "TESTER", "pm_accept" → "ACCEPT"
+        For each phase it picks the file with the highest mtime (to handle retries like se_1_, se_2_).
+        It then reads every line as JSON, collecting: iteration_start, session_end, api_response, tool_call events.
+        Returns an AgentState dataclass.
+
+        Scenario: read_wt_state reads current_iter as the highest iteration value seen in iteration_start events
+            Given a JSONL file containing iteration_start events with iteration values 1, 5, 12
+            When read_wt_state(wt_path) is called
+            Then the returned AgentState has current_iter == 12
+
+        Scenario: read_wt_state reads max_iter from the max_iterations field of iteration_start events
+            Given a JSONL file with an iteration_start event containing max_iterations=125
+            When read_wt_state(wt_path) is called
+            Then the returned AgentState has max_iter == 125
+
+        Scenario: read_wt_state sets active_phase to the label of the most recent phase lacking session_end
+            Given agent_events_pm_plan_*.jsonl has a session_end event
+            And agent_events_se_*.jsonl has an iteration_start but no session_end
+            When read_wt_state(wt_path) is called
+            Then state.active_phase == "SE"
+
+        Scenario: read_wt_state adds a phase label to done_phases when its log contains session_end
+            Given agent_events_pm_plan_*.jsonl contains {"event": "session_end", ...}
+            When read_wt_state(wt_path) is called
+            Then "PM-PLAN" is in state.done_phases
+
+        Scenario: read_wt_state returns done_phases in fixed pipeline order PM-PLAN SE TESTER ACCEPT
+            Given both pm_plan and se logs have session_end (se log is newer)
+            When read_wt_state(wt_path) is called
+            Then state.done_phases == ["PM-PLAN", "SE"] — pm_plan appears first regardless of mtime
+
+        Scenario: read_wt_state reads tokens as the highest cumulative_output_tokens seen in api_response events
+            Given an api_response event with cumulative_output_tokens=4500
+            When read_wt_state(wt_path) is called
+            Then state.tokens == 4500
+
+        Scenario: read_wt_state reads start_ts as a float epoch from the ts field of the session_start event
+            Given a session_start event with ts="2026-04-26T10:00:00+00:00"
+            When read_wt_state(wt_path) is called
+            Then state.start_ts is a float approximately equal to datetime.fromisoformat("2026-04-26T10:00:00+00:00").timestamp()
+
+        Scenario: read_wt_state collects the 3 most recent tool_call events from the active phase log as last_tools
+            Given the active phase JSONL file contains 5 tool_call events in order A B C D E
+            When read_wt_state(wt_path) is called
+            Then state.last_tools == [format_tool_call(C), format_tool_call(D), format_tool_call(E)]
+
+        Scenario: read_wt_state skips malformed JSON lines and continues reading
+            Given a JSONL file where line 3 is "not valid json" and lines 1,2,4 are valid events
+            When read_wt_state(wt_path) is called
+            Then it does not raise an exception and processes lines 1, 2, and 4 correctly
+
+        Scenario: read_wt_state returns zeroed AgentState when no JSONL files exist in worktree
+            Given a worktree directory containing no agent_events_*.jsonl files
+            When read_wt_state(wt_path) is called
+            Then state.active_phase is None, state.done_phases == [], state.current_iter == 0, state.tokens == 0
+
+        Scenario: read_wt_state picks the JSONL file with the highest mtime when multiple files share the same phase prefix
+            Given agent_events_se_1_foo.jsonl (mtime=T) and agent_events_se_2_foo.jsonl (mtime=T+60)
+            When read_wt_state(wt_path) selects which se log to use
+            Then it reads agent_events_se_2_foo.jsonl (the most recently modified)
+
+        Scenario: read_wt_state handles OSError when opening a JSONL file
+            Given one of the agent_events_*.jsonl files raises OSError when opened
+            When read_wt_state(wt_path) is called
+            Then it skips that file and still processes the remaining files without raising
+
+        Scenario: read_wt_state sets start_ts to current time when no session_start event exists
+            Given a JSONL file with iteration_start events but no session_start event
+            When read_wt_state(wt_path) is called
+            Then state.start_ts is approximately time.time() (defaults to now)
+
+    Feature: AgentState Dataclass
+        As a developer building the dashboard
+        I want a clean Python dataclass to hold per-agent state
+        So that rendering functions are pure and easy to test
+
+        AgentState is a dataclass defined in scripts/dashboard.py with these fields:
+          wt_path: str
+          scenario_name: str
+          active_phase: Optional[str]  # "PM-PLAN", "SE", "TESTER", "ACCEPT", or None
+          done_phases: List[str]
+          current_iter: int
+          max_iter: int
+          tokens: int
+          last_tools: List[str]  # up to 3 formatted tool call strings
+          start_ts: float  # epoch timestamp, defaults to time.time()
+
+        Scenario: AgentState is a dataclass with the required fields
+            Given scripts/dashboard.py is read
+            When the AgentState class definition is inspected
+            Then it is decorated with @dataclass and has fields: wt_path, scenario_name, active_phase, done_phases, current_iter, max_iter, tokens, last_tools, start_ts
+
+        Scenario: AgentState.elapsed_s property returns seconds since start_ts
+            Given an AgentState with start_ts = time.time() - 60
+            When state.elapsed_s is accessed
+            Then it returns a float between 59 and 61
+
+        Scenario: AgentState.is_stale property returns True when newest JSONL mtime is over 120 seconds old
+            Given all agent_events_*.jsonl files in wt_path have mtime older than 120 seconds ago
+            When state.is_stale is accessed (it re-stats the files each call)
+            Then it returns True
+
+        Scenario: AgentState.is_stale returns False when any JSONL file was modified within 120 seconds
+            Given at least one agent_events_*.jsonl file has mtime within the last 30 seconds
+            When state.is_stale is accessed
+            Then it returns False
+
+        Scenario: AgentState.is_stale returns False when worktree has no JSONL files yet
+            Given wt_path directory exists but contains no agent_events_*.jsonl files
+            When state.is_stale is accessed
+            Then it returns False (not stale — just not started yet)
+
+        Scenario: AgentState.is_done returns True only when all four phase labels are in done_phases
+            Given state.done_phases == ["PM-PLAN", "SE", "TESTER", "ACCEPT"]
+            When state.is_done is accessed
+            Then it returns True
+
+        Scenario: AgentState.is_done returns False when fewer than four phases are done
+            Given state.done_phases == ["PM-PLAN", "SE"]
+            When state.is_done is accessed
+            Then it returns False
+
+    Feature: Tool Call Formatting
+        As a developer building the dashboard
+        I want format_tool_call(tool, input_dict) to produce concise one-line action strings
+        So that the agent "thought process" is readable at a glance in the panel
+
+        format_tool_call(tool: str, input_dict: dict) -> str
+        Maps known tool names to short prefixes and extracts the most relevant input field.
+        The function lives in scripts/dashboard.py.
+
+        Scenario: format_tool_call formats read_file as "r: <path>"
+            Given tool="read_file" and input_dict={"path": "src/main.rs"}
+            When format_tool_call("read_file", {"path": "src/main.rs"}) is called
+            Then it returns "r: src/main.rs"
+
+        Scenario: format_tool_call formats write_file as "w: <path>"
+            Given tool="write_file" and input_dict={"path": "tests/test_foo.py", "content": "..."}
+            When format_tool_call("write_file", {"path": "tests/test_foo.py", "content": "..."}) is called
+            Then it returns "w: tests/test_foo.py" (content field ignored)
+
+        Scenario: format_tool_call formats bash as "$ <command>" truncated to 60 chars
+            Given tool="bash" and input_dict={"command": "cargo test --all -- --nocapture --test-threads=1 2>&1 | head"}
+            When format_tool_call("bash", input_dict) is called
+            Then the returned string starts with "$ " and the command portion is at most 60 characters
+
+        Scenario: format_tool_call formats run_command identically to bash
+            Given tool="run_command" and input_dict={"command": "pytest tests/ -v"}
+            When format_tool_call("run_command", {"command": "pytest tests/ -v"}) is called
+            Then it returns "$ pytest tests/ -v"
+
+        Scenario: format_tool_call formats edit_file as "e: <path>"
+            Given tool="edit_file" and input_dict={"path": "src/lib.rs", "old_string": "x", "new_string": "y"}
+            When format_tool_call("edit_file", {"path": "src/lib.rs", "old_string": "x", "new_string": "y"}) is called
+            Then it returns "e: src/lib.rs"
+
+        Scenario: format_tool_call uses generic "tool: value" format for unknown tools
+            Given tool="search_files" and input_dict={"pattern": "def authenticate"}
+            When format_tool_call("search_files", {"pattern": "def authenticate"}) is called
+            Then it returns "search_files: def authenticate"
+
+        Scenario: format_tool_call returns "r: ?" when path key is missing from input_dict for read_file
+            Given tool="read_file" and input_dict={} (empty dict)
+            When format_tool_call("read_file", {}) is called
+            Then it returns "r: ?" without raising a KeyError
+
+        Scenario: format_tool_call handles None input_dict without raising
+            Given tool="bash" and input_dict=None
+            When format_tool_call("bash", None) is called
+            Then it returns "$ ?" without raising an exception
+
+    Feature: Log Line Filtering
+        As a developer building the dashboard
+        I want is_log_noise(line: str) -> bool to classify each stdout line from orchestrate.py
+        So that the log strip panel shows only useful orchestrator-level output
+
+        is_log_noise(line) returns True for lines that should be suppressed (per-agent noise).
+        It returns False for lines that should be kept in the log buffer.
+        parse_wt_mapping_line(line) -> Optional[Tuple[str, str]] parses the
+        "  <scenario_name> → <wt_path>" lines that orchestrate.py prints when creating worktrees.
+        Both functions live in scripts/dashboard.py.
+
+        Scenario: is_log_noise returns True for TPS monitor lines matching "tok | X TPS |"
+            Given line = "  [My Scenario PM-PLAN] 1234 tok | 45.1 TPS | 30s"
+            When is_log_noise(line) is called
+            Then it returns True
+
+        Scenario: is_log_noise returns True for bracketed per-agent output lines
+            Given line = "  [My Scenario SE] Writing implementation..."
+            When is_log_noise(line) is called
+            Then it returns True (matches pattern r"^\s+\[.+?\] " with non-TPS content)
+
+        Scenario: is_log_noise returns False for round banner lines starting with "==="
+            Given line = "=== Round 2/3 — 2 scenario(s) ==="
+            When is_log_noise(line) is called
+            Then it returns False
+
+        Scenario: is_log_noise returns False for MERGED result lines
+            Given line = "    → MERGED"
+            When is_log_noise(line) is called
+            Then it returns False
+
+        Scenario: is_log_noise returns False for THROWN AWAY result lines
+            Given line = "    → THROWN AWAY (no commits — agent made no progress)"
+            When is_log_noise(line) is called
+            Then it returns False
+
+        Scenario: is_log_noise returns False for Pre-flight status lines
+            Given line = "  Pre-flight: OK"
+            When is_log_noise(line) is called
+            Then it returns False
+
+        Scenario: is_log_noise returns False for scenario-to-worktree mapping lines containing " → /tmp"
+            Given line = "  My Scenario → /tmp/baadd-wt-my-scenario-1234"
+            When is_log_noise(line) is called
+            Then it returns False
+
+        Scenario: is_log_noise returns False for empty lines
+            Given line = ""
+            When is_log_noise(line) is called
+            Then it returns False
+
+        Scenario: parse_wt_mapping_line extracts scenario name and worktree path
+            Given line = "  Enable verbose mode → /tmp/baadd-wt-enable-verbose-mode-5678"
+            When parse_wt_mapping_line(line) is called
+            Then it returns the tuple ("Enable verbose mode", "/tmp/baadd-wt-enable-verbose-mode-5678")
+
+        Scenario: parse_wt_mapping_line returns None for lines without " → /tmp"
+            Given line = "  Pre-flight: OK"
+            When parse_wt_mapping_line(line) is called
+            Then it returns None
+
+        Scenario: parse_wt_mapping_line returns None for empty string
+            Given line = ""
+            When parse_wt_mapping_line("") is called
+            Then it returns None
+
+        Scenario: log buffer is a deque(maxlen=10) that automatically discards oldest entries
+            Given 15 non-noise lines have been appended to a deque(maxlen=10)
+            When the deque is read
+            Then it contains exactly 10 entries — the 10 most recent kept lines
+
+    Feature: Dashboard Rendering Functions
+        As a developer building the dashboard
+        I want pure functions that build Rich renderables from AgentState data
+        So that rendering is testable without a real terminal
+
+        All rendering functions live in scripts/dashboard.py.
+        They return plain strings or rich.text.Text / rich.panel.Panel objects.
+        Tests call the functions and assert on the returned string content.
+
+        Scenario: format_phase_line returns correct string for two done phases and one active phase
+            Given done_phases=["PM-PLAN", "SE"], active_phase="TESTER", current_iter=31, max_iter=125
+            When format_phase_line(done_phases, active_phase, current_iter, max_iter) is called
+            Then the returned string contains "PM-PLAN✓", "SE✓", "TESTER", "31/125", and "─" for ACCEPT
+
+        Scenario: format_phase_line returns all checkmarks when all four phases are done
+            Given done_phases=["PM-PLAN", "SE", "TESTER", "ACCEPT"], active_phase=None
+            When format_phase_line(done_phases, None, 0, 125) is called
+            Then the returned string contains "PM-PLAN✓", "SE✓", "TESTER✓", "ACCEPT✓"
+
+        Scenario: format_phase_line returns four dashes when nothing has started
+            Given done_phases=[], active_phase=None
+            When format_phase_line([], None, 0, 125) is called
+            Then the returned string contains four "─" characters (one per phase)
+
+        Scenario: format_phase_line shows active phase with iteration count
+            Given done_phases=[], active_phase="PM-PLAN", current_iter=5, max_iter=125
+            When format_phase_line([], "PM-PLAN", 5, 125) is called
+            Then the returned string contains "PM-PLAN" and "5/125" and three "─" for the remaining phases
+
+        Scenario: render_progress_bar returns a string of bar_width unicode chars using "█" and "░"
+            Given current_iter=0, max_iter=125, bar_width=20
+            When render_progress_bar(0, 125, 20) is called
+            Then it returns "░░░░░░░░░░░░░░░░░░░░" (20 empty chars)
+
+        Scenario: render_progress_bar fills correct proportion at 50 percent
+            Given current_iter=62, max_iter=125 (approximately 49.6% ≈ 9 filled out of 20), bar_width=20
+            When render_progress_bar(62, 125, 20) is called
+            Then the returned string is exactly 20 chars and starts with "█████████░" (9 filled)
+
+        Scenario: render_progress_bar returns fully filled bar at 100 percent
+            Given current_iter=125, max_iter=125, bar_width=20
+            When render_progress_bar(125, 125, 20) is called
+            Then it returns "████████████████████" (20 filled chars)
+
+        Scenario: render_progress_bar clamps fill at 100 percent when current_iter exceeds max_iter
+            Given current_iter=200, max_iter=125, bar_width=20
+            When render_progress_bar(200, 125, 20) is called
+            Then it returns "████████████████████" (20 filled chars, no overflow or exception)
+
+        Scenario: render_progress_bar handles max_iter=0 without division-by-zero
+            Given current_iter=0, max_iter=0, bar_width=20
+            When render_progress_bar(0, 0, 20) is called
+            Then it returns "░░░░░░░░░░░░░░░░░░░░" without raising ZeroDivisionError
+
+        Scenario: format_metrics_line returns formatted tokens and TPS string
+            Given tokens=8321, tps=38.4
+            When format_metrics_line(8321, 38.4) is called
+            Then it returns "8,321 tok  38.4 TPS"
+
+        Scenario: format_metrics_line returns dash when tokens is zero
+            Given tokens=0, tps=0.0
+            When format_metrics_line(0, 0.0) is called
+            Then it returns "─" — not "0 tok  0.0 TPS"
+
+        Scenario: format_metrics_line computes TPS as tokens divided by elapsed_s
+            Given tokens=3600, elapsed_s=60
+            When format_metrics_line(3600, elapsed_s=60) is called
+            Then tps in the output is 60.0
+
+        Scenario: format_metrics_line does not divide by zero when elapsed_s is 0
+            Given tokens=100, elapsed_s=0
+            When format_metrics_line(100, elapsed_s=0) is called
+            Then it returns a string without raising ZeroDivisionError (tps shown as 0.0 or "─")
+
+        Scenario: format_elapsed returns seconds string for durations under 60 seconds
+            Given elapsed_s=45
+            When format_elapsed(45) is called
+            Then it returns "45s"
+
+        Scenario: format_elapsed returns minutes and zero-padded seconds for durations over 60 seconds
+            Given elapsed_s=185
+            When format_elapsed(185) is called
+            Then it returns "3m05s"
+
+        Scenario: format_elapsed returns "0s" for zero elapsed time
+            Given elapsed_s=0
+            When format_elapsed(0) is called
+            Then it returns "0s"
+
+        Scenario: build_agent_panel returns a rich.panel.Panel whose title is the scenario name
+            Given a valid AgentState with scenario_name="My Scenario"
+            When build_agent_panel(state) is called
+            Then isinstance(result, rich.panel.Panel) is True
+            And the panel's title contains "My Scenario"
+
+        Scenario: build_agent_panel appends "(stale)" to panel title when state.is_stale is True
+            Given a valid AgentState where is_stale returns True
+            When build_agent_panel(state) is called
+            Then the panel's title contains "(stale)"
+
+        Scenario: build_agent_panel does not include "(stale)" when state.is_stale is False
+            Given a valid AgentState where is_stale returns False
+            When build_agent_panel(state) is called
+            Then the panel's title does not contain "(stale)"
+
+        Scenario: format_header returns a string containing agent count and session elapsed time
+            Given 3 AgentState objects and session_start_ts = time.time() - 95
+            When format_header(states, session_start_ts) is called
+            Then the returned string contains "3 agents" and "1m35s"
+
+        Scenario: format_header returns "waiting for agents" string when states list is empty
+            Given states=[]
+            When format_header([], session_start_ts) is called
+            Then the returned string contains "waiting for agents"
+
+        Scenario: format_log_strip returns a string containing all lines from the log buffer
+            Given log_buffer = deque(["Pre-flight: OK", "→ MERGED", "Round 2/3 complete"])
+            When format_log_strip(log_buffer) is called
+            Then "Pre-flight: OK" and "→ MERGED" and "Round 2/3 complete" all appear in the returned string
+
+        Scenario: format_log_strip returns a placeholder string when log buffer is empty
+            Given log_buffer = deque([])
+            When format_log_strip(log_buffer) is called
+            Then it returns a non-empty string such as "(waiting for orchestrator output...)"
+
+        Scenario: build_renderable returns a rich.console.Group containing all agent panels plus header and log panels
+            Given 2 AgentState objects and a non-empty log_buffer
+            When build_renderable(states, log_buffer, session_start_ts) is called
+            Then isinstance(result, rich.console.Group) is True
+            And len(result.renderables) == 4 (header panel + 2 agent panels + log panel)
+
+        Scenario: build_renderable returns a Group with only header and log panels when states is empty
+            Given states=[] and empty log_buffer
+            When build_renderable([], log_buffer, session_start_ts) is called
+            Then isinstance(result, rich.console.Group) is True
+            And len(result.renderables) == 2 (header panel + log panel)
+
+    Feature: Wrapper Mode
+        As a developer who wants to replace running orchestrate.py directly
+        I want "python3 scripts/dashboard.py [args]" to launch orchestrate.py as a subprocess
+        So that I see the TUI instead of raw interleaved output
+
+        In wrapper mode (no --watch flag), dashboard.py runs:
+          subprocess.Popen(["python3", "scripts/orchestrate.py"] + pass_through_args,
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        A daemon threading.Thread reads proc.stdout line by line, calls is_log_noise() on each line,
+        appends non-noise lines to a deque(maxlen=10), and calls parse_wt_mapping_line() to build wt_map.
+        The main thread runs a rich.live.Live loop polling at poll_interval seconds.
+        When proc.poll() is not None the loop exits and sys.exit(proc.returncode) is called.
+
+        Scenario: wrapper mode constructs the subprocess command as ["python3", "scripts/orchestrate.py"] plus forwarded args
+            Given parse_args() returns Namespace(watch=False, refresh=2, pass_args=["--max-agents", "3"])
+            When build_subprocess_cmd(pass_args=["--max-agents", "3"]) is called
+            Then it returns ["python3", "scripts/orchestrate.py", "--max-agents", "3"]
+
+        Scenario: wrapper mode passes all unrecognised args through to orchestrate.py unchanged
+            Given dashboard.py is invoked with "python3 scripts/dashboard.py --max-agents 2 --max-rounds 3"
+            When the subprocess is constructed
+            Then orchestrate.py receives the argv ["--max-agents", "2", "--max-rounds", "3"]
+
+        Scenario: stdout reader thread calls is_log_noise on each line and only appends non-noise lines to log_buffer
+            Given a mock proc.stdout that yields ["  [Foo SE] detail", "→ MERGED", ""]
+            When the stdout reader thread processes those lines
+            Then log_buffer contains ["→ MERGED"] only — the bracketed agent line is filtered out
+
+        Scenario: stdout reader thread calls parse_wt_mapping_line and populates wt_map for matching lines
+            Given proc.stdout yields "  My Scenario → /tmp/baadd-wt-my-scenario-1"
+            When the stdout reader processes that line
+            Then wt_map == {"/tmp/baadd-wt-my-scenario-1": "My Scenario"}
+
+        Scenario: wrapper main loop calls sys.exit with orchestrate.py returncode when subprocess exits with 0
+            Given the subprocess exits with returncode 0
+            When the main loop detects proc.poll() is not None
+            Then sys.exit(0) is called
+
+        Scenario: wrapper main loop calls sys.exit with orchestrate.py returncode when subprocess exits with 1
+            Given the subprocess exits with returncode 1
+            When the main loop detects proc.poll() is not None
+            Then sys.exit(1) is called
+
+        Scenario: wrapper renders "waiting for agents" header when no worktrees exist yet
+            Given wt_map is empty and discover_worktrees returns []
+            When build_renderable([], log_buffer, session_start_ts) is rendered
+            Then the header panel contains "waiting for agents"
+
+        Scenario: wrapper adds a new agent panel when a worktree appears between polls
+            Given the first poll finds 1 worktree and the second poll finds 2 worktrees
+            When build_renderable is called on the second poll
+            Then it returns a Group containing 2 agent panels
+
+        Scenario: wrapper mode raises RuntimeError and prints clear message when scripts/orchestrate.py does not exist
+            Given "scripts/orchestrate.py" does not exist at the expected path
+            When the subprocess Popen call raises FileNotFoundError
+            Then dashboard.py prints "ERROR: scripts/orchestrate.py not found" and exits with code 1
+
+    Feature: Watcher Mode
+        As a developer who wants to monitor an already-running orchestration
+        I want "python3 scripts/dashboard.py --watch" to attach to existing worktrees
+        So that I can observe without launching a new orchestration
+
+        In watcher mode the subprocess is never started.
+        discover_worktrees() is called on every poll to find /tmp/baadd-wt-* paths.
+        The loop exits when discover_worktrees() has returned [] on two consecutive polls
+        (to avoid exiting prematurely if worktrees are being created).
+        After the Live context exits, it prints "All agents done." to stdout.
+
+        Scenario: --watch flag causes no subprocess to be started
+            Given dashboard.py is invoked with --watch
+            When run_watcher_mode() executes
+            Then subprocess.Popen is never called
+
+        Scenario: watcher mode calls discover_worktrees on every poll iteration
+            Given two polls occur with discover_worktrees returning ["/tmp/baadd-wt-foo-1"]
+            When run_watcher_mode() polls twice
+            Then discover_worktrees() has been called at least twice
+
+        Scenario: watcher exits after two consecutive empty polls from discover_worktrees
+            Given discover_worktrees returns [] on poll N and [] on poll N+1
+            When run_watcher_mode() processes poll N+1
+            Then the Live loop exits cleanly
+
+        Scenario: watcher does not exit after a single empty poll
+            Given discover_worktrees returns [] on poll N but ["/tmp/baadd-wt-foo"] on poll N-1
+            When run_watcher_mode() processes poll N
+            Then the loop continues (single empty result is not enough to exit)
+
+        Scenario: watcher prints "All agents done." to stdout after the Live context closes
+            Given all worktrees are cleaned up and watcher exits
+            When run_watcher_mode() returns
+            Then the console has printed "All agents done."
+
+        Scenario: watcher resolves scenario names from slug_to_name when no wt_map is available
+            Given discover_worktrees returns ["/tmp/baadd-wt-my-feature-42"] and wt_map is empty
+            When build_renderable is called
+            Then the agent panel title contains "my feature"
+
+    Feature: Dashboard CLI Arguments
+        As a developer using the dashboard
+        I want a clear argparse CLI in dashboard.py
+        So that both wrapper and watcher modes are easy to invoke and configure
+
+        parse_args() uses argparse.ArgumentParser with parse_known_args() so that unrecognised flags
+        are collected in a remainder list and forwarded to orchestrate.py in wrapper mode.
+        It returns a Namespace with: watch (bool), refresh (int), and pass_args (list of str).
+
+        Scenario: parse_args returns watch=False and mode is wrapper when --watch is absent
+            Given sys.argv = ["dashboard.py"]
+            When parse_args() is called
+            Then result.watch is False
+
+        Scenario: parse_args returns watch=True when --watch flag is present
+            Given sys.argv = ["dashboard.py", "--watch"]
+            When parse_args() is called
+            Then result.watch is True
+
+        Scenario: parse_args collects unrecognised flags into pass_args for forwarding
+            Given sys.argv = ["dashboard.py", "--max-agents", "2", "--max-rounds", "3"]
+            When parse_args() is called
+            Then result.pass_args == ["--max-agents", "2", "--max-rounds", "3"]
+
+        Scenario: parse_args --refresh sets poll interval
+            Given sys.argv = ["dashboard.py", "--refresh", "5"]
+            When parse_args() is called
+            Then result.refresh == 5
+
+        Scenario: parse_args default refresh interval is 2 seconds
+            Given sys.argv = ["dashboard.py"]
+            When parse_args() is called
+            Then result.refresh == 2
+
+        Scenario: --watch and --refresh can be combined with pass_args
+            Given sys.argv = ["dashboard.py", "--watch", "--refresh", "3", "--max-agents", "2"]
+            When parse_args() is called
+            Then result.watch is True, result.refresh == 3, result.pass_args == ["--max-agents", "2"]
+
+    Feature: Dashboard Error Handling and Edge Cases
+        As a developer using the dashboard
+        I want robust error handling throughout scripts/dashboard.py
+        So that the TUI never crashes or hangs due to environment issues
+
+        Scenario: Missing rich package causes immediate error with install instruction
+            Given "import rich" raises ImportError
+            When scripts/dashboard.py is executed
+            Then it prints "ERROR: rich not installed. Run: pip install rich" to stderr and exits with code 1
+
+        Scenario: KeyboardInterrupt during Live loop exits cleanly without traceback
+            Given the Live loop is running and the user presses Ctrl-C
+            When KeyboardInterrupt is raised inside the with Live(...) block
+            Then the exception is caught, the Live display is closed, and the process exits with code 0 — no traceback printed
+
+        Scenario: SIGTERM during wrapper mode terminates the subprocess before exiting
+            Given dashboard.py is in wrapper mode and receives SIGTERM
+            When the signal handler fires
+            Then proc.terminate() is called on the orchestrate.py subprocess before the process exits
+
+        Scenario: Worktree directory disappears between polls without crashing
+            Given a worktree path was valid on the previous poll but has been deleted (rm -rf)
+            When read_wt_state(vanished_wt_path) is called on the next poll
+            Then it returns a zeroed AgentState without raising FileNotFoundError
+
+        Scenario: glob finds no JSONL files in a worktree that exists but has not started yet
+            Given glob("agent_events_*.jsonl") returns [] for wt_path
+            When read_wt_state(wt_path) is called
+            Then state.active_phase is None and state.current_iter == 0 — no exception
+
+        Scenario: TPS calculation guards against division by zero when elapsed_s is 0
+            Given state.tokens=500 and state.elapsed_s returns 0.0
+            When format_metrics_line is called with those values
+            Then it does not raise ZeroDivisionError and returns a valid string
+
+        Scenario: Very long scenario name is truncated in panel title to prevent wrapping
+            Given state.scenario_name is a 120-character string
+            When build_agent_panel(state) is called
+            Then the panel title uses at most 60 characters of the scenario name (truncated with "…")
+
+        Scenario: render_progress_bar always returns a string of exactly bar_width characters
+            Given bar_width=20 and various current_iter and max_iter values
+            When render_progress_bar(current_iter, max_iter, bar_width) is called for each
+            Then len(result) == 20 in every case
+
+        Scenario: Dashboard handles zero-width terminal gracefully
+            Given Console().width returns a very small number (less than 40)
+            When build_renderable is called
+            Then it does not raise an exception — panels render with minimum content
+
+        Scenario: stdout reader thread sets a threading.Event when subprocess stdout is exhausted
+            Given the subprocess closes its stdout pipe (process ended)
+            When the stdout reader thread finishes reading
+            Then it sets a done_event so the main loop can detect process exit without polling returncode in a tight loop
