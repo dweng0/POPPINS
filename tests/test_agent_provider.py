@@ -53,6 +53,75 @@ print(result)
         os.unlink(script_path)
 
 
+# BDD: No provider detected error message
+def test_no_provider_detected_error_message():
+    """Test that agent.py prints error listing all supported provider env vars when no provider detected."""
+    scripts_dir = os.path.abspath("scripts")
+    agent_path = os.path.abspath("scripts/agent.py")
+    
+    test_script = """
+import os
+import sys
+sys.path.insert(0, 'SCRIPTS_DIR')
+
+# Clear all provider-related env vars
+for key in ['ANTHROPIC_API_KEY', 'MOONSHOT_API_KEY', 'DASHSCOPE_API_KEY', 
+            'OPENAI_API_KEY', 'GROQ_API_KEY', 'CUSTOM_API_KEY', 'CUSTOM_BASE_URL', 'OLLAMA_HOST']:
+    if key in os.environ:
+        del os.environ[key]
+
+from agent import detect_provider
+result = detect_provider()
+print("provider:" + str(result))
+""".replace('SCRIPTS_DIR', scripts_dir)
+    
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+        f.write(test_script)
+        script_path = f.name
+    
+    try:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Run the script with no provider env vars set and no poppins.yml
+            env = os.environ.copy()
+            for key in ['ANTHROPIC_API_KEY', 'MOONSHOT_API_KEY', 'DASHSCOPE_API_KEY', 
+                        'OPENAI_API_KEY', 'GROQ_API_KEY', 'CUSTOM_API_KEY', 'CUSTOM_BASE_URL', 'OLLAMA_HOST']:
+                env.pop(key, None)
+            env['PWD'] = tmpdir
+            
+            result = subprocess.run(
+                [sys.executable, script_path],
+                capture_output=True,
+                text=True,
+                env=env,
+                cwd=tmpdir,
+            )
+            
+            # detect_provider should return None
+            assert result.returncode == 0, f"Script failed: {result.stderr}"
+            assert result.stdout.strip() == "provider:None", f"Expected 'provider:None', got '{result.stdout.strip()}'"
+            
+            # Now test the full agent.py script with no stdin (should fail)
+            # Use absolute path for agent.py
+            result = subprocess.run(
+                [sys.executable, agent_path],
+                capture_output=True,
+                text=True,
+                env=env,
+                cwd=tmpdir,
+            )
+            
+            # Should exit with code 1 and print error message
+            assert result.returncode == 1, f"Expected exit code 1, got {result.returncode}"
+            assert "ERROR: No API key found" in result.stderr, f"Expected error message, got: {result.stderr}"
+            assert "ANTHROPIC_API_KEY" in result.stderr, "Error should list ANTHROPIC_API_KEY"
+            assert "MOONSHOT_API_KEY" in result.stderr, "Error should list MOONSHOT_API_KEY"
+            assert "DASHSCOPE_API_KEY" in result.stderr, "Error should list DASHSCOPE_API_KEY"
+            assert "OPENAI_API_KEY" in result.stderr, "Error should list OPENAI_API_KEY"
+            assert "GROQ_API_KEY" in result.stderr, "Error should list GROQ_API_KEY"
+    finally:
+        os.unlink(script_path)
+
+
 # BDD: Set OLLAMA_HOST from poppins.yml base_url
 def test_set_ollama_host_from_poppins_yml_base_url():
     """Test that OLLAMA_HOST is set from poppins.yml base_url (strips /v1 suffix)."""
