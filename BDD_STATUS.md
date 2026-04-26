@@ -18,7 +18,7 @@ Checked 333 scenario(s) across 19 test file(s).
 - [x] Exclude non-source directories from test search
 - [x] Detect coverage via BDD marker comment
 - [x] Detect coverage via marker with different comment style
-- [ ] UNCOVERED: Detect coverage via heuristic name matching
+- [x] Detect coverage via heuristic name matching
 - [x] Detect coverage via partial name matching
 - [ ] UNCOVERED: Report uncovered scenarios
 - [x] Exit with error code when scenarios uncovered
@@ -65,7 +65,7 @@ Checked 333 scenario(s) across 19 test file(s).
 - [ ] UNCOVERED: Edit file replaces only first occurrence
 - [x] List files excludes git and node_modules
 - [x] Search files finds pattern
-- [ ] UNCOVERED: Search files handles no matches
+- [x] Search files handles no matches
 
 ## Feature: Agent Loop and Iteration Management
 
@@ -436,10 +436,9 @@ Checked 333 scenario(s) across 19 test file(s).
 - [ ] UNCOVERED: stdout reader thread sets a threading.Event when subprocess stdout is exhausted
 
 ---
-**61/333 scenarios covered.**
+**63/333 scenarios covered.**
 
-272 scenario(s) need tests:
-- Detect coverage via heuristic name matching
+270 scenario(s) need tests:
 - Report uncovered scenarios
 - Provider priority order
 - No provider detected error message
@@ -458,7 +457,6 @@ Checked 333 scenario(s) across 19 test file(s).
 - Edit file replaces exact string
 - Edit file fails when string not found
 - Edit file replaces only first occurrence
-- Search files handles no matches
 - Agent stops at max iterations
 - Wrap-up reminder injected at threshold
 - Wrap-up reminder content for evolve mode
