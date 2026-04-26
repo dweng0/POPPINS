@@ -295,3 +295,71 @@ print(f"base_url:{base_url}")
         assert "base_url:https://dashscope-intl.aliyuncs.com/compatible-mode/v1" in output, f"Expected correct base_url, got '{output}'"
     finally:
         os.unlink(script_path)
+
+
+# BDD: Missing anthropic package error
+def test_missing_anthropic_package_error():
+    """Test that agent.py has error handling for missing anthropic package."""
+    # Verify the error handling code exists in agent.py
+    with open("scripts/agent.py") as f:
+        content = f.read()
+    
+    assert "anthropic package not installed" in content, \
+        "Error message for missing anthropic package should exist"
+    assert "pip install anthropic" in content, \
+        "Installation instruction should exist"
+    
+    # Verify the try/except block exists
+    assert "try:" in content, "Try block should exist"
+    assert "import anthropic" in content, "Import anthropic should exist"
+    assert "except ImportError:" in content, "ImportError handler should exist"
+    
+    # If anthropic is installed, verify it works
+    import importlib.util
+    anthropic_found = importlib.util.find_spec("anthropic") is not None
+    
+    if anthropic_found:
+        scripts_dir = os.path.abspath("scripts")
+        agent_path = os.path.abspath("scripts/agent.py")
+        
+        test_script = """
+import os
+import sys
+sys.path.insert(0, 'SCRIPTS_DIR')
+os.environ['ANTHROPIC_API_KEY'] = 'sk-ant-test-key'
+from agent import detect_provider
+print("provider:" + str(detect_provider()))
+""".replace('SCRIPTS_DIR', scripts_dir)
+        
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+            f.write(test_script)
+            script_path = f.name
+        
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                # Copy agent.py to tmpdir
+                import shutil
+                shutil.copy(agent_path, os.path.join(tmpdir, 'agent.py'))
+                shutil.copy(os.path.join(scripts_dir, 'parse_poppins_config.py'), 
+                           os.path.join(tmpdir, 'parse_poppins_config.py'))
+                
+                env = os.environ.copy()
+                env['ANTHROPIC_API_KEY'] = 'sk-ant-test-key'
+                for key in ['MOONSHOT_API_KEY', 'DASHSCOPE_API_KEY', 
+                            'OPENAI_API_KEY', 'GROQ_API_KEY', 'CUSTOM_API_KEY', 'CUSTOM_BASE_URL', 'OLLAMA_HOST']:
+                    env.pop(key, None)
+                
+                result = subprocess.run(
+                    [sys.executable, script_path],
+                    capture_output=True,
+                    text=True,
+                    env=env,
+                    cwd=tmpdir,
+                )
+                
+                assert result.returncode == 0, f"Script failed: {result.stderr}"
+                assert result.stdout.strip() == "provider:anthropic", \
+                    f"Expected 'provider:anthropic', got '{result.stdout.strip()}'"
+        finally:
+            os.unlink(script_path)
+

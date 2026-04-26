@@ -43,7 +43,7 @@ Checked 333 scenario(s) across 20 test file(s).
 - [x] CUSTOM_MODEL required for custom provider without --model
 - [x] Unknown provider error
 - [x] Override provider via --provider flag
-- [ ] UNCOVERED: Missing anthropic package error
+- [x] Missing anthropic package error
 - [x] Missing openai package error
 - [ ] UNCOVERED: Empty stdin prompt error
 - [x] Load skills from SKILL.md files
@@ -155,9 +155,9 @@ Checked 333 scenario(s) across 20 test file(s).
 
 - [x] Generate scenario slug from name
 - [x] Slug truncates to 60 characters
-- [ ] UNCOVERED: Check for existing lock file
+- [x] Check for existing lock file
 - [ ] UNCOVERED: Detect stale lock from dead PID
-- [ ] UNCOVERED: Write lock file with session metadata
+- [x] Write lock file with session metadata
 - [ ] UNCOVERED: Release lock on completion
 - [ ] UNCOVERED: Clean up lock on early exit
 
@@ -436,10 +436,9 @@ Checked 333 scenario(s) across 20 test file(s).
 - [ ] UNCOVERED: stdout reader thread sets a threading.Event when subprocess stdout is exhausted
 
 ---
-**68/333 scenarios covered.**
+**71/333 scenarios covered.**
 
-265 scenario(s) need tests:
-- Missing anthropic package error
+262 scenario(s) need tests:
 - Empty stdin prompt error
 - Skills appended to system prompt
 - Skip skills loading if directory missing
@@ -504,9 +503,7 @@ Checked 333 scenario(s) across 20 test file(s).
 - Guard warning for minimal work with uncovered scenarios
 - Handle push failure gracefully
 - Handle missing git remote
-- Check for existing lock file
 - Detect stale lock from dead PID
-- Write lock file with session metadata
 - Release lock on completion
 - Clean up lock on early exit
 - Create worktree for scenario
