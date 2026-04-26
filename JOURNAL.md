@@ -1,6 +1,15 @@
 # Journal
 
 
+## 2026-04-26 20:37 — Orchestrator session
+
+Ran 4 agents across 1 round(s) (max 4 concurrent per round). Total agent time: 4113s.
+
+**Failed (4):** Provider priority order, CUSTOM_MODEL required for custom provider without --model, No provider detected error message, Override provider via --provider flag
+
+Coverage: 65/333 scenarios.
+
+
 ## 2026-04-13 08:15 — Orchestrator session
 
 Ran 2 agents across 1 round(s) (max 2 concurrent per round). Total agent time: 1535s.
