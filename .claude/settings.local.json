@@ -36,7 +36,8 @@
       "Bash(curl -s http://192.168.1.112:1234/v1/models)",
       "Bash(ls -la /home/jay/projects/BAADD/scripts/*.py)",
       "Bash(wc -l /home/jay/projects/BAADD/scripts/*.py)",
-      "Bash(git -C /home/jay/projects/BAADD log --oneline)"
+      "Bash(git -C /home/jay/projects/BAADD log --oneline)",
+      "Bash([ -f \"locks/$SLUG.lock\" ])"
     ]
   }
 }

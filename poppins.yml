@@ -3,7 +3,7 @@
 
 orchestration:
   # Maximum number of parallel worker agents (each gets its own worktree)
-  max_parallel_agents: 2
+  max_parallel_agents: 4
   max_rounds: 1
 
   # LLM provider for the scenario ordering call
