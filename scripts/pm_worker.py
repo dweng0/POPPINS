@@ -55,34 +55,6 @@ PROTECTED_PATHS = _poppins_cfg.get("agent", {}).get("protected_paths") or [
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _get_protected_paths_constraint():
-    """Generate the constraint text from PROTECTED_PATHS configuration."""
-    paths = PROTECTED_PATHS.copy()
-    files = []
-    dirs = []
-    
-    # Separate files and directories
-    for p in paths:
-        if p.endswith("/"):
-            d = p.rstrip("/")
-            if d not in dirs:
-                dirs.append(d)
-        else:
-            if p not in files:
-                files.append(p)
-    
-    lines = []
-    if dirs:
-        for d in dirs:
-            lines.append(f"- Do NOT modify ANY existing file under `{d}/`")
-    if files:
-        lines.append(f"- Do NOT modify: {', '.join(f'`{f}`' for f in files)}")
-    
-    # Always include the management files constraint
-    lines.append("- Do NOT modify BDD.md, PLAN.md, IDENTITY.md, QA_REPORT.md, RETRY_NOTES.md")
-    return "\n".join(lines)
-
-
 def check_se_protected_files(wt_path):
     """Return list of protected files the SE modified. Empty = clean."""
     diff_out, _, _ = run_cmd(
@@ -353,7 +325,10 @@ Read PLAN.md now before doing anything else.
 === CONSTRAINTS (absolute — no exceptions) ===
 
 - Do NOT run any git command (no git add, git commit, git checkout, git status)
-{protected_paths_constraint}
+- Do NOT modify BDD.md, PLAN.md, IDENTITY.md, QA_REPORT.md, RETRY_NOTES.md
+- Do NOT modify ANY existing file in scripts/ — those are shared infrastructure.
+  If PLAN.md says to add a function to an existing script, use edit_file to ADD
+  the function only; never rewrite the whole file.
 - Do NOT use sed, awk, or shell redirection to modify files — use edit_file only
 - Do NOT deviate from the design in PLAN.md — implement exactly what it specifies
 - If something in PLAN.md looks wrong, implement it as written anyway; the PM
@@ -812,7 +787,6 @@ def run_pm_pipeline(scenario_name, scenario_text, wt_path, branch, main_dir, con
             branch=branch,
             scenario_name=scenario_name,
             retry_section=retry_section,
-            protected_paths_constraint=_get_protected_paths_constraint(),
         )
         stdout, rc, phase_elapsed = run_agent(
             se_prompt, wt_path, main_dir, provider, model,
@@ -832,7 +806,10 @@ def run_pm_pipeline(scenario_name, scenario_text, wt_path, branch, main_dir, con
                 "# Retry Notes\n\n"
                 "The SE modified files that are strictly off-limits:\n\n"
                 + "".join(f"- `{v}`\n" for v in violations)
-                + "\n" + _get_protected_paths_constraint() + "\n"
+                + "\nDo NOT touch any file under `scripts/`, `.github/`, "
+                "`IDENTITY.md`, `BDD.md`, or `conftest.py`.\n"
+                "These are shared infrastructure — they must never be rewritten.\n"
+                "Only create or edit files under `src/`, `tests/`, or `tools/`.\n"
             )
             with open(os.path.join(wt_path, "RETRY_NOTES.md"), "w") as f:
                 f.write(retry_notes)
