@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import MagicMock, patch
 # Import the specific components needed from their respective locations
 # NOTE: The test for unknown provider relies on internal structure (PROVIDER_CONFIGS) which we are not implementing in scope, 

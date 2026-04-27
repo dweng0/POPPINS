@@ -24,7 +24,7 @@ import subprocess
 import sys
 import threading
 import time
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 try:
     from rich.console import Console, Group

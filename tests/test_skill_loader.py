@@ -1,7 +1,6 @@
 import os
 import sys
 import tempfile
-import pytest
 from scripts.skill_loader import load_skills
 
 

@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """Tests for verify_issue_trust.py"""
 
-import json
 import os
 import sys
-import tempfile
 from unittest.mock import patch, MagicMock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))

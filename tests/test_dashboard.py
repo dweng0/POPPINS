@@ -80,7 +80,8 @@ def test_agent_state_elapsed_s_property_returns_seconds_since_start_ts():
 
 # BDD: Rich is the only third-party import in dashboard.py
 def test_dashboard_only_imports_rich():
-    import ast, pathlib
+    import ast
+    import pathlib
     src = (pathlib.Path(__file__).parent.parent / "scripts" / "dashboard.py").read_text()
     tree = ast.parse(src)
     stdlib_and_allowed = {

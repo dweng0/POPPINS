@@ -1,7 +1,6 @@
 import os
 import sys
 import subprocess
-import pytest
 
 sys.path.insert(0, os.path.abspath("scripts"))
 from agent import make_wrap_up_message, estimate_tokens, trim_context

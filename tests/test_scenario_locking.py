@@ -109,7 +109,7 @@ def test_clean_up_lock_on_early_exit():
         slug = "my-test-scenario"
         lock_path = os.path.join(locks_dir, f"{slug}.lock")
         with open(lock_path, "w") as f:
-            f.write(f"PID=99999\nSCENARIO=My Test Scenario\nDATE=2026-01-01\n")
+            f.write("PID=99999\nSCENARIO=My Test Scenario\nDATE=2026-01-01\n")
         assert os.path.exists(lock_path)
 
         # Run a bash script that sources cleanup_worktree from evolve.sh and calls it

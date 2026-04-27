@@ -8,7 +8,6 @@ import tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 from parse_poppins_config import get_config
-import tempfile
 
 
 # BDD: Parse YAML frontmatter from BDD.md

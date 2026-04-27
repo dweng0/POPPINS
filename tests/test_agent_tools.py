@@ -3,7 +3,6 @@ import sys
 import tempfile
 import subprocess
 from unittest.mock import patch
-import pytest
 
 sys.path.insert(0, os.path.abspath("scripts"))
 from agent import run_tool

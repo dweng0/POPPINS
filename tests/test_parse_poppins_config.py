@@ -38,7 +38,9 @@ def test_parse_poppins_yml_with_agent_section():
 
 # BDD: Deep merge file config with defaults
 def test_deep_merge_file_config_with_defaults():
-    import importlib.util, sys, os, tempfile, yaml
+    import importlib.util
+    import os
+    import tempfile
 
     script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     config_path = os.path.join(script_dir, "scripts", "parse_poppins_config.py")

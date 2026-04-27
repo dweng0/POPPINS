@@ -889,7 +889,7 @@ def main():
         print(f"  Using cached scenario order from {SCENARIO_ORDER_FILE}", flush=True)
     else:
         if cached is not None:
-            print(f"  Cached order stale (new scenarios in BDD.md) — re-ordering...", flush=True)
+            print("  Cached order stale (new scenarios in BDD.md) — re-ordering...", flush=True)
         else:
             print("  Ordering scenarios...", flush=True)
         ordered_names = plan_scenario_order(

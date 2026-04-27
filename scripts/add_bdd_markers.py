@@ -47,6 +47,75 @@ def detect_comment_prefix(filepath):
     return COMMENT_PREFIX.get(ext, "#")
 
 
+def compute_planned_changes(scenarios, test_contents):
+    """For each scenario, checks if a marker already exists; if not, searches test
+    files for a matching test line via find_test_line(). Returns a list of dicts
+    with keys scenario_name, filepath, line_index, prefix, match_type.
+
+    Pure logic — no filesystem I/O.
+    """
+    planned = []
+
+    for feature, scenario_name in scenarios:
+        # Already has an explicit marker?
+        if check_marker(scenario_name, test_contents):
+            continue
+
+        # Try to find a matching test via heuristic
+        found_in = None
+        found_line = None
+        match_type = None
+
+        for path, content in test_contents.items():
+            line_idx, mtype = find_test_line(content, scenario_name)
+            if line_idx is not None:
+                found_in = path
+                found_line = line_idx
+                match_type = mtype
+                break
+
+        if found_in is None:
+            continue
+
+        prefix = detect_comment_prefix(found_in)
+        planned.append({
+            "scenario_name": scenario_name,
+            "filepath": found_in,
+            "line_index": found_line,
+            "prefix": prefix,
+            "match_type": match_type,
+        })
+
+    return planned
+
+
+def format_output(planned, applied_count, skipped_has_marker, skipped_no_match, apply_mode):
+    """Formats the terminal output for dry-run or apply mode.
+
+    When apply_mode=False, each planned change is prefixed with [would add].
+    When apply_mode=True, each change is prefixed with [add].
+    Returns the full output string including summary lines.
+    """
+    prefix_label = "[add]" if apply_mode else "[would add]"
+    lines = []
+
+    for change in planned:
+        lines.append(f"  {prefix_label} {change['scenario_name']}")
+        lines.append(
+            f"              → {change['filepath']}:{change['line_index'] + 1} ({change['match_type']})"
+        )
+
+    action_word = "Applied" if apply_mode else "Would apply"
+    lines.append(f"\n{action_word}: {applied_count} marker(s)")
+    lines.append(f"Already marked: {skipped_has_marker}")
+    lines.append(f"No test found:  {skipped_no_match}")
+
+    if not apply_mode and applied_count > 0:
+        lines.append("\nRe-run with --apply to modify files:")
+
+    return "\n".join(lines)
+
+
 def find_test_line(content, scenario_name):
     """Find the line number where a test matching this scenario starts.
     Returns (line_index, match_type) or (None, None)."""

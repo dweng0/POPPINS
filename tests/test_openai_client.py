@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import Mock
 from agents.providers.openai_client import try_initialize_openai # Assuming this path based on PLAN.md
 

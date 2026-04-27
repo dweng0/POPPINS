@@ -669,7 +669,7 @@ def _record_failed_pipeline(scenario_name, wt_path, main_dir, log):
     with open(failed_path, "a") as f:
         f.write(entry)
 
-    log(f"Recorded failure in FAILED_PIPELINES.md")
+    log("Recorded failure in FAILED_PIPELINES.md")
 
 
 # ---------------------------------------------------------------------------
@@ -703,7 +703,7 @@ def run_pm_pipeline(scenario_name, scenario_text, wt_path, branch, main_dir, con
     # Pipeline header
     # -----------------------------------------------------------------------
     log(f"{'='*60}")
-    log(f"PIPELINE START")
+    log("PIPELINE START")
     log(f"  scenario : {scenario_name}")
     log(f"  branch   : {branch}")
     log(f"  worktree : {wt_path}")
@@ -714,7 +714,7 @@ def run_pm_pipeline(scenario_name, scenario_text, wt_path, branch, main_dir, con
     # -----------------------------------------------------------------------
     # Phase 1: PM designs
     # -----------------------------------------------------------------------
-    log(f"--- PHASE 1: PM PLAN ---")
+    log("--- PHASE 1: PM PLAN ---")
     log(f"Scenario text injected ({len(scenario_text)} chars)")
 
     plan_prompt = PM_PLAN_PROMPT.format(
@@ -800,7 +800,7 @@ def run_pm_pipeline(scenario_name, scenario_text, wt_path, branch, main_dir, con
         violations = check_se_protected_files(wt_path)
         if violations:
             log(f"HARD REJECT: SE modified protected file(s): {violations}")
-            log(f"Resetting and writing RETRY_NOTES before next attempt")
+            log("Resetting and writing RETRY_NOTES before next attempt")
             run_cmd("git checkout -- . 2>&1", cwd=wt_path)
             retry_notes = (
                 "# Retry Notes\n\n"
@@ -823,7 +823,7 @@ def run_pm_pipeline(scenario_name, scenario_text, wt_path, branch, main_dir, con
         if marker_out.strip():
             log(f"Marker pre-check: FOUND — {marker_out.strip().splitlines()[0]}")
         else:
-            log(f"Marker pre-check: WARN — marker not found yet (tester will confirm)")
+            log("Marker pre-check: WARN — marker not found yet (tester will confirm)")
 
         log(f"--- PHASE 3: TESTER QA  attempt {attempt}/{MAX_RETRIES} ---")
         retry_context = ""
@@ -956,7 +956,7 @@ def run_pm_pipeline(scenario_name, scenario_text, wt_path, branch, main_dir, con
     # Pipeline summary
     # -----------------------------------------------------------------------
     log(f"{'='*60}")
-    log(f"PIPELINE COMPLETE")
+    log("PIPELINE COMPLETE")
     log(f"  accepted   : {accepted}")
     log(f"  commits    : {commit_count}")
     log(f"  tests pass : {tests_pass} (rc={test_rc})")
