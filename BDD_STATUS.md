@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 333 scenario(s) across 26 test file(s).
+Checked 333 scenario(s) across 27 test file(s).
 
 
 ## Feature: BDD Specification Parser
@@ -129,27 +129,27 @@ Checked 333 scenario(s) across 26 test file(s).
 ## Feature: Evolution Script
 
 - [x] Load BDD config before session
-- [ ] UNCOVERED: Check starting build state
-- [ ] UNCOVERED: Continue with failing tests
-- [ ] UNCOVERED: Exit if build broken at start
-- [ ] UNCOVERED: Fetch trusted GitHub issues
-- [ ] UNCOVERED: Generate issues file for agent
-- [ ] UNCOVERED: Pre-compute coverage before session
-- [ ] UNCOVERED: Detect test-only anti-pattern
-- [ ] UNCOVERED: Retry fix on build failure
-- [ ] UNCOVERED: Revert session on persistent failure
-- [ ] UNCOVERED: Write journal if agent skipped
+- [x] Check starting build state
+- [x] Continue with failing tests
+- [x] Exit if build broken at start
+- [x] Fetch trusted GitHub issues
+- [x] Generate issues file for agent
+- [x] Pre-compute coverage before session
+- [x] Detect test-only anti-pattern
+- [x] Retry fix on build failure
+- [x] Revert session on persistent failure
+- [x] Write journal if agent skipped
 - [x] Write fallback journal if agent still skips
-- [ ] UNCOVERED: Update journal index after session
-- [ ] UNCOVERED: Comment and close implemented issues
-- [ ] UNCOVERED: Push changes after session
-- [ ] UNCOVERED: Track session start SHA for rollback
+- [x] Update journal index after session
+- [x] Comment and close implemented issues
+- [x] Push changes after session
+- [x] Track session start SHA for rollback
 - [x] Exclude management files from worktree commits
-- [ ] UNCOVERED: Branch naming convention with timestamp
-- [ ] UNCOVERED: Calculate has_work flag
+- [x] Branch naming convention with timestamp
+- [x] Calculate has_work flag
 - [ ] UNCOVERED: Guard warning for minimal work with uncovered scenarios
-- [ ] UNCOVERED: Handle push failure gracefully
-- [ ] UNCOVERED: Handle missing git remote
+- [x] Handle push failure gracefully
+- [x] Handle missing git remote
 
 ## Feature: Scenario Locking for Parallel Execution
 
@@ -288,7 +288,7 @@ Checked 333 scenario(s) across 26 test file(s).
 - [x] Bootstrap mode agent prompt
 - [ ] UNCOVERED: Handle scenario with special characters in name
 - [ ] UNCOVERED: Handle concurrent scenario locks
-- [ ] UNCOVERED: Issue response file format parsing
+- [x] Issue response file format parsing
 
 ## Feature: Dashboard — scripts/dashboard.py (Python, Rich TUI)
 
@@ -436,28 +436,10 @@ Checked 333 scenario(s) across 26 test file(s).
 - [ ] UNCOVERED: stdout reader thread sets a threading.Event when subprocess stdout is exhausted
 
 ---
-**120/333 scenarios covered.**
+**139/333 scenarios covered.**
 
-213 scenario(s) need tests:
-- Check starting build state
-- Continue with failing tests
-- Exit if build broken at start
-- Fetch trusted GitHub issues
-- Generate issues file for agent
-- Pre-compute coverage before session
-- Detect test-only anti-pattern
-- Retry fix on build failure
-- Revert session on persistent failure
-- Write journal if agent skipped
-- Update journal index after session
-- Comment and close implemented issues
-- Push changes after session
-- Track session start SHA for rollback
-- Branch naming convention with timestamp
-- Calculate has_work flag
+194 scenario(s) need tests:
 - Guard warning for minimal work with uncovered scenarios
-- Handle push failure gracefully
-- Handle missing git remote
 - Detect stale lock from dead PID
 - Release lock on completion
 - Clean up lock on early exit
@@ -550,7 +532,6 @@ Checked 333 scenario(s) across 26 test file(s).
 - Mode flag affects wrap-up message content
 - Handle scenario with special characters in name
 - Handle concurrent scenario locks
-- Issue response file format parsing
 - Dashboard file exists at scripts/dashboard.py
 - Running "python3 scripts/dashboard.py" opens the Rich TUI immediately
 - The dashboard is only for scripts/orchestrate.py — not evolve.sh or agent.py
