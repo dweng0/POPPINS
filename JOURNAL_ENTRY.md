@@ -1,0 +1,3 @@
+## 2026-04-27 21:39 — Setup Node dependencies
+
+The PM designed a content-based test (`tests/test_setup_env.py`) that reads `scripts/setup_env.sh` and verifies the `node|javascript)` case block contains a `package.json` existence check and `npm install` command. The SE implemented the test with three assertions matching the PLAN spec: the case block exists, `[ -f package.json ]` is present, and `npm install` runs inside it. The QA tester confirmed all four acceptance checks passed — marker is correct, all 143 tests pass, BDD coverage shows the scenario as covered, and the implementation complies with the design (no port/adapter split needed for a shell script content test).
