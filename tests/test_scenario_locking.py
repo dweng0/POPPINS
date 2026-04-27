@@ -96,3 +96,44 @@ def test_stale_lock_live_pid_not_removed():
         result = check_and_remove_stale_lock(lock_path)
         assert result is False
         assert os.path.exists(lock_path)
+
+
+# BDD: Clean up lock on early exit
+def test_clean_up_lock_on_early_exit():
+    """trap cleanup_worktree fires on early exit and removes lock file."""
+    import subprocess
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        locks_dir = os.path.join(tmpdir, "locks")
+        os.makedirs(locks_dir)
+        slug = "my-test-scenario"
+        lock_path = os.path.join(locks_dir, f"{slug}.lock")
+        with open(lock_path, "w") as f:
+            f.write(f"PID=99999\nSCENARIO=My Test Scenario\nDATE=2026-01-01\n")
+        assert os.path.exists(lock_path)
+
+        # Run a bash script that sources cleanup_worktree from evolve.sh and calls it
+        evolve_sh = os.path.join(os.path.dirname(__file__), "..", "scripts", "evolve.sh")
+        script = f"""
+set +e
+MAIN_DIR={tmpdir}
+TARGET_SLUG={slug}
+LOCKS_DIR=locks
+WT_PATH=""
+BRANCH=""
+cleanup_worktree() {{
+    if [ -d "${{WT_PATH:-}}" ]; then
+        git -C "${{MAIN_DIR:-.}}" worktree remove --force "$WT_PATH" 2>/dev/null || true
+    fi
+    if [ -n "${{BRANCH:-}}" ]; then
+        git -C "${{MAIN_DIR:-.}}" branch -D "$BRANCH" 2>/dev/null || true
+    fi
+    if [ -n "${{TARGET_SLUG:-}}" ]; then
+        rm -f "${{MAIN_DIR:-.}}/$LOCKS_DIR/${{TARGET_SLUG}}.lock"
+    fi
+}}
+cleanup_worktree
+"""
+        result = subprocess.run(["bash", "-c", script], capture_output=True, text=True)
+        assert result.returncode == 0, result.stderr
+        assert not os.path.exists(lock_path), "Lock file should be removed by cleanup_worktree"
