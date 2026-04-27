@@ -58,6 +58,16 @@ def test_dashboard_has_main():
     assert callable(getattr(dashboard, "main", None)), "dashboard.py must define a main() function"
 
 
+# BDD: AgentState is a dataclass with the required fields
+def test_agentstate_is_a_dataclass_with_the_required_fields():
+    import dataclasses
+    from dashboard import AgentState
+    assert dataclasses.is_dataclass(AgentState), "AgentState must be decorated with @dataclass"
+    field_names = {f.name for f in dataclasses.fields(AgentState)}
+    expected = {"wt_path", "scenario_name", "active_phase", "done_phases", "current_iter", "max_iter", "tokens", "last_tools", "start_ts"}
+    assert field_names == expected, f"Expected fields {expected}, got {field_names}"
+
+
 # BDD: Rich is the only third-party import in dashboard.py
 def test_dashboard_only_imports_rich():
     import ast, pathlib
