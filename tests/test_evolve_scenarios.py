@@ -279,6 +279,25 @@ def test_evolve_handles_push_failure():
     assert "failed" in content.lower() or "check" in content.lower()
 
 
+# BDD: Guard warning for minimal work with uncovered scenarios
+def test_evolve_guard_warning_minimal_work():
+    """Test that evolve.sh prints warning when agent made few commits but scenarios remain uncovered."""
+    evolve_path = os.path.join(
+        os.path.dirname(__file__), "..", "scripts", "evolve.sh"
+    )
+
+    with open(evolve_path) as f:
+        content = f.read()
+
+    # Script must have a guard that warns when commits are low but uncovered scenarios remain
+    assert "WARNING" in content or "warning" in content.lower()
+    # Must reference commits made vs uncovered scenarios
+    assert "COMMITS_MADE" in content or "commits" in content.lower()
+    assert "uncovered" in content.lower() or "COVERED" in content
+    # Must mention skipping implementation
+    assert "skip" in content.lower() or "skipped" in content.lower()
+
+
 # BDD: Handle missing git remote
 def test_evolve_handles_missing_git_remote():
     """Test that evolve.sh handles missing git remote gracefully."""
