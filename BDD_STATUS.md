@@ -159,7 +159,7 @@ Checked 333 scenario(s) across 28 test file(s).
 - [x] Detect stale lock from dead PID
 - [x] Write lock file with session metadata
 - [x] Release lock on completion
-- [ ] UNCOVERED: Clean up lock on early exit
+- [x] Clean up lock on early exit
 
 ## Feature: Git Worktree Isolation
 
@@ -436,10 +436,9 @@ Checked 333 scenario(s) across 28 test file(s).
 - [ ] UNCOVERED: stdout reader thread sets a threading.Event when subprocess stdout is exhausted
 
 ---
-**150/333 scenarios covered.**
+**151/333 scenarios covered.**
 
-183 scenario(s) need tests:
-- Clean up lock on early exit
+182 scenario(s) need tests:
 - Find uncovered scenarios for orchestration
 - AI-powered scenario ordering
 - Fallback to BDD.md order on AI failure
