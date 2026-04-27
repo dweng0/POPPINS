@@ -58,6 +58,7 @@ def test_dashboard_has_main():
     assert callable(getattr(dashboard, "main", None)), "dashboard.py must define a main() function"
 
 
+<<<<<<< HEAD
 # BDD: AgentState is a dataclass with the required fields
 def test_agentstate_is_a_dataclass_with_the_required_fields():
     import dataclasses
@@ -66,6 +67,16 @@ def test_agentstate_is_a_dataclass_with_the_required_fields():
     field_names = {f.name for f in dataclasses.fields(AgentState)}
     expected = {"wt_path", "scenario_name", "active_phase", "done_phases", "current_iter", "max_iter", "tokens", "last_tools", "start_ts"}
     assert field_names == expected, f"Expected fields {expected}, got {field_names}"
+=======
+# BDD: AgentState.elapsed_s property returns seconds since start_ts
+def test_agent_state_elapsed_s_property_returns_seconds_since_start_ts():
+    import time
+    from dashboard import AgentState
+    state = AgentState(wt_path="/tmp/test", scenario_name="test", start_ts=time.time() - 60)
+    result = state.elapsed_s
+    assert isinstance(result, float)
+    assert 59.0 <= result <= 61.0
+>>>>>>> agent/agentstate-elapsed-s-property-returns-seconds-since-start-ts-20260427-192733
 
 
 # BDD: Rich is the only third-party import in dashboard.py
