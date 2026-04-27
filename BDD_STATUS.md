@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 333 scenario(s) across 23 test file(s).
+Checked 333 scenario(s) across 24 test file(s).
 
 
 ## Feature: BDD Specification Parser
@@ -101,10 +101,10 @@ Checked 333 scenario(s) across 23 test file(s).
 
 ## Feature: GitHub Issue Trust Verification
 
-- [ ] UNCOVERED: Trust repo owner's issues directly
-- [ ] UNCOVERED: Trust community issue with agent-approved label from owner
-- [ ] UNCOVERED: Reject community issue with agent-approved from non-owner
-- [ ] UNCOVERED: Verify label applier via GitHub events API
+- [x] Trust repo owner's issues directly
+- [x] Trust community issue with agent-approved label from owner
+- [x] Reject community issue with agent-approved from non-owner
+- [x] Verify label applier via GitHub events API
 
 ## Feature: Issue Formatting for Agent
 
@@ -436,13 +436,9 @@ Checked 333 scenario(s) across 23 test file(s).
 - [ ] UNCOVERED: stdout reader thread sets a threading.Event when subprocess stdout is exhausted
 
 ---
-**101/333 scenarios covered.**
+**105/333 scenarios covered.**
 
-232 scenario(s) need tests:
-- Trust repo owner's issues directly
-- Trust community issue with agent-approved label from owner
-- Reject community issue with agent-approved from non-owner
-- Verify label applier via GitHub events API
+228 scenario(s) need tests:
 - Format issue as markdown
 - Truncate long issue body
 - Sort issues by reaction count
