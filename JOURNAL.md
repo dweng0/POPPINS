@@ -1,6 +1,15 @@
 # Journal
 
 
+## 2026-04-27 19:24 — Orchestrator session
+
+Ran 2 agents across 1 round(s) (max 2 concurrent per round). Total agent time: 447s.
+
+**Failed (2):** AgentState.elapsed_s property returns seconds since start_ts, AgentState is a dataclass with the required fields
+
+Coverage: 99/333 scenarios.
+
+
 ## 2026-04-26 22:05 — Orchestrator session
 
 Ran 4 agents across 1 round(s) (max 4 concurrent per round). Total agent time: 4s.
