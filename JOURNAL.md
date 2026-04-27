@@ -1,5 +1,10 @@
 # Journal
 
+## 2026-04-27 21:39 — Setup Python dependencies
+
+The PM designed a content-verification test for the `scripts/setup_env.sh` shell script, asserting it contains a `python)` case with a `requirements.txt` existence guard and `pip install -r requirements.txt` command. The SE built `tests/test_setup_env.py` with `test_setup_python_dependencies` that reads the shell script and verifies all three assertions via string matching. The tester confirmed all 143 tests pass, the BDD marker is correctly placed, coverage shows `[x]` for this scenario, and the implementation matches the PLAN.md design (minor cosmetic omission of `-> None` return type has no functional impact).
+
+
 
 ## 2026-04-27 21:23 — Orchestrator session
 

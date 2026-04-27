@@ -1,27 +1,76 @@
 # Scenario Order
-<!-- generated: 2026-04-27 20:53 -->
+<!-- generated: 2026-04-27 21:39 -->
 
-- Detect comment prefix by file extension
-- Detect JavaScript comment prefix
-- Insert marker above test function
-- Skip if marker already exists
-- Dry run mode shows planned changes
-- Apply mode modifies files
+- Setup Python dependencies
+- Setup Go dependencies
+- Setup Node dependencies
+- Setup Rust toolchain
+- Always install agent dependencies
+- Skip unknown language gracefully
+- Create locks directory
+- Read manifest file list
+- Stamp version in manifest
+- Set executable permissions on scripts
+- Download file creates parent directories
+- Create BDD.md from template
+- Override max parallel agents via CLI
+- Custom BDD.md path via --bdd flag
+- Override orchestrator planning model
+- Force orchestrator provider via CLI
+- Run orchestrator N rounds sequentially
+- Override max rounds via CLI
+- Write orchestrator journal entry
+- Select top N scenarios for parallel run
+- Create worktrees for parallel scenarios
+- Run agents in parallel with ThreadPoolExecutor
+- Stream agent output with scenario prefix
+- Merge results in planned order
+- Track total agent time across workers
+- Deferred scenarios message
+- Fallback to BDD.md order on AI failure
+- Worker result structure
+- Status indicators for worker output
+- Worker with no commits shows fail status
+- Worker with failing tests shows warning
+- Merge agent detects merge conflicts
+- Merge agent combines imports from multiple scenarios
+- Merge agent preserves all test functions
+- Merge agent inserts markers above test functions
+- Merge agent handles duplicate markers
+- Merge agent writes resolved file to staging
+- Merge agent logs resolution decisions
+- Integration test agent reports pass
+- Integration test agent reports fail
+- Integration test agent re-runs tests after fix
+- Integration test agent fails session on persistent failure
+- Integration test agent writes test result log
+- discover_worktrees returns baadd worktree paths from git worktree list output
+- discover_worktrees excludes the main worktree
+- discover_worktrees returns empty list when no baadd worktrees exist
+- discover_worktrees returns empty list when git command fails
 - slug_to_name converts hyphenated path slug to display name
 - slug_to_name handles path with no trailing digits
 - resolve_display_name prefers explicit wt_map entry over slug
 - resolve_display_name falls back to slug_to_name when path not in wt_map
-- parse_wt_mapping_line extracts scenario name and worktree path
-- parse_wt_mapping_line returns None for lines without " → /tmp"
-- parse_wt_mapping_line returns None for empty string
-- is_log_noise returns True for TPS monitor lines matching "tok | X TPS |"
-- is_log_noise returns True for bracketed per-agent output lines
-- is_log_noise returns False for round banner lines starting with "==="
-- is_log_noise returns False for MERGED result lines
-- is_log_noise returns False for THROWN AWAY result lines
-- is_log_noise returns False for Pre-flight status lines
-- is_log_noise returns False for scenario-to-worktree mapping lines containing " → /tmp"
-- is_log_noise returns False for empty lines
+- read_wt_state reads current_iter as the highest iteration value seen in iteration_start events
+- read_wt_state reads max_iter from the max_iterations field of iteration_start events
+- read_wt_state sets active_phase to the label of the most recent phase lacking session_end
+- read_wt_state adds a phase label to done_phases when its log contains session_end
+- read_wt_state returns done_phases in fixed pipeline order PM-PLAN SE TESTER ACCEPT
+- read_wt_state reads tokens as the highest cumulative_output_tokens seen in api_response events
+- read_wt_state reads start_ts as a float epoch from the ts field of the session_start event
+- read_wt_state collects the 3 most recent tool_call events from the active phase log as last_tools
+- read_wt_state skips malformed JSON lines and continues reading
+- read_wt_state returns zeroed AgentState when no JSONL files exist in worktree
+- read_wt_state picks the JSONL file with the highest mtime when multiple files share the same phase prefix
+- read_wt_state handles OSError when opening a JSONL file
+- read_wt_state sets start_ts to current time when no session_start event exists
+- AgentState.is_stale property returns True when newest JSONL mtime is over 120 seconds old
+- AgentState.is_stale returns False when any JSONL file was modified within 120 seconds
+- AgentState.is_stale returns False when worktree has no JSONL files yet
+- AgentState.is_done returns True only when all four phase labels are in done_phases
+- AgentState.is_done returns False when fewer than four phases are done
+- log buffer is a deque(maxlen=10) that automatically discards oldest entries
 - format_tool_call formats read_file as "r: <path>"
 - format_tool_call formats write_file as "w: <path>"
 - format_tool_call formats bash as "$ <command>" truncated to 60 chars
@@ -30,9 +79,21 @@
 - format_tool_call uses generic "tool: value" format for unknown tools
 - format_tool_call returns "r: ?" when path key is missing from input_dict for read_file
 - format_tool_call handles None input_dict without raising
-- format_elapsed returns seconds string for durations under 60 seconds
-- format_elapsed returns minutes and zero-padded seconds for durations over 60 seconds
-- format_elapsed returns "0s" for zero elapsed time
+- is_log_noise returns True for TPS monitor lines matching "tok | X TPS |"
+- is_log_noise returns True for bracketed per-agent output lines
+- is_log_noise returns False for round banner lines starting with "==="
+- is_log_noise returns False for MERGED result lines
+- is_log_noise returns False for THROWN AWAY result lines
+- is_log_noise returns False for Pre-flight status lines
+- is_log_noise returns False for scenario-to-worktree mapping lines containing " → /tmp"
+- is_log_noise returns False for empty lines
+- parse_wt_mapping_line extracts scenario name and worktree path
+- parse_wt_mapping_line returns None for lines without " → /tmp"
+- parse_wt_mapping_line returns None for empty string
+- format_phase_line returns correct string for two done phases and one active phase
+- format_phase_line returns all checkmarks when all four phases are done
+- format_phase_line returns four dashes when nothing has started
+- format_phase_line shows active phase with iteration count
 - render_progress_bar returns a string of bar_width unicode chars using "█" and "░"
 - render_progress_bar fills correct proportion at 50 percent
 - render_progress_bar returns fully filled bar at 100 percent
@@ -44,103 +105,35 @@
 - format_metrics_line computes TPS as tokens divided by elapsed_s
 - format_metrics_line does not divide by zero when elapsed_s is 0
 - TPS calculation guards against division by zero when elapsed_s is 0
-- format_phase_line returns correct string for two done phases and one active phase
-- format_phase_line returns all checkmarks when all four phases are done
-- format_phase_line returns four dashes when nothing has started
-- format_phase_line shows active phase with iteration count
-- log buffer is a deque(maxlen=10) that automatically discards oldest entries
+- format_elapsed returns seconds string for durations under 60 seconds
+- format_elapsed returns minutes and zero-padded seconds for durations over 60 seconds
+- format_elapsed returns "0s" for zero elapsed time
 - format_header returns a string containing agent count and session elapsed time
 - format_header returns "waiting for agents" string when states list is empty
 - format_log_strip returns a string containing all lines from the log buffer
 - format_log_strip returns a placeholder string when log buffer is empty
-- Tool output formatting with iteration tag
-- Tool icons for different tool types
-- Moonshot default model
-- Dashscope default model
-- Groq default model
-- Ollama default model
-- Custom provider requires api_key string placeholder
-- Ollama provider uses "ollama" as api_key
-- Setup Python dependencies
-- Setup Node dependencies
-- Setup Go dependencies
-- Setup Rust toolchain
-- Always install agent dependencies
-- Skip unknown language gracefully
-- Detect CI environment
-- Configure git bot identity
-- Create locks directory
-- Set executable permissions on scripts
-- Download file creates parent directories
-- Create BDD.md from template
-- Init git repo if missing
-- Handle scenario with special characters in name
-- Custom BDD.md path via --bdd flag
-- Override max rounds via CLI
-- Override max parallel agents via CLI
-- Force orchestrator provider via CLI
-- Override orchestrator planning model
-- Dry run mode shows plan without execution
-- Select top N scenarios for parallel run
-- Fallback to BDD.md order on AI failure
-- Create worktrees for parallel scenarios
-- Run agents in parallel with ThreadPoolExecutor
-- Stream agent output with scenario prefix
-- Merge results in planned order
-- Track total agent time across workers
-- Deferred scenarios message
-- Run orchestrator N rounds sequentially
-- Write orchestrator journal entry
-- Worker result structure
-- Status indicators for worker output
-- Worker with no commits shows fail status
-- Worker with failing tests shows warning
-- Timeout kills long session
-- Worktree creation failure
-- API error causes retry exit
-- Post-merge verification catches breakage
-- Handle concurrent scenario locks
-- Mode flag affects wrap-up message content
-- Only build features from BDD.md
-- Dashboard file exists at scripts/dashboard.py
-- Running "python3 scripts/dashboard.py" opens the Rich TUI immediately
-- The dashboard is only for scripts/orchestrate.py — not evolve.sh or agent.py
-- Missing rich package causes immediate error with install instruction
-- Live refresh loop uses rich.live.Live with refresh_per_second
-- discover_worktrees returns baadd worktree paths from git worktree list output
-- discover_worktrees excludes the main worktree
-- discover_worktrees returns empty list when no baadd worktrees exist
-- discover_worktrees returns empty list when git command fails
-- read_wt_state reads current_iter as the highest iteration value seen in iteration_start events
-- read_wt_state reads max_iter from the max_iterations field of iteration_start events
-- read_wt_state sets active_phase to the label of the most recent phase lacking session_end
-- read_wt_state adds a phase label to done_phases when its log contains session_end
-- read_wt_state returns done_phases in fixed pipeline order PM-PLAN SE TESTER ACCEPT
-- read_wt_state reads tokens as the highest cumulative_output_tokens seen in api_response events
-- read_wt_state reads start_ts as a float epoch from the ts field of the session_start event
-- read_wt_state collects the 3 most recent tool_call events from the active phase log as last_tools
-- read_wt_state skips malformed JSONL files and continues reading
-- read_wt_state returns zeroed AgentState when no JSONL files exist in worktree
-- read_wt_state picks the JSONL file with the highest mtime when multiple files share the same phase prefix
-- read_wt_state handles OSError when opening a JSONL file
-- read_wt_state sets start_ts to current time when no session_start event exists
-- AgentState.is_stale property returns True when newest JSONL mtime is over 120 seconds old
-- AgentState.is_stale returns False when any JSONL file was modified within 120 seconds
-- AgentState.is_stale returns False when worktree has no JSONL files yet
-- AgentState.is_done returns True only when all four phase labels are in done_phases
-- AgentState.is_done returns False when fewer than four phases are done
-- glob finds no JSONL files in a worktree that exists but has not started yet
-- Each agent is rendered as a rich.panel.Panel
 - build_agent_panel returns a rich.panel.Panel whose title is the scenario name
 - build_agent_panel appends "(stale)" to panel title when state.is_stale is True
 - build_agent_panel does not include "(stale)" when state.is_stale is False
-- Overall renderable is a rich.console.Group of Panels stacked vertically
 - build_renderable returns a rich.console.Group containing all agent panels plus header and log panels
 - build_renderable returns a Group with only header and log panels when states is empty
+- Dashboard file exists at scripts/dashboard.py
+- Running "python3 scripts/dashboard.py" opens the Rich TUI immediately
+- The dashboard is only for scripts/orchestrate.py — not evolve.sh or agent.py
+- Live refresh loop uses rich.live.Live with refresh_per_second
+- Each agent is rendered as a rich.panel.Panel
+- Overall renderable is a rich.console.Group of Panels stacked vertically
 - Dashboard handles zero-width terminal gracefully
 - wrapper mode constructs the subprocess command as ["python3", "scripts/orchestrate.py"] plus forwarded args
 - wrapper mode passes all unrecognised args through to orchestrate.py unchanged
 - wrapper mode raises RuntimeError and prints clear message when scripts/orchestrate.py does not exist
+- Missing rich package causes immediate error with install instruction
+- --watch flag causes no subprocess to be started
+- watcher mode calls discover_worktrees on every poll iteration
+- watcher exits after two consecutive empty polls from discover_worktrees
+- watcher does not exit after a single empty poll
+- watcher prints "All agents done." to stdout after the Live context closes
+- watcher resolves scenario names from slug_to_name when no wt_map is available
 - stdout reader thread calls is_log_noise on each line and only appends non-noise lines to log_buffer
 - stdout reader thread calls parse_wt_mapping_line and populates wt_map for matching lines
 - stdout reader thread sets a threading.Event when subprocess stdout is exhausted
@@ -148,36 +141,47 @@
 - wrapper main loop calls sys.exit with orchestrate.py returncode when subprocess exits with 1
 - wrapper renders "waiting for agents" header when no worktrees exist yet
 - wrapper adds a new agent panel when a worktree appears between polls
-- --watch flag causes no subprocess to be started
-- watcher mode calls discover_worktrees on every poll iteration
-- watcher exits after two consecutive empty polls from discover_worktrees
-- watcher does not exit after a single empty poll
-- watcher prints "All agents done." to stdout after the Live context closes
-- watcher resolves scenario names from slug_to_name when no wt_map is available
 - KeyboardInterrupt during Live loop exits cleanly without traceback
 - SIGTERM during wrapper mode terminates the subprocess before exiting
 - Worktree directory disappears between polls without crashing
-- Read manifest file list
-- Stamp version in manifest
-- Fetch latest version from GitHub API
-- Update existing baadd project
-- Auto-detect update mode
-- Pin to specific version
-- Already on target version skips update
-- Skip no-clobber files on update
-- Archive journals before update
-- Never modify IDENTITY.md
-- Never modify scripts/evolve.sh
-- Never modify .github/workflows/
+- glob finds no JSONL files in a worktree that exists but has not started yet
 - GitHub Actions workflow triggers on schedule
 - Manual workflow dispatch
 - Bootstrap detection in workflow
 - Workflow timeout limit
 - Retry after first attempt failure
 - Retry after second attempt failure
+- Configure git bot identity
 - GitHub Actions log grouping
+- Detect CI environment
 - Release workflow on version tag
 - Release includes install.sh
 - Docs workflow triggers on docs path change
 - Docs deployment to GitHub Pages
-- read_wt_state skips malformed JSON lines and continues reading
+- Update existing baadd project
+- Auto-detect update mode
+- Pin to specific version
+- Fetch latest version from GitHub API
+- Skip no-clobber files on update
+- Archive journals before update
+- Never modify IDENTITY.md
+- Never modify scripts/evolve.sh
+- Never modify .github/workflows/
+- Only build features from BDD.md
+- Already on target version skips update
+- API error causes retry exit
+- Post-merge verification catches breakage
+- Timeout kills long session
+- Worktree creation failure
+- Handle concurrent scenario locks
+- Handle scenario with special characters in name
+- Moonshot default model
+- Dashscope default model
+- Groq default model
+- Ollama default model
+- Custom provider requires api_key string placeholder
+- Ollama provider uses "ollama" as api_key
+- Mode flag affects wrap-up message content
+- Apply mode modifies files
+- Tool output formatting with iteration tag
+- Tool icons for different tool types
