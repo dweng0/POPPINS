@@ -174,7 +174,7 @@ Checked 333 scenario(s) across 28 test file(s).
 ## Feature: Parallel Agent Orchestration
 
 - [x] Find uncovered scenarios for orchestration
-- [ ] UNCOVERED: AI-powered scenario ordering
+- [x] AI-powered scenario ordering
 - [ ] UNCOVERED: Fallback to BDD.md order on AI failure
 - [ ] UNCOVERED: Select top N scenarios for parallel run
 - [ ] UNCOVERED: Create worktrees for parallel scenarios
@@ -436,10 +436,9 @@ Checked 333 scenario(s) across 28 test file(s).
 - [ ] UNCOVERED: stdout reader thread sets a threading.Event when subprocess stdout is exhausted
 
 ---
-**153/333 scenarios covered.**
+**154/333 scenarios covered.**
 
-180 scenario(s) need tests:
-- AI-powered scenario ordering
+179 scenario(s) need tests:
 - Fallback to BDD.md order on AI failure
 - Select top N scenarios for parallel run
 - Create worktrees for parallel scenarios
