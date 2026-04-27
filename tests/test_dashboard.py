@@ -58,6 +58,16 @@ def test_dashboard_has_main():
     assert callable(getattr(dashboard, "main", None)), "dashboard.py must define a main() function"
 
 
+# BDD: AgentState.elapsed_s property returns seconds since start_ts
+def test_agent_state_elapsed_s_property_returns_seconds_since_start_ts():
+    import time
+    from dashboard import AgentState
+    state = AgentState(wt_path="/tmp/test", scenario_name="test", start_ts=time.time() - 60)
+    result = state.elapsed_s
+    assert isinstance(result, float)
+    assert 59.0 <= result <= 61.0
+
+
 # BDD: Rich is the only third-party import in dashboard.py
 def test_dashboard_only_imports_rich():
     import ast, pathlib
