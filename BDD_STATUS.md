@@ -173,7 +173,7 @@ Checked 333 scenario(s) across 28 test file(s).
 
 ## Feature: Parallel Agent Orchestration
 
-- [ ] UNCOVERED: Find uncovered scenarios for orchestration
+- [x] Find uncovered scenarios for orchestration
 - [ ] UNCOVERED: AI-powered scenario ordering
 - [ ] UNCOVERED: Fallback to BDD.md order on AI failure
 - [ ] UNCOVERED: Select top N scenarios for parallel run
@@ -186,7 +186,7 @@ Checked 333 scenario(s) across 28 test file(s).
 - [x] Read max_rounds from poppins.yml
 - [ ] UNCOVERED: Run orchestrator N rounds sequentially
 - [ ] UNCOVERED: Override max rounds via CLI
-- [ ] UNCOVERED: Write orchestrator event log
+- [x] Write orchestrator event log
 - [ ] UNCOVERED: Write orchestrator journal entry
 - [ ] UNCOVERED: Override max parallel agents via CLI
 - [ ] UNCOVERED: Dry run mode shows plan without execution
@@ -436,10 +436,9 @@ Checked 333 scenario(s) across 28 test file(s).
 - [ ] UNCOVERED: stdout reader thread sets a threading.Event when subprocess stdout is exhausted
 
 ---
-**151/333 scenarios covered.**
+**153/333 scenarios covered.**
 
-182 scenario(s) need tests:
-- Find uncovered scenarios for orchestration
+180 scenario(s) need tests:
 - AI-powered scenario ordering
 - Fallback to BDD.md order on AI failure
 - Select top N scenarios for parallel run
@@ -451,7 +450,6 @@ Checked 333 scenario(s) across 28 test file(s).
 - Deferred scenarios message
 - Run orchestrator N rounds sequentially
 - Override max rounds via CLI
-- Write orchestrator event log
 - Write orchestrator journal entry
 - Override max parallel agents via CLI
 - Dry run mode shows plan without execution
