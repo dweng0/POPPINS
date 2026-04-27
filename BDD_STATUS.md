@@ -147,7 +147,7 @@ Checked 333 scenario(s) across 28 test file(s).
 - [x] Exclude management files from worktree commits
 - [x] Branch naming convention with timestamp
 - [x] Calculate has_work flag
-- [ ] UNCOVERED: Guard warning for minimal work with uncovered scenarios
+- [x] Guard warning for minimal work with uncovered scenarios
 - [x] Handle push failure gracefully
 - [x] Handle missing git remote
 
@@ -436,10 +436,9 @@ Checked 333 scenario(s) across 28 test file(s).
 - [ ] UNCOVERED: stdout reader thread sets a threading.Event when subprocess stdout is exhausted
 
 ---
-**146/333 scenarios covered.**
+**147/333 scenarios covered.**
 
-187 scenario(s) need tests:
-- Guard warning for minimal work with uncovered scenarios
+186 scenario(s) need tests:
 - Detect stale lock from dead PID
 - Release lock on completion
 - Clean up lock on early exit
