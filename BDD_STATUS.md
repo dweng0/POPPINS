@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 333 scenario(s) across 28 test file(s).
+Checked 333 scenario(s) across 29 test file(s).
 
 
 ## Feature: BDD Specification Parser
@@ -209,8 +209,8 @@ Checked 333 scenario(s) across 28 test file(s).
 
 ## Feature: Add BDD Markers Utility
 
-- [ ] UNCOVERED: Detect comment prefix by file extension
-- [ ] UNCOVERED: Detect JavaScript comment prefix
+- [x] Detect comment prefix by file extension
+- [x] Detect JavaScript comment prefix
 - [x] Find test line matching scenario
 - [ ] UNCOVERED: Insert marker above test function
 - [ ] UNCOVERED: Skip if marker already exists
@@ -436,9 +436,9 @@ Checked 333 scenario(s) across 28 test file(s).
 - [ ] UNCOVERED: stdout reader thread sets a threading.Event when subprocess stdout is exhausted
 
 ---
-**154/333 scenarios covered.**
+**156/333 scenarios covered.**
 
-179 scenario(s) need tests:
+177 scenario(s) need tests:
 - Fallback to BDD.md order on AI failure
 - Select top N scenarios for parallel run
 - Create worktrees for parallel scenarios
@@ -465,8 +465,6 @@ Checked 333 scenario(s) across 28 test file(s).
 - Setup Go dependencies
 - Always install agent dependencies
 - Skip unknown language gracefully
-- Detect comment prefix by file extension
-- Detect JavaScript comment prefix
 - Insert marker above test function
 - Skip if marker already exists
 - Dry run mode shows planned changes
