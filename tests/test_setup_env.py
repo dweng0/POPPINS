@@ -3,6 +3,7 @@
 
 import os
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 
 # BDD: Setup Python dependencies
@@ -36,6 +37,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 # BDD: Setup Node dependencies
 def test_setup_node_dependencies():
     """Test that setup_env.sh contains correct node|javascript) case with npm install logic."""
+=======
+
+
+# BDD: Setup Rust toolchain
+def test_setup_rust_toolchain():
+    """Test that setup_env.sh installs Rust via rustup when LANGUAGE=rust and cargo is not installed."""
+>>>>>>> agent/setup-rust-toolchain-20260427-213902
     setup_env_path = os.path.join(
         os.path.dirname(__file__), "..", "scripts", "setup_env.sh"
     )
@@ -43,6 +51,7 @@ def test_setup_node_dependencies():
     with open(setup_env_path) as f:
         content = f.read()
 
+<<<<<<< HEAD
     # 1. Verify the node|javascript) case block exists
     assert "node|javascript)" in content, "setup_env.sh must contain a node|javascript) case block"
 
@@ -65,3 +74,14 @@ def test_setup_node_dependencies():
         "node|javascript) case must run npm install when package.json exists"
 >>>>>>> agent/setup-node-dependencies-20260427-213902
     )
+=======
+    # Verify the script has a rust case
+    assert "rust)" in content, "setup_env.sh should have a 'rust' case in its case statement"
+
+    # Verify it checks for cargo not being installed
+    assert "command -v cargo" in content, "setup_env.sh should check if cargo is installed"
+
+    # Verify it installs Rust via rustup
+    assert "rustup" in content, "setup_env.sh should install Rust via rustup"
+    assert "sh.rustup.rs" in content, "setup_env.sh should use sh.rustup.rs for rustup installation"
+>>>>>>> agent/setup-rust-toolchain-20260427-213902
