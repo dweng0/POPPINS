@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 347 scenario(s) across 30 test file(s).
+Checked 347 scenario(s) across 31 test file(s).
 
 
 ## Feature: BDD Specification Parser
@@ -200,9 +200,9 @@ Checked 347 scenario(s) across 30 test file(s).
 
 ## Feature: Setup Environment Script
 
-- [ ] UNCOVERED: Setup Rust toolchain
-- [ ] UNCOVERED: Setup Node dependencies
-- [ ] UNCOVERED: Setup Python dependencies
+- [x] Setup Rust toolchain
+- [x] Setup Node dependencies
+- [x] Setup Python dependencies
 - [ ] UNCOVERED: Setup Go dependencies
 - [ ] UNCOVERED: Always install agent dependencies
 - [ ] UNCOVERED: Skip unknown language gracefully
@@ -456,9 +456,9 @@ Checked 347 scenario(s) across 30 test file(s).
 - [ ] UNCOVERED: Integration test agent writes test result log
 
 ---
-**163/347 scenarios covered.**
+**166/347 scenarios covered.**
 
-184 scenario(s) need tests:
+181 scenario(s) need tests:
 - Fallback to BDD.md order on AI failure
 - Select top N scenarios for parallel run
 - Create worktrees for parallel scenarios
@@ -478,9 +478,6 @@ Checked 347 scenario(s) across 30 test file(s).
 - Status indicators for worker output
 - Worker with no commits shows fail status
 - Worker with failing tests shows warning
-- Setup Rust toolchain
-- Setup Node dependencies
-- Setup Python dependencies
 - Setup Go dependencies
 - Always install agent dependencies
 - Skip unknown language gracefully
