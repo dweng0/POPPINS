@@ -1,0 +1,3 @@
+## 2026-04-27 19:27 — AgentState is a dataclass with the required fields
+
+The PM designed a pure class-introspection test that verifies `AgentState` in `scripts/dashboard.py` is decorated with `@dataclass` and has all 9 required fields: `wt_path`, `scenario_name`, `active_phase`, `done_phases`, `current_iter`, `max_iter`, `tokens`, `last_tools`, `start_ts`. The SE added the test `test_agentstate_is_a_dataclass_with_the_required_fields` to `tests/test_dashboard.py` with the correct BDD marker and no DI needed. The QA tester confirmed all 76 tests pass, the BDD marker is correct, coverage shows [x], and no regressions were introduced.
