@@ -11,8 +11,8 @@ def scenario_to_slug(scenario_name: str) -> str:
         scenario_name: The scenario name (e.g., "Login with valid credentials")
     
     Returns:
-        A lowercase slug with alphanumeric characters and hyphens only
-        (e.g., "login-with-valid-credentials")
+        A lowercase slug with alphanumeric characters and hyphens only,
+        truncated to 60 characters (e.g., "login-with-valid-credentials")
     """
     # Convert to lowercase
     slug = scenario_name.lower()
@@ -25,5 +25,8 @@ def scenario_to_slug(scenario_name: str) -> str:
     
     # Strip leading and trailing hyphens
     slug = slug.strip('-')
+    
+    # Truncate to 60 characters
+    slug = slug[:60]
     
     return slug

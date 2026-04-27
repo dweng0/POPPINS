@@ -22,3 +22,23 @@ def test_generate_scenario_slug_from_name():
     assert scenario_to_slug("UPPERCASE") == "uppercase"
     assert scenario_to_slug("with-dashes") == "with-dashes"
     assert scenario_to_slug("with_underscores") == "with-underscores"
+
+
+# BDD: Slug truncates to 60 characters
+def test_slug_truncates_to_60_characters():
+    """Test that scenario_to_slug truncates slugs to 60 characters."""
+    # Very long scenario name should be truncated
+    long_name = "A" * 100
+    slug = scenario_to_slug(long_name)
+    assert len(slug) <= 60
+    assert slug == "a" * 60
+    
+    # Scenario name at exactly 60 chars should not be truncated
+    exact_name = "A" * 60
+    slug = scenario_to_slug(exact_name)
+    assert len(slug) == 60
+    
+    # Scenario name at 61 chars should be truncated to 60
+    over_name = "A" * 61
+    slug = scenario_to_slug(over_name)
+    assert len(slug) == 60
