@@ -330,8 +330,8 @@ Checked 333 scenario(s) across 23 test file(s).
 
 ## Feature: AgentState Dataclass
 
-- [ ] UNCOVERED: AgentState is a dataclass with the required fields
-- [ ] UNCOVERED: AgentState.elapsed_s property returns seconds since start_ts
+- [x] AgentState is a dataclass with the required fields
+- [x] AgentState.elapsed_s property returns seconds since start_ts
 - [ ] UNCOVERED: AgentState.is_stale property returns True when newest JSONL mtime is over 120 seconds old
 - [ ] UNCOVERED: AgentState.is_stale returns False when any JSONL file was modified within 120 seconds
 - [ ] UNCOVERED: AgentState.is_stale returns False when worktree has no JSONL files yet
@@ -436,9 +436,9 @@ Checked 333 scenario(s) across 23 test file(s).
 - [ ] UNCOVERED: stdout reader thread sets a threading.Event when subprocess stdout is exhausted
 
 ---
-**97/333 scenarios covered.**
+**99/333 scenarios covered.**
 
-236 scenario(s) need tests:
+234 scenario(s) need tests:
 - Agent stops at max iterations
 - Session ends on end_turn stop reason
 - Trust repo owner's issues directly
@@ -599,8 +599,6 @@ Checked 333 scenario(s) across 23 test file(s).
 - read_wt_state picks the JSONL file with the highest mtime when multiple files share the same phase prefix
 - read_wt_state handles OSError when opening a JSONL file
 - read_wt_state sets start_ts to current time when no session_start event exists
-- AgentState is a dataclass with the required fields
-- AgentState.elapsed_s property returns seconds since start_ts
 - AgentState.is_stale property returns True when newest JSONL mtime is over 120 seconds old
 - AgentState.is_stale returns False when any JSONL file was modified within 120 seconds
 - AgentState.is_stale returns False when worktree has no JSONL files yet
