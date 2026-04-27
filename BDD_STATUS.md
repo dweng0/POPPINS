@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 333 scenario(s) across 27 test file(s).
+Checked 333 scenario(s) across 28 test file(s).
 
 
 ## Feature: BDD Specification Parser
@@ -163,13 +163,13 @@ Checked 333 scenario(s) across 27 test file(s).
 
 ## Feature: Git Worktree Isolation
 
-- [ ] UNCOVERED: Create worktree for scenario
-- [ ] UNCOVERED: Copy runtime files to worktree
-- [ ] UNCOVERED: Merge successful worktree to main
-- [ ] UNCOVERED: Auto-resolve management file conflicts
-- [ ] UNCOVERED: Fold JOURNAL_ENTRY.md into JOURNAL.md
-- [ ] UNCOVERED: Clean up worktree after merge
-- [ ] UNCOVERED: Remove worktree on failure
+- [x] Create worktree for scenario
+- [x] Copy runtime files to worktree
+- [x] Merge successful worktree to main
+- [x] Auto-resolve management file conflicts
+- [x] Fold JOURNAL_ENTRY.md into JOURNAL.md
+- [x] Clean up worktree after merge
+- [x] Remove worktree on failure
 
 ## Feature: Parallel Agent Orchestration
 
@@ -436,20 +436,13 @@ Checked 333 scenario(s) across 27 test file(s).
 - [ ] UNCOVERED: stdout reader thread sets a threading.Event when subprocess stdout is exhausted
 
 ---
-**139/333 scenarios covered.**
+**146/333 scenarios covered.**
 
-194 scenario(s) need tests:
+187 scenario(s) need tests:
 - Guard warning for minimal work with uncovered scenarios
 - Detect stale lock from dead PID
 - Release lock on completion
 - Clean up lock on early exit
-- Create worktree for scenario
-- Copy runtime files to worktree
-- Merge successful worktree to main
-- Auto-resolve management file conflicts
-- Fold JOURNAL_ENTRY.md into JOURNAL.md
-- Clean up worktree after merge
-- Remove worktree on failure
 - Find uncovered scenarios for orchestration
 - AI-powered scenario ordering
 - Fallback to BDD.md order on AI failure
