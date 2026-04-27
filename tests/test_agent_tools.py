@@ -1,6 +1,8 @@
 import os
 import sys
 import tempfile
+import subprocess
+from unittest.mock import patch
 import pytest
 
 sys.path.insert(0, os.path.abspath("scripts"))
@@ -21,7 +23,8 @@ def test_run_bash_command_with_stderr():
 
 # BDD: Bash command timeout after 300 seconds
 def test_bash_command_timeout():
-    result = run_tool("bash", {"command": "sleep 400"})
+    with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("sleep", 300)):
+        result = run_tool("bash", {"command": "sleep 400"})
     assert "ERROR: command timed out after 300s" in result
 
 
