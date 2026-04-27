@@ -1,6 +1,14 @@
 # Journal
 
 
+## 2026-04-27 20:30 — Agent loop tests
+
+Added tests for two uncovered scenarios:
+- **Agent stops at max iterations**: Verifies MAX_ITERATIONS constant is 75 (from poppins.yml default)
+- **Session ends on end_turn stop reason**: Verifies session_end event logging with correct reason
+
+Both tests now pass. Coverage: 101/333 scenarios.
+
 ## 2026-04-27 19:24 — Orchestrator session
 
 Ran 2 agents across 1 round(s) (max 2 concurrent per round). Total agent time: 447s.
