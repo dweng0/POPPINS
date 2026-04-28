@@ -28,5 +28,18 @@
 {"ts": "2026-04-28T13:22:57.889392", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
 {"ts": "2026-04-28T13:22:58.899712", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
 {"ts": "2026-04-28T13:22:58.899778", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+<<<<<<< HEAD
 {"ts": "2026-04-28T13:25:01.682224", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
 {"ts": "2026-04-28T13:25:01.682419", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+=======
+{"ts": "2026-04-28T13:26:55.871702", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-28T13:26:55.871737", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-28T13:27:00.535081", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-28T13:27:00.535126", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-28T13:27:33.332985", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-28T13:27:33.333027", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-28T13:27:37.429592", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-28T13:27:37.429659", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-28T13:28:04.845455", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-28T13:28:04.845503", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+>>>>>>> agent/skip-unknown-language-gracefully-20260428-132502
