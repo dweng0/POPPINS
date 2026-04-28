@@ -12,3 +12,5 @@
 {"ts": "2026-04-28T13:03:25.175750", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
 {"ts": "2026-04-28T13:13:17.076166", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
 {"ts": "2026-04-28T13:13:17.076221", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-28T13:13:18.085568", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-28T13:13:18.085626", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
