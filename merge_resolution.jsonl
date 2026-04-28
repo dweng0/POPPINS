@@ -8,3 +8,5 @@
 {"ts": "2026-04-28T13:01:58.355880", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
 {"ts": "2026-04-28T13:02:39.166801", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
 {"ts": "2026-04-28T13:02:39.166859", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-28T13:03:25.175702", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-28T13:03:25.175750", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
