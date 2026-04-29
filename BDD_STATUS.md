@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 347 scenario(s) across 57 test file(s).
+Checked 347 scenario(s) across 60 test file(s).
 
 
 ## Feature: BDD Specification Parser
@@ -243,27 +243,27 @@ Checked 347 scenario(s) across 57 test file(s).
 ## Feature: Install Script
 
 - [x] Init new baadd project
-- [ ] UNCOVERED: Update existing baadd project
-- [ ] UNCOVERED: Auto-detect update mode
-- [ ] UNCOVERED: Pin to specific version
-- [ ] UNCOVERED: Fetch latest version from GitHub API
-- [ ] UNCOVERED: Skip no-clobber files on update
-- [ ] UNCOVERED: Archive journals before update
-- [ ] UNCOVERED: Create BDD.md from template
+- [x] Update existing baadd project
+- [x] Auto-detect update mode
+- [x] Pin to specific version
+- [x] Fetch latest version from GitHub API
+- [x] Skip no-clobber files on update
+- [x] Archive journals before update
+- [x] Create BDD.md from template
 - [x] Init git repo if missing
-- [ ] UNCOVERED: Create locks directory
-- [ ] UNCOVERED: Read manifest file list
-- [ ] UNCOVERED: Stamp version in manifest
-- [ ] UNCOVERED: Already on target version skips update
-- [ ] UNCOVERED: Set executable permissions on scripts
-- [ ] UNCOVERED: Download file creates parent directories
+- [x] Create locks directory
+- [x] Read manifest file list
+- [x] Stamp version in manifest
+- [x] Already on target version skips update
+- [x] Set executable permissions on scripts
+- [x] Download file creates parent directories
 
 ## Feature: Identity and Safety Rules
 
-- [ ] UNCOVERED: Never modify IDENTITY.md
-- [ ] UNCOVERED: Never modify scripts/evolve.sh
-- [ ] UNCOVERED: Never modify .github/workflows/
-- [ ] UNCOVERED: Only build features from BDD.md
+- [x] Never modify IDENTITY.md
+- [x] Never modify scripts/evolve.sh
+- [x] Never modify .github/workflows/
+- [x] Only build features from BDD.md
 - [x] Never delete tests
 
 ## Feature: Error Recovery
@@ -274,20 +274,20 @@ Checked 347 scenario(s) across 57 test file(s).
 - [x] Handle missing gh CLI gracefully
 - [ ] UNCOVERED: Worktree creation failure
 - [x] Handle test file that cannot be read
-- [ ] UNCOVERED: Tool output formatting with iteration tag
-- [ ] UNCOVERED: Tool icons for different tool types
+- [x] Tool output formatting with iteration tag
+- [x] Tool icons for different tool types
 - [x] Detect Moonshot provider
 - [x] Detect Dashscope provider
-- [ ] UNCOVERED: Moonshot default model
-- [ ] UNCOVERED: Dashscope default model
-- [ ] UNCOVERED: Groq default model
-- [ ] UNCOVERED: Ollama default model
-- [ ] UNCOVERED: Custom provider requires api_key string placeholder
-- [ ] UNCOVERED: Ollama provider uses "ollama" as api_key
-- [ ] UNCOVERED: Mode flag affects wrap-up message content
+- [x] Moonshot default model
+- [x] Dashscope default model
+- [x] Groq default model
+- [x] Ollama default model
+- [x] Custom provider requires api_key string placeholder
+- [x] Ollama provider uses "ollama" as api_key
+- [x] Mode flag affects wrap-up message content
 - [x] Bootstrap mode agent prompt
-- [ ] UNCOVERED: Handle scenario with special characters in name
-- [ ] UNCOVERED: Handle concurrent scenario locks
+- [x] Handle scenario with special characters in name
+- [x] Handle concurrent scenario locks
 - [x] Issue response file format parsing
 
 ## Feature: Dashboard — scripts/dashboard.py (Python, Rich TUI)
@@ -456,41 +456,13 @@ Checked 347 scenario(s) across 57 test file(s).
 - [ ] UNCOVERED: Integration test agent writes test result log
 
 ---
-**308/347 scenarios covered.**
+**336/347 scenarios covered.**
 
-39 scenario(s) need tests:
-- Update existing baadd project
-- Auto-detect update mode
-- Pin to specific version
-- Fetch latest version from GitHub API
-- Skip no-clobber files on update
-- Archive journals before update
-- Create BDD.md from template
-- Create locks directory
-- Read manifest file list
-- Stamp version in manifest
-- Already on target version skips update
-- Set executable permissions on scripts
-- Download file creates parent directories
-- Never modify IDENTITY.md
-- Never modify scripts/evolve.sh
-- Never modify .github/workflows/
-- Only build features from BDD.md
+11 scenario(s) need tests:
 - API error causes retry exit
 - Post-merge verification catches breakage
 - Timeout kills long session
 - Worktree creation failure
-- Tool output formatting with iteration tag
-- Tool icons for different tool types
-- Moonshot default model
-- Dashscope default model
-- Groq default model
-- Ollama default model
-- Custom provider requires api_key string placeholder
-- Ollama provider uses "ollama" as api_key
-- Mode flag affects wrap-up message content
-- Handle scenario with special characters in name
-- Handle concurrent scenario locks
 - Merge agent inserts markers above test functions
 - Merge agent handles duplicate markers
 - Merge agent writes resolved file to staging
