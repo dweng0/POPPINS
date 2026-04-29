@@ -287,3 +287,7 @@
 {"ts": "2026-04-29T11:57:01.854378", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
 {"ts": "2026-04-29T12:11:10.162855", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
 {"ts": "2026-04-29T12:11:10.162995", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-29T12:11:55.136136", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-29T12:11:55.136424", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-29T12:12:10.563820", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-29T12:12:10.563955", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
