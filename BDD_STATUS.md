@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 347 scenario(s) across 60 test file(s).
+Checked 347 scenario(s) across 62 test file(s).
 
 
 ## Feature: BDD Specification Parser
@@ -268,11 +268,11 @@ Checked 347 scenario(s) across 60 test file(s).
 
 ## Feature: Error Recovery
 
-- [ ] UNCOVERED: API error causes retry exit
-- [ ] UNCOVERED: Post-merge verification catches breakage
-- [ ] UNCOVERED: Timeout kills long session
+- [x] API error causes retry exit
+- [x] Post-merge verification catches breakage
+- [x] Timeout kills long session
 - [x] Handle missing gh CLI gracefully
-- [ ] UNCOVERED: Worktree creation failure
+- [x] Worktree creation failure
 - [x] Handle test file that cannot be read
 - [x] Tool output formatting with iteration tag
 - [x] Tool icons for different tool types
@@ -440,10 +440,10 @@ Checked 347 scenario(s) across 60 test file(s).
 - [x] Merge agent detects merge conflicts
 - [x] Merge agent combines imports from multiple scenarios
 - [x] Merge agent preserves all test functions
-- [ ] UNCOVERED: Merge agent inserts markers above test functions
-- [ ] UNCOVERED: Merge agent handles duplicate markers
-- [ ] UNCOVERED: Merge agent writes resolved file to staging
-- [ ] UNCOVERED: Merge agent logs resolution decisions
+- [x] Merge agent inserts markers above test functions
+- [x] Merge agent handles duplicate markers
+- [x] Merge agent writes resolved file to staging
+- [x] Merge agent logs resolution decisions
 
 ## Feature: Integration Test Agent
 
@@ -451,22 +451,9 @@ Checked 347 scenario(s) across 60 test file(s).
 - [x] Integration test agent reports pass
 - [x] Integration test agent reports fail
 - [x] Integration test agent attempts fix on failure
-- [ ] UNCOVERED: Integration test agent re-runs tests after fix
-- [ ] UNCOVERED: Integration test agent fails session on persistent failure
-- [ ] UNCOVERED: Integration test agent writes test result log
+- [x] Integration test agent re-runs tests after fix
+- [x] Integration test agent fails session on persistent failure
+- [x] Integration test agent writes test result log
 
 ---
-**336/347 scenarios covered.**
-
-11 scenario(s) need tests:
-- API error causes retry exit
-- Post-merge verification catches breakage
-- Timeout kills long session
-- Worktree creation failure
-- Merge agent inserts markers above test functions
-- Merge agent handles duplicate markers
-- Merge agent writes resolved file to staging
-- Merge agent logs resolution decisions
-- Integration test agent re-runs tests after fix
-- Integration test agent fails session on persistent failure
-- Integration test agent writes test result log
+**347/347 scenarios covered.**
