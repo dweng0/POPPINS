@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 347 scenario(s) across 56 test file(s).
+Checked 347 scenario(s) across 57 test file(s).
 
 
 ## Feature: BDD Specification Parser
@@ -235,10 +235,10 @@ Checked 347 scenario(s) across 56 test file(s).
 - [x] Configure git bot identity
 - [x] GitHub Actions log grouping
 - [x] Detect CI environment
-- [ ] UNCOVERED: Release workflow on version tag
-- [ ] UNCOVERED: Release includes install.sh
+- [x] Release workflow on version tag
+- [x] Release includes install.sh
 - [x] Docs workflow triggers on docs path change
-- [ ] UNCOVERED: Docs deployment to GitHub Pages
+- [x] Docs deployment to GitHub Pages
 
 ## Feature: Install Script
 
@@ -456,12 +456,9 @@ Checked 347 scenario(s) across 56 test file(s).
 - [ ] UNCOVERED: Integration test agent writes test result log
 
 ---
-**305/347 scenarios covered.**
+**308/347 scenarios covered.**
 
-42 scenario(s) need tests:
-- Release workflow on version tag
-- Release includes install.sh
-- Docs deployment to GitHub Pages
+39 scenario(s) need tests:
 - Update existing baadd project
 - Auto-detect update mode
 - Pin to specific version
