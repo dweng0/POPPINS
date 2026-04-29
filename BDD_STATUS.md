@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 347 scenario(s) across 32 test file(s).
+Checked 347 scenario(s) across 54 test file(s).
 
 
 ## Feature: BDD Specification Parser
@@ -179,32 +179,32 @@ Checked 347 scenario(s) across 32 test file(s).
 - [x] Select top N scenarios for parallel run
 - [x] Create worktrees for parallel scenarios
 - [x] Run agents in parallel with ThreadPoolExecutor
-- [ ] UNCOVERED: Stream agent output with scenario prefix
-- [ ] UNCOVERED: Merge results in planned order
-- [ ] UNCOVERED: Track total agent time across workers
-- [ ] UNCOVERED: Deferred scenarios message
+- [x] Stream agent output with scenario prefix
+- [x] Merge results in planned order
+- [x] Track total agent time across workers
+- [x] Deferred scenarios message
 - [x] Read max_rounds from poppins.yml
-- [ ] UNCOVERED: Run orchestrator N rounds sequentially
-- [ ] UNCOVERED: Override max rounds via CLI
+- [x] Run orchestrator N rounds sequentially
+- [x] Override max rounds via CLI
 - [x] Write orchestrator event log
-- [ ] UNCOVERED: Write orchestrator journal entry
-- [ ] UNCOVERED: Override max parallel agents via CLI
+- [x] Write orchestrator journal entry
+- [x] Override max parallel agents via CLI
 - [x] Dry run mode shows plan without execution
-- [ ] UNCOVERED: Custom BDD.md path via --bdd flag
-- [ ] UNCOVERED: Override orchestrator planning model
-- [ ] UNCOVERED: Force orchestrator provider via CLI
-- [ ] UNCOVERED: Worker result structure
-- [ ] UNCOVERED: Status indicators for worker output
-- [ ] UNCOVERED: Worker with no commits shows fail status
-- [ ] UNCOVERED: Worker with failing tests shows warning
+- [x] Custom BDD.md path via --bdd flag
+- [x] Override orchestrator planning model
+- [x] Force orchestrator provider via CLI
+- [x] Worker result structure
+- [x] Status indicators for worker output
+- [x] Worker with no commits shows fail status
+- [x] Worker with failing tests shows warning
 
 ## Feature: Setup Environment Script
 
 - [x] Setup Rust toolchain
 - [x] Setup Node dependencies
 - [x] Setup Python dependencies
-- [ ] UNCOVERED: Setup Go dependencies
-- [ ] UNCOVERED: Always install agent dependencies
+- [x] Setup Go dependencies
+- [x] Always install agent dependencies
 - [x] Skip unknown language gracefully
 
 ## Feature: Add BDD Markers Utility
@@ -215,7 +215,7 @@ Checked 347 scenario(s) across 32 test file(s).
 - [x] Insert marker above test function
 - [x] Skip if marker already exists
 - [x] Dry run mode shows planned changes
-- [ ] UNCOVERED: Apply mode modifies files
+- [x] Apply mode modifies files
 
 ## Feature: Dotenv Loading
 
@@ -226,18 +226,18 @@ Checked 347 scenario(s) across 32 test file(s).
 
 ## Feature: CI/CD Integration
 
-- [ ] UNCOVERED: GitHub Actions workflow triggers on schedule
-- [ ] UNCOVERED: Manual workflow dispatch
-- [ ] UNCOVERED: Bootstrap detection in workflow
-- [ ] UNCOVERED: Workflow timeout limit
+- [x] GitHub Actions workflow triggers on schedule
+- [x] Manual workflow dispatch
+- [x] Bootstrap detection in workflow
+- [x] Workflow timeout limit
 - [x] Retry after first attempt failure
-- [ ] UNCOVERED: Retry after second attempt failure
-- [ ] UNCOVERED: Configure git bot identity
+- [x] Retry after second attempt failure
+- [x] Configure git bot identity
 - [ ] UNCOVERED: GitHub Actions log grouping
 - [ ] UNCOVERED: Detect CI environment
 - [ ] UNCOVERED: Release workflow on version tag
 - [ ] UNCOVERED: Release includes install.sh
-- [ ] UNCOVERED: Docs workflow triggers on docs path change
+- [x] Docs workflow triggers on docs path change
 - [ ] UNCOVERED: Docs deployment to GitHub Pages
 
 ## Feature: Install Script
@@ -439,7 +439,7 @@ Checked 347 scenario(s) across 32 test file(s).
 
 - [x] Merge agent detects merge conflicts
 - [x] Merge agent combines imports from multiple scenarios
-- [ ] UNCOVERED: Merge agent preserves all test functions
+- [x] Merge agent preserves all test functions
 - [ ] UNCOVERED: Merge agent inserts markers above test functions
 - [ ] UNCOVERED: Merge agent handles duplicate markers
 - [ ] UNCOVERED: Merge agent writes resolved file to staging
@@ -456,38 +456,13 @@ Checked 347 scenario(s) across 32 test file(s).
 - [ ] UNCOVERED: Integration test agent writes test result log
 
 ---
-**277/347 scenarios covered.**
+**303/347 scenarios covered.**
 
-70 scenario(s) need tests:
-- Stream agent output with scenario prefix
-- Merge results in planned order
-- Track total agent time across workers
-- Deferred scenarios message
-- Run orchestrator N rounds sequentially
-- Override max rounds via CLI
-- Write orchestrator journal entry
-- Override max parallel agents via CLI
-- Custom BDD.md path via --bdd flag
-- Override orchestrator planning model
-- Force orchestrator provider via CLI
-- Worker result structure
-- Status indicators for worker output
-- Worker with no commits shows fail status
-- Worker with failing tests shows warning
-- Setup Go dependencies
-- Always install agent dependencies
-- Apply mode modifies files
-- GitHub Actions workflow triggers on schedule
-- Manual workflow dispatch
-- Bootstrap detection in workflow
-- Workflow timeout limit
-- Retry after second attempt failure
-- Configure git bot identity
+44 scenario(s) need tests:
 - GitHub Actions log grouping
 - Detect CI environment
 - Release workflow on version tag
 - Release includes install.sh
-- Docs workflow triggers on docs path change
 - Docs deployment to GitHub Pages
 - Update existing baadd project
 - Auto-detect update mode
@@ -521,7 +496,6 @@ Checked 347 scenario(s) across 32 test file(s).
 - Mode flag affects wrap-up message content
 - Handle scenario with special characters in name
 - Handle concurrent scenario locks
-- Merge agent preserves all test functions
 - Merge agent inserts markers above test functions
 - Merge agent handles duplicate markers
 - Merge agent writes resolved file to staging
