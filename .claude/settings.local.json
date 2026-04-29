@@ -49,7 +49,8 @@
       "Bash(echo \"coverage exit: $?\")",
       "Bash(bash -c 'set -o noclobber; cat > /home/jay/projects/BAADD/locks/create-worktrees-for-parallel-scenarios.lock')",
       "Bash(bash -c 'set -o noclobber; cat > /home/jay/projects/BAADD/locks/run-agents-in-parallel-with-threadpoolexecutor.lock')",
-      "Bash(echo \"Lock: $?\")"
+      "Bash(echo \"Lock: $?\")",
+      "Bash(git stash *)"
     ]
   }
 }
