@@ -3,7 +3,7 @@
 
 orchestration:
   # Maximum number of parallel worker agents (each gets its own worktree)
-  max_parallel_agents: 2
+  max_parallel_agents: 1
   max_rounds: 1
 
   # LLM provider for the scenario ordering call
@@ -65,7 +65,7 @@ agent:
   # Remove entries you want the SE to be allowed to touch (e.g. scripts/ when
   # poppins is developing itself).
   protected_paths:
-  - .github/
-  - IDENTITY.md
-  - BDD.md
-  - conftest.py
+    - .github/
+    - IDENTITY.md
+    - BDD.md
+    - conftest.py

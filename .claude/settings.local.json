@@ -54,7 +54,8 @@
       "Bash(echo \"Exit: $?\")",
       "Bash(pip install *)",
       "Bash(echo \"EXIT:$?\")",
-      "Bash(xargs ls *)"
+      "Bash(xargs ls *)",
+      "Bash(bash *)"
     ]
   }
 }

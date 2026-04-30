@@ -554,7 +554,7 @@ The correct TDD cycle — ALL steps must complete before any commit:
        eval "$(python3 scripts/parse_bdd_config.py BDD.md)" && eval "$BUILD_CMD" && eval "$TEST_CMD"
 
   6. Only now commit:
-       git add -A -- ':!BDD_STATUS.md' ':!JOURNAL.md' ':!JOURNAL_INDEX.md'
+       git add -A -- ':!BDD_STATUS.md' ':!JOURNAL.md' ':!JOURNAL_INDEX.md' ':!BDD.md'
        git commit -m "{date} {session_time}: implement {scenario_name}"
 
 If checks fail after your implementation:
@@ -596,7 +596,7 @@ Now begin. Read IDENTITY.md first, then BDD.md.
         f.write(prompt)
 
     # Copy runtime files to worktree
-    for runtime_file in ["ISSUES_TODAY.md"]:
+    for runtime_file in ["ISSUES_TODAY.md", "BDD.md", "BDD_STATUS.md"]:
         src = os.path.join(main_dir, runtime_file)
         if os.path.exists(src):
             run_cmd(f'cp "{src}" "{wt_path}/"')
