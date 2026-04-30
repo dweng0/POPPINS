@@ -1,6 +1,6 @@
 # BDD Status
 
-Checked 432 scenario(s) across 62 test file(s).
+Checked 432 scenario(s) across 63 test file(s).
 
 
 ## Feature: BDD Specification Parser
@@ -462,7 +462,7 @@ Checked 432 scenario(s) across 62 test file(s).
 - [ ] UNCOVERED: evolve.sh appends session_end to sessions.jsonl on failure or early exit
 - [ ] UNCOVERED: orchestrate.py appends session_start per worker worktree it spawns
 - [ ] UNCOVERED: orchestrate.py appends session_end for each worker when it finishes
-- [ ] UNCOVERED: sessions.jsonl is created if it does not exist
+- [x] sessions.jsonl is created if it does not exist
 - [ ] UNCOVERED: sessions.jsonl append is atomic enough to avoid corruption under parallel writes
 - [ ] UNCOVERED: read_sessions(sessions_path) returns list of dicts parsed from sessions.jsonl
 - [ ] UNCOVERED: read_sessions returns empty list when sessions.jsonl does not exist
@@ -565,15 +565,14 @@ Checked 432 scenario(s) across 62 test file(s).
 - [ ] UNCOVERED: format_log_strip returns placeholder when log_buffer is empty regardless of scroll_offset
 
 ---
-**351/432 scenarios covered.**
+**352/432 scenarios covered.**
 
-81 scenario(s) need tests:
+80 scenario(s) need tests:
 - evolve.sh appends session_start to sessions.jsonl when worktree is created
 - evolve.sh appends session_end to sessions.jsonl on normal completion
 - evolve.sh appends session_end to sessions.jsonl on failure or early exit
 - orchestrate.py appends session_start per worker worktree it spawns
 - orchestrate.py appends session_end for each worker when it finishes
-- sessions.jsonl is created if it does not exist
 - sessions.jsonl append is atomic enough to avoid corruption under parallel writes
 - read_sessions(sessions_path) returns list of dicts parsed from sessions.jsonl
 - read_sessions returns empty list when sessions.jsonl does not exist

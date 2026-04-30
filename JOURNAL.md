@@ -1,5 +1,10 @@
 # Journal
 
+## 2026-04-30 14:00 — sessions.jsonl is created if it does not exist
+
+PM designed a simple `append_session_event(sessions_path, event)` function in `scripts/session_lifecycle.py` that uses Python's `open(..., "a")` to auto-create the sessions.jsonl file on first write, with no port/adapter split needed for this 5-line stdlib-only operation. SE implemented the function and wrote a test in `tests/test_session_lifecycle.py` that uses `tempfile.TemporaryDirectory()` to verify the file doesn't exist before the call, exists after, and contains exactly one valid JSON line matching the event dict. Tester confirmed all four acceptance criteria pass: BDD marker present, all 557 tests green, coverage shows `[x]`, and design fully complies with the plan.
+
+
 
 ## 2026-04-29 20:58 — Orchestrator session
 
