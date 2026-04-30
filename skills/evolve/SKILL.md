@@ -45,6 +45,35 @@ Name your test something like:
 
 This is what `check_bdd_coverage.py` searches for. If you don't name tests after scenarios, coverage will show as 0%.
 
+## Test philosophy
+
+Tests verify **behavior through public interfaces**, not implementation details. A good test reads like a specification — "user can checkout with valid cart" — and survives refactors because it doesn't care about internal structure.
+
+### What to mock
+
+Mock at **system boundaries only**:
+- External APIs (payment, email, etc.)
+- Databases (prefer a test DB over mocking)
+- Time / randomness
+- File system (sometimes)
+
+**Do not mock** your own classes, modules, or internal collaborators. If your test breaks when you rename an internal function but behavior hasn't changed, the test was wrong.
+
+### Design for testability
+
+Use dependency injection — pass external dependencies in rather than creating them inside:
+
+```python
+# Easy to test
+def process_payment(order, payment_client):
+    return payment_client.charge(order.total)
+
+# Hard to test
+def process_payment(order):
+    client = StripeClient(os.environ["STRIPE_KEY"])
+    return client.charge(order.total)
+```
+
 ## What you must never do
 
 - Write code for a feature not in BDD.md
