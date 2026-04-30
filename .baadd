@@ -17,6 +17,8 @@
     "scripts/parse_poppins_config.py",
     "scripts/orchestrate.py",
     "scripts/add_bdd_markers.py",
+    "scripts/grill.py",
+    "scripts/i_have_an_idea.sh",
     "poppins.yml",
     ".gitignore",
     ".github/workflows/evolve.yml",

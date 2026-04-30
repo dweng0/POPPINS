@@ -23,8 +23,8 @@ birth_date: 2026-03-05
         A worktree is DONE if session_end is present.
 
 
-        Scenario: orchestrate.py appends session_start per worker worktree it spawns
-            Given orchestrate.py spawns 3 parallel evolve.sh workers, each with its own wt_path
-            When each worker worktree is created
-            Then sessions.jsonl contains 3 separate session_start lines with distinct wt_paths
+        Scenario: orchestrate.py appends session_end for each worker when it finishes
+            Given orchestrate.py has spawned 3 workers and they all complete
+            When the last worker exits
+            Then sessions.jsonl contains 3 session_end lines matching the 3 wt_paths
 

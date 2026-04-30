@@ -218,15 +218,13 @@ Branch: {branch}
 Your ONLY job this session is to produce PLAN.md — a design document for one BDD scenario.
 You do NOT write any source or test code. You do NOT run tests. You do NOT commit anything.
 
-=== YOUR SCENARIO ===
-
-{scenario_text}
-
 === YOUR TASK ===
 
-The scenario spec above is your complete context. Do NOT read BDD.md — it is ~130KB and will exhaust your context.
+Read BDD_SCENARIO.md now — it contains your complete scenario spec (~30 lines). Do NOT read BDD.md — it is ~130KB and will exhaust your context.
 Use the write_file tool to create PLAN.md in the current directory. Writing PLAN.md is the ONLY output
 you produce — do not describe the plan in text, do not use any other tool.
+
+Keep PLAN.md under 60 lines total. Be precise but concise — the SE and Tester read this verbatim.
 
 PLAN.md must contain these six sections (in order):
 
@@ -309,7 +307,7 @@ to be thrown away.
 Example (only include if deletions are actually needed):
   - scripts/old_helper.py — superseded by the new unified loader in this scenario
 
-Use write_file to write PLAN.md now. That is your only action after reading BDD_SCENARIO.md.
+Use write_file to write PLAN.md now (under 60 lines). That is your only action.
 Do not write any source code, test code, or other files. Do not commit.
 """
 
@@ -676,7 +674,7 @@ def _record_failed_pipeline(scenario_name, wt_path, main_dir, log):
 # Main pipeline
 # ---------------------------------------------------------------------------
 
-def run_pm_pipeline(scenario_name, scenario_text, wt_path, branch, main_dir, config):
+def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
     """
     Run the PM → SE → Tester → PM pipeline for one scenario.
     Returns a result dict with the same shape expected by orchestrate.py.
@@ -715,14 +713,12 @@ def run_pm_pipeline(scenario_name, scenario_text, wt_path, branch, main_dir, con
     # Phase 1: PM designs
     # -----------------------------------------------------------------------
     log("--- PHASE 1: PM PLAN ---")
-    log(f"Scenario text injected ({len(scenario_text)} chars)")
 
     plan_prompt = PM_PLAN_PROMPT.format(
         date=date,
         time=session_time,
         branch=branch,
         scenario_name=scenario_name,
-        scenario_text=scenario_text,
     )
     stdout, rc, phase_elapsed = run_agent(
         plan_prompt, wt_path, main_dir, provider, model,
@@ -770,9 +766,10 @@ def run_pm_pipeline(scenario_name, scenario_text, wt_path, branch, main_dir, con
                 "FAIL_STACK_TRACE.md — read it before making any changes.\n"
                 if os.path.exists(stack_trace_path) else ""
             )
+            retry_notes_text = read_file(retry_path)[:3000]
             retry_section = (
                 "=== RETRY NOTES FROM PM ===\n\n"
-                + read_file(retry_path)
+                + retry_notes_text
                 + stack_hint
                 + "\n\nAddress every point above. Nothing else.\n"
             )
@@ -830,7 +827,7 @@ def run_pm_pipeline(scenario_name, scenario_text, wt_path, branch, main_dir, con
         if attempt > 1 and os.path.exists(retry_path):
             retry_context = (
                 "=== PREVIOUS PM REJECTION NOTES ===\n\n"
-                + read_file(retry_path)
+                + read_file(retry_path)[:3000]
                 + "\n\nPay particular attention to the issues the PM flagged above "
                 "when running your checks.\n"
             )

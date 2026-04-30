@@ -2,16 +2,12 @@
 """
 Orchestrator — coordinates parallel agent workers for BAADD evolution.
 
-Instead of each evolve.sh instance racing to claim a scenario, the orchestrator:
-1. Reads BDD.md + BDD_STATUS.md to find all uncovered scenarios
-2. Makes one AI call to produce a dependency-ordered execution plan
-3. Spawns up to max_parallel_agents workers, each in its own worktree
-4. Waits for workers, then merges results sequentially with verification
+Finds all uncovered scenarios in BDD.md order, spawns up to max_parallel_agents
+workers (each in its own git worktree), then merges results sequentially with
+post-merge verification.
 
 Usage:
     ANTHROPIC_API_KEY=sk-... python3 scripts/orchestrate.py
-
-    # Or with explicit config overrides:
     python3 scripts/orchestrate.py --max-agents 2 --dry-run
 """
 
@@ -19,6 +15,7 @@ import os
 import sys
 import json
 import subprocess
+import tempfile
 import argparse
 import time
 import re
@@ -32,40 +29,10 @@ from check_bdd_coverage import parse_scenarios, find_test_files, check_coverage
 from pm_worker import run_pm_pipeline
 
 
-def run_merge_agent(scenario_results, main_dir):
-    """Run the merge agent to resolve conflicts before merging."""
-    print("    [MERGE AGENT] Resolving merge conflicts...", flush=True)
-    
-    # Write results to temp file for merge agent
-    import tempfile
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-        json.dump(scenario_results, f)
-        results_file = f.name
-    
-    try:
-        stdout, stderr, rc = run_cmd(
-            f"python3 scripts/merge_agent.py --main-dir . --results-file {results_file}",
-            cwd=main_dir,
-            timeout=60,
-        )
-        
-        if rc == 0:
-            print(f"    [MERGE AGENT] Success: {stdout}", flush=True)
-            return True, stdout
-        else:
-            print(f"    [MERGE AGENT] Failed: {stderr or stdout}", flush=True)
-            return False, stderr or stdout
-    finally:
-        if os.path.exists(results_file):
-            os.unlink(results_file)
-
 
 def run_integration_tests(scenario_results, main_dir):
     """Run integration tests after merging."""
     print("    [INTEGRATION TEST] Running post-merge tests...", flush=True)
-    
-    # Write results to temp file for integration test agent
-    import tempfile
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         json.dump(scenario_results, f)
         results_file = f.name
@@ -230,12 +197,6 @@ def scenario_to_slug(name):
     return slug[:60]
 
 
-def select_scenarios(ordered_names, max_agents):
-    """Return (selected, remaining) where selected is the top max_agents scenarios."""
-    selected = ordered_names[:max_agents]
-    remaining = ordered_names[max_agents:]
-    return selected, remaining
-
 
 def get_uncovered_scenarios(bdd_path="BDD.md"):
     """Return list of (feature, scenario) tuples that lack test coverage."""
@@ -295,94 +256,30 @@ def detect_provider():
     return None
 
 
-def resolve_model_and_client(provider, model_override=None):
-    """Return (model_name, callable) where callable(prompt) -> response text.
-    Supports all providers agent.py supports."""
-    defaults = {
-        "anthropic": "claude-haiku-4-5-20251001",
-        "moonshot": "kimi-latest",
-        "dashscope": "qwen-max",
-        "openai": "gpt-4o",
-        "groq": "llama-3.3-70b-versatile",
-        "ollama": "llama3.2",
-        "custom": os.environ.get("CUSTOM_MODEL", ""),
-    }
-    base_urls = {
-        "moonshot": "https://api.moonshot.cn/v1",
-        "dashscope": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
-        "groq": "https://api.groq.com/openai/v1",
-    }
-    api_key_envs = {
-        "anthropic": "ANTHROPIC_API_KEY",
-        "moonshot": "MOONSHOT_API_KEY",
-        "dashscope": "DASHSCOPE_API_KEY",
-        "openai": "OPENAI_API_KEY",
-        "groq": "GROQ_API_KEY",
-        "custom": "CUSTOM_API_KEY",
-    }
 
-    model = model_override or os.environ.get("MODEL") or defaults.get(provider, "")
-
-    if provider == "anthropic":
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
-
-        def call(prompt):
-            import anthropic
-
-            client = anthropic.Anthropic(api_key=api_key)
-            response = client.messages.create(
-                model=model,
-                max_tokens=8192,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            return response.content[0].text.strip()
-
-        return model, call
-
-    # All other providers via OpenAI-compatible client
-    try:
-        from openai import OpenAI
-    except ImportError:
-        raise RuntimeError("openai package not installed: pip install openai")
-
-    api_key = os.environ.get(api_key_envs.get(provider, ""), "")
-    base_url = base_urls.get(provider)
-
-    if provider == "ollama":
-        host = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-        base_url = host.rstrip("/") + "/v1"
-        api_key = "ollama"
-        model = (
-            model_override
-            or os.environ.get("MODEL")
-            or os.environ.get("CUSTOM_MODEL", "llama3.2")
-        )
-    elif provider == "custom":
-        base_url = os.environ.get("CUSTOM_BASE_URL")
-        model = (
-            model_override
-            or os.environ.get("MODEL")
-            or os.environ.get("CUSTOM_MODEL", "")
-        )
-        if not api_key:
-            api_key = "custom"
-
-    client_kwargs = {"api_key": api_key or "none"}
-    if base_url:
-        client_kwargs["base_url"] = base_url
-    oai_client = OpenAI(**client_kwargs)
-
-    def call(prompt):
-        response = oai_client.chat.completions.create(
-            model=model,
-            max_tokens=8192,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return response.choices[0].message.content.strip()
-
-    return model, call
+def select_scenarios(ordered_names, max_agents):
+    """Return (selected, remaining) where selected is the top max_agents scenarios."""
+    return ordered_names[:max_agents], ordered_names[max_agents:]
 
 
+def format_worker_output(result):
+    """Format worker result with scenario prefix on each line."""
+    scenario_name = result.get("scenario", "unknown")
+    stdout = result.get("stdout", "")
+    commits = result.get("commits", 0)
+    tests_pass = result.get("tests_pass", False)
+    elapsed_s = result.get("elapsed_s", 0)
+    rc = result.get("rc", 0)
+
+    lines = [f"[{scenario_name}] {line}" for line in stdout.split("\n") if line.strip()]
+    if commits == 0:
+        status = "FAIL: no commits"
+    elif not tests_pass:
+        status = "WARN: tests failing"
+    else:
+        status = "OK"
+    lines.append(f"[{scenario_name}] {status} — {commits} commit(s), {elapsed_s:.1f}s, exit={rc}")
+    return "\n".join(lines)
 
 
 def create_worktree(scenario_slug, main_dir):
@@ -410,216 +307,6 @@ def remove_worktree(wt_path, branch, main_dir):
         run_cmd(f'git branch -D "{branch}"', cwd=main_dir, timeout=10)
 
 
-def run_worker(scenario_name, wt_path, branch, main_dir, config):
-    """Run a single agent worker for one scenario. Returns a result dict."""
-    agent_config = config.get("agent", {})
-    model = os.environ.get(
-        "MODEL", agent_config.get("default_model", "claude-haiku-4-5-20251001")
-    )
-    provider = agent_config.get("provider")
-    timeout = agent_config.get("session_timeout", 3600)
-
-    # Read BDD.md config for build/test commands
-    stdout, _, _ = run_cmd("python3 scripts/parse_bdd_config.py BDD.md", cwd=main_dir)
-
-    date = time.strftime("%Y-%m-%d")
-    session_time = time.strftime("%H:%M")
-
-    # Build a focused prompt for this single scenario
-    prompt = f"""Today is {date} {session_time}.
-You are working in a git worktree on branch: {branch}
-
-Read these files first, in this order:
-1. IDENTITY.md — your rules and purpose
-2. BDD_SCENARIO.md — your scoped spec (frontmatter + the one scenario you must implement)
-
-DO NOT read BDD.md — it is ~130KB and will exhaust your context. BDD_SCENARIO.md contains everything you need.
-
-=== YOUR TARGET SCENARIO ===
-
-You must implement exactly this one scenario this session:
-
-  {scenario_name}
-
-Do not pick a different scenario. Implement this scenario.
-
-=== PHASE 1: Read BDD_SCENARIO.md (MANDATORY) ===
-
-BDD_SCENARIO.md is your complete spec. Read it before doing anything else.
-
-=== PHASE 2: Implement ===
-
-The correct TDD cycle — ALL steps must complete before any commit:
-
-  1. Write the test (name it after the scenario).
-
-     CRITICAL — the BDD marker MUST be the line immediately above the test
-     function definition, exactly like this:
-
-       # BDD: {scenario_name}
-       def test_...(...)
-
-     For JS/TS/Go/Rust/Java use // instead of #:
-
-       // BDD: {scenario_name}
-
-     The scenario name in the marker must match EXACTLY (same capitalisation,
-     same spacing, no trailing whitespace). This marker is how the coverage
-     checker proves the scenario is tested.
-
-  2. After writing the test, VERIFY the marker was inserted correctly:
-       grep -rn "BDD: {scenario_name}" tests/
-     If grep returns no output — the marker is missing or wrong. Fix it now
-     before continuing. Do not proceed without a successful grep result.
-
-  3. Run the test — confirm it FAILS (do NOT commit yet)
-
-  4. Write the implementation code that makes it pass
-
-  5. Run build and tests — confirm ALL tests PASS:
-       eval "$(python3 scripts/parse_bdd_config.py BDD_SCENARIO.md)" && eval "$BUILD_CMD" && eval "$TEST_CMD"
-
-  6. Only now commit:
-       git add -A -- ':!BDD_STATUS.md' ':!JOURNAL.md' ':!JOURNAL_INDEX.md' ':!BDD.md' ':!BDD_SCENARIO.md'
-       git commit -m "{date} {session_time}: implement {scenario_name}"
-
-If checks fail after your implementation:
-  - Read the error carefully
-  - Fix it and re-run — up to 3 attempts
-  - If still failing after 3 attempts: git checkout -- . (revert)
-
-=== PHASE 3: Verify ===
-
-Run: python3 scripts/check_bdd_coverage.py BDD.md
-(BDD.md is used here only by the coverage checker — do not read it yourself)
-Confirm "{scenario_name}" is now marked [x].
-
-If it is STILL marked [ ] UNCOVERED:
-  - The marker is missing or mismatched. Check with:
-      grep -rn "BDD:" tests/
-  - Fix the marker so it matches the scenario name exactly, then re-run the
-    coverage checker until it shows [x].
-  - Do NOT write the journal entry if the scenario is still UNCOVERED.
-  - Do NOT commit if coverage still shows UNCOVERED.
-
-Do not commit BDD_STATUS.md.
-
-=== PHASE 4: Journal ===
-
-Write a journal entry to JOURNAL_ENTRY.md (NOT JOURNAL.md):
-## {date} {session_time} — [title]
-[2-4 sentences: which scenario you covered, what approach you took]
-
-Then: git add JOURNAL_ENTRY.md && git commit -m "{date} {session_time}: journal entry"
-
-Now begin. Read IDENTITY.md first, then BDD_SCENARIO.md. Do NOT read full BDD.md.
-"""
-
-    # Write prompt to temp file
-    prompt_file = (
-        f"/tmp/baadd-prompt-{scenario_to_slug(scenario_name)}-{os.getpid()}.txt"
-    )
-    with open(prompt_file, "w") as f:
-        f.write(prompt)
-
-    # Copy runtime files to worktree
-    for runtime_file in ["ISSUES_TODAY.md", "BDD_STATUS.md"]:
-        src = os.path.join(main_dir, runtime_file)
-        if os.path.exists(src):
-            run_cmd(f'cp "{src}" "{wt_path}/"')
-
-    # Extract scoped spec — only the target scenario's Feature block (~30 lines vs ~130KB)
-    extract_result, _, extract_rc = run_cmd(
-        f'bash "{main_dir}/scripts/extract_scenario.sh" '
-        f'"{scenario_name}" "{main_dir}/BDD.md" "{wt_path}/BDD_SCENARIO.md"'
-    )
-    if extract_rc != 0:
-        # Fallback: copy full BDD.md so the agent can still work
-        run_cmd(f'cp "{main_dir}/BDD.md" "{wt_path}/BDD_SCENARIO.md"')
-        print(f"  BDD_SCENARIO.md: fallback to full BDD.md (extract failed)", flush=True)
-    else:
-        lines = extract_result.strip().split("\n")[0] if extract_result else ""
-        print(f"  BDD_SCENARIO.md: {lines}", flush=True)
-
-    # Run the agent - stream output in real-time
-    event_log = os.path.join(wt_path, "agent_events.jsonl")
-    provider_flag = f'--provider "{provider}" ' if provider else ""
-    agent_cmd = (
-        f'cd "{wt_path}" && '
-        f'timeout {timeout} python3 "{main_dir}/scripts/agent.py" '
-        f'{provider_flag}--model "{model}" --event-log "{event_log}" '
-        f'< "{prompt_file}" 2>&1'
-    )
-
-    start_time = time.time()
-    stdout_lines = []
-
-    # Stream output in real-time with prefix
-    prefix = f"[{scenario_name[:40]}]"
-    try:
-        proc = subprocess.Popen(
-            agent_cmd,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            cwd=wt_path,
-        )
-        for line in proc.stdout:
-            line = line.rstrip()
-            stdout_lines.append(line)
-            # Print in real-time with scenario prefix
-            print(f"  {prefix} {line}", flush=True)
-        proc.wait(timeout=timeout + 60)
-        rc = proc.returncode
-    except subprocess.TimeoutExpired:
-        proc.kill()
-        stdout_lines.append("TIMEOUT")
-        rc = 1
-    elapsed = time.time() - start_time
-
-    stdout = "\n".join(stdout_lines)
-
-    # Clean up prompt
-    try:
-        os.unlink(prompt_file)
-    except OSError:
-        pass
-
-    # Check if the agent made any commits
-    commits_out, _, _ = run_cmd(
-        f'git log --oneline HEAD.."{branch}" 2>/dev/null | wc -l',
-        cwd=main_dir,
-        timeout=10,
-    )
-    commit_count = int(commits_out.strip()) if commits_out.strip().isdigit() else 0
-
-    # Check if tests pass in the worktree
-    _, _, test_rc = run_cmd(
-        'eval "$(python3 scripts/parse_bdd_config.py BDD.md)" && eval "$TEST_CMD"',
-        cwd=wt_path,
-        timeout=120,
-    )
-
-    # Check if the BDD marker was actually added for this scenario
-    marker_grep, _, marker_rc = run_cmd(
-        f'grep -rn "BDD: {scenario_name}" tests/ scripts/ src/ 2>/dev/null || true',
-        cwd=wt_path,
-        timeout=10,
-    )
-    has_marker = bool(marker_grep.strip())
-
-    return {
-        "scenario": scenario_name,
-        "branch": branch,
-        "wt_path": wt_path,
-        "commits": commit_count,
-        "tests_pass": test_rc == 0,
-        "has_marker": has_marker,
-        "elapsed_s": round(elapsed),
-        "rc": rc,
-        "stdout": stdout[:2000] if stdout else "",
-    }
 
 
 def merge_worker_result(result, main_dir):
@@ -848,26 +535,27 @@ def main():
 
     # Pre-flight: verify existing tests pass before starting (skip in dry-run)
     if not args.dry_run:
+        # Parse config once — used for both the test run and the error hint
+        bdd_cfg_out, _, _ = run_cmd("python3 scripts/parse_bdd_config.py BDD.md", cwd=main_dir)
+        test_cmd_hint = "pytest"
+        for _line in bdd_cfg_out.splitlines():
+            if _line.startswith("export TEST_CMD="):
+                test_cmd_hint = _line.split("=", 1)[1].strip().strip("'")
+                break
+
         print("  Pre-flight: running test suite...", flush=True)
         _, _, preflight_rc = run_cmd(
-            'eval "$(python3 scripts/parse_bdd_config.py BDD.md)" && eval "$TEST_CMD"',
+            f'eval "$(python3 scripts/parse_bdd_config.py BDD.md)" && eval "$TEST_CMD"',
             cwd=main_dir,
             timeout=600,
             capture=None,  # stream to terminal — no Python buffering
         )
         if preflight_rc != 0:
-            # Get the actual test command from BDD.md for the hint
-            _bdd_out, _, _ = run_cmd("python3 scripts/parse_bdd_config.py BDD.md", cwd=main_dir)
-            _test_cmd = "cargo test"
-            for _line in _bdd_out.splitlines():
-                if _line.startswith("export TEST_CMD="):
-                    _test_cmd = _line.split("=", 1)[1].strip().strip("'")
-                    break
             print("", flush=True)
             print("ERROR: existing tests are failing — pipeline cannot run.", flush=True)
             print("Fix the failing tests on main before starting a cycle.", flush=True)
             print("", flush=True)
-            print(f"  Run:  {_test_cmd}", flush=True)
+            print(f"  Run:  {test_cmd_hint}", flush=True)
             sys.exit(1)
         print("  Pre-flight: OK", flush=True)
         print("", flush=True)
@@ -944,10 +632,15 @@ def main():
                 f'"{scenario_name}" "{main_dir}/BDD.md" "{scenario_md}"'
             )
             if extract_rc != 0 or not os.path.exists(scenario_md):
-                run_cmd(f'cp "{main_dir}/BDD.md" "{scenario_md}"')
-            scenario_text = read_file_safe(scenario_md)
-            workers[scenario_name] = (wt_path, branch, scenario_text)
-            lines = len(scenario_text.splitlines())
+                print(
+                    f"  [ERROR] extract_scenario.sh failed for '{scenario_name}' — skipping "
+                    f"(do not fall back to full BDD.md; fix extract_scenario.sh)",
+                    flush=True,
+                )
+                remove_worktree(wt_path, branch, main_dir)
+                continue
+            workers[scenario_name] = (wt_path, branch)
+            lines = len(open(scenario_md).readlines())
             print(f"  {scenario_name[:50]} → {wt_path} ({lines} lines spec)", flush=True)
 
         if not workers:
@@ -965,7 +658,7 @@ def main():
 
         # Combined iteration progress bar across all worktrees
         max_iter_cfg = agent_config.get("max_iterations", 75)
-        wt_paths = [wt for wt, _branch, _text in workers.values()]
+        wt_paths = [wt for wt, _branch in workers.values()]
         pb_stop = threading.Event()
         pb_thread = threading.Thread(
             target=_progress_bar,
@@ -976,11 +669,10 @@ def main():
 
         with ThreadPoolExecutor(max_workers=max_agents) as executor:
             futures = {}
-            for scenario_name, (wt_path, branch, scenario_text) in workers.items():
+            for scenario_name, (wt_path, branch) in workers.items():
                 future = executor.submit(
                     run_pm_pipeline,
                     scenario_name,
-                    scenario_text,
                     wt_path,
                     branch,
                     main_dir,
@@ -1054,7 +746,7 @@ def main():
 
         # Clean up worktrees for this round
         print(f"\n  Cleaning up {len(workers)} worktrees...", flush=True)
-        for scenario_name, (wt_path, branch, _scenario_text) in workers.items():
+        for scenario_name, (wt_path, branch) in workers.items():
             remove_worktree(wt_path, branch, main_dir)
 
         # Put thrown-away scenarios back so they appear in the remaining list
@@ -1151,11 +843,10 @@ def main():
     # Write orchestrator journal entry
     merged_names = [r["scenario"] for r in results if r.get("merged")]
     failed_names = [r["scenario"] for r in results if not r.get("merged")]
-    coverage_out, _, _ = run_cmd(
-        "python3 scripts/check_bdd_coverage.py BDD.md", cwd=main_dir
-    )
-    covered_count = len([l for l in coverage_out.splitlines() if "[x]" in l])
-    total_count = len([l for l in coverage_out.splitlines() if "- [" in l])
+    # BDD_STATUS.md was just written above — parse it instead of re-running the script
+    bdd_status = read_file_safe(os.path.join(main_dir, "BDD_STATUS.md"))
+    covered_count = len([l for l in bdd_status.splitlines() if "[x]" in l])
+    total_count = len([l for l in bdd_status.splitlines() if "- [" in l])
 
     journal_md = os.path.join(main_dir, "JOURNAL.md")
     journal_content = read_file_safe(journal_md)
@@ -1215,42 +906,6 @@ def main():
         cwd=main_dir,
     )
 
-
-def format_worker_output(result):
-    """Format worker result with scenario prefix for each output line.
-    
-    Args:
-        result: Dict with scenario, stdout, commits, tests_pass, elapsed_s, rc
-        
-    Returns:
-        Formatted string with scenario prefix on each line
-    """
-    scenario_name = result.get("scenario", "unknown")
-    stdout = result.get("stdout", "")
-    commits = result.get("commits", 0)
-    tests_pass = result.get("tests_pass", False)
-    elapsed_s = result.get("elapsed_s", 0)
-    rc = result.get("rc", 0)
-    
-    lines = []
-    
-    if stdout:
-        for line in stdout.split("\n"):
-            if line.strip():
-                lines.append(f"[{scenario_name}] {line}")
-    
-    status_parts = []
-    if commits == 0:
-        status_parts.append("FAIL: no commits")
-    elif not tests_pass:
-        status_parts.append("WARN: tests failing")
-    else:
-        status_parts.append("OK")
-    
-    status_str = ", ".join(status_parts)
-    lines.append(f"[{scenario_name}] {status_str} — {commits} commit(s), {elapsed_s:.1f}s, exit={rc}")
-    
-    return "\n".join(lines)
 
 
 if __name__ == "__main__":

@@ -714,3 +714,18 @@
 {"ts": "2026-04-30T17:24:04.767874", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
 {"ts": "2026-04-30T17:24:04.767938", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
 {"ts": "2026-04-30T17:24:04.772255", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T17:39:30.799100", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T17:39:30.799203", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T17:39:30.809827", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T21:11:12.690628", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T21:11:12.690706", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T21:11:12.694695", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T21:17:59.718798", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T21:17:59.718871", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T21:17:59.722690", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T21:21:29.312896", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T21:21:29.312957", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T21:21:29.317249", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T21:29:05.843791", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T21:29:05.843866", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T21:29:05.849164", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
