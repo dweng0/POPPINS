@@ -67,6 +67,7 @@ def parse_cli_args(args):
     Skips args[0] (the script name).
     """
     import argparse as _argparse
+
     p = _argparse.ArgumentParser()
     p.add_argument("--model", default=None)
     p.add_argument("--provider", default=None)
@@ -78,6 +79,7 @@ def parse_cli_args(args):
     if parsed.event_log is not None:
         result["event_log"] = parsed.event_log
     return result
+
 
 # Import poppins config (lives alongside this script)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -130,9 +132,11 @@ IN_CI = os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "t
 def _strip_thinking(text):
     """Extract and return (thoughts_list, clean_text) from <|channel>...<channel|> blocks."""
     import re
+
     thoughts = re.findall(r"<\|channel>(.*?)<channel\|>", text, flags=re.DOTALL)
     cleaned = re.sub(r"<\|channel>.*?<channel\|>", "", text, flags=re.DOTALL)
     return [t.strip() for t in thoughts if t.strip()], cleaned.strip()
+
 
 # Icons for tool types (plain-text, no emoji to keep CI logs clean)
 TOOL_ICONS = {
@@ -453,7 +457,7 @@ TOOLS_OPENAI = [
 
 def detect_provider():
     """Return provider from env var detection, then poppins.yml config, then ollama probe.
-    
+
     Environment variables take priority over poppins.yml config.
     """
     # Check environment variables first (highest priority)
@@ -755,13 +759,14 @@ def make_wrap_up_message(iteration, max_iterations, mode):
 def _parse_skill_pipelines(content):
     """Return list of pipelines from YAML frontmatter, or None if field absent."""
     import re as _re
-    match = _re.match(r'^---\s*\n(.*?)\n---', content, _re.DOTALL)
+
+    match = _re.match(r"^---\s*\n(.*?)\n---", content, _re.DOTALL)
     if not match:
         return None
-    line = _re.search(r'^pipelines:\s*\[([^\]]*)\]', match.group(1), _re.MULTILINE)
+    line = _re.search(r"^pipelines:\s*\[([^\]]*)\]", match.group(1), _re.MULTILINE)
     if not line:
         return None
-    return [p.strip() for p in line.group(1).split(',') if p.strip()]
+    return [p.strip() for p in line.group(1).split(",") if p.strip()]
 
 
 def load_skills(skills_dir, pipeline=None):
@@ -908,7 +913,7 @@ def _stream_openai_response(client, model, messages):
     """
     _SPINNER = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
     text_chunks = []
-    tool_buf = {}   # index -> {id, name, arguments}
+    tool_buf = {}  # index -> {id, name, arguments}
     finish_reason = None
     input_tokens = output_tokens = None
     tok = 0
@@ -945,8 +950,11 @@ def _stream_openai_response(client, model, messages):
                     elapsed = time.time() - stream_start
                     tps = tok / elapsed if elapsed > 0 else 0.0
                     preview = "".join(text_chunks).lstrip().splitlines()[0][:50]
-                    print(f"\r\033[90m  {spin} {tok} tok | {tps:.1f} tok/s  {preview}\033[0m",
-                          end="", flush=True)
+                    print(
+                        f"\r\033[90m  {spin} {tok} tok | {tps:.1f} tok/s  {preview}\033[0m",
+                        end="",
+                        flush=True,
+                    )
 
             if delta.tool_calls:
                 tok += 1
@@ -954,8 +962,11 @@ def _stream_openai_response(client, model, messages):
                     spin = _SPINNER[tok % len(_SPINNER)]
                     elapsed = time.time() - stream_start
                     tps = tok / elapsed if elapsed > 0 else 0.0
-                    print(f"\r\033[90m  {spin} {tok} tok | {tps:.1f} tok/s\033[0m",
-                          end="", flush=True)
+                    print(
+                        f"\r\033[90m  {spin} {tok} tok | {tps:.1f} tok/s\033[0m",
+                        end="",
+                        flush=True,
+                    )
                 for tc in delta.tool_calls:
                     idx = tc.index
                     if idx not in tool_buf:
@@ -1015,8 +1026,9 @@ def run_openai_loop(client, model, system_prompt, prompt, mode, event_log):
             event_log.wrap_up(iteration)
 
         try:
-            finish_reason, text, tool_calls, input_tokens, output_tokens = \
+            finish_reason, text, tool_calls, input_tokens, output_tokens = (
                 _stream_openai_response(client, model, messages)
+            )
         except Exception as api_err:
             print(f"\n[BAADD agent: API error — {api_err}]", flush=True)
             event_log.session_end(iteration, f"api_error: {api_err}")
@@ -1036,7 +1048,9 @@ def run_openai_loop(client, model, system_prompt, prompt, mode, event_log):
                     print(f"\n\033[2m~ {thought}\033[0m", flush=True)
             if display:
                 if IN_CI:
-                    _ci_group(f"Agent [{iteration}/{MAX_ITERATIONS}]: {display[:80]}...")
+                    _ci_group(
+                        f"Agent [{iteration}/{MAX_ITERATIONS}]: {display[:80]}..."
+                    )
                     print(display, flush=True)
                     _ci_endgroup()
                 else:
@@ -1049,18 +1063,23 @@ def run_openai_loop(client, model, system_prompt, prompt, mode, event_log):
 
         if finish_reason == "tool_calls":
             # Reconstruct an assistant message with tool_calls for the history
-            messages.append({
-                "role": "assistant",
-                "content": text or None,
-                "tool_calls": [
-                    {
-                        "id": tc.id,
-                        "type": "function",
-                        "function": {"name": tc.function.name, "arguments": tc.function.arguments},
-                    }
-                    for tc in tool_calls
-                ],
-            })
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": text or None,
+                    "tool_calls": [
+                        {
+                            "id": tc.id,
+                            "type": "function",
+                            "function": {
+                                "name": tc.function.name,
+                                "arguments": tc.function.arguments,
+                            },
+                        }
+                        for tc in tool_calls
+                    ],
+                }
+            )
 
             for tool_call in tool_calls:
                 name = tool_call.function.name
@@ -1103,7 +1122,11 @@ def main():
         help="Force provider: anthropic|moonshot|dashscope|openai|groq|ollama",
     )
     parser.add_argument("--skills", default=None)
-    parser.add_argument("--pipeline", default=None, help="Pipeline context for skill filtering (e.g. evolve, orchestrate, claude)")
+    parser.add_argument(
+        "--pipeline",
+        default=None,
+        help="Pipeline context for skill filtering (e.g. evolve, orchestrate, claude)",
+    )
     parser.add_argument("--mode", default="evolve", choices=["evolve", "bootstrap"])
     parser.add_argument(
         "--event-log",

@@ -5,6 +5,7 @@ def test_detects_anthropic_when_keys_are_set():
 
     class StubConfigReader:
         """Stub implementation of EnvironmentConfigReader for testing."""
+
         def get_key(self, key: str) -> Optional[str]:
             if key == "ANTHROPIC_API_KEY":
                 return "mock_anthropic_key"

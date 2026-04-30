@@ -4,8 +4,7 @@
 import os
 
 WORKFLOWS_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    ".github", "workflows"
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".github", "workflows"
 )
 EVOLVE_YML = os.path.join(WORKFLOWS_DIR, "evolve.yml")
 

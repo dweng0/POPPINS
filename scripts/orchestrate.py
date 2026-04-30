@@ -27,26 +27,26 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from parse_poppins_config import get_config
 from check_bdd_coverage import parse_scenarios, find_test_files, check_coverage
 from pm_worker import run_pm_pipeline
-
+from session_lifecycle import append_session_event
 
 
 def run_integration_tests(scenario_results, main_dir):
     """Run integration tests after merging."""
     print("    [INTEGRATION TEST] Running post-merge tests...", flush=True)
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(scenario_results, f)
         results_file = f.name
-    
+
     try:
         stdout, stderr, rc = run_cmd(
             f"python3 scripts/integration_test_agent.py --main-dir . --results-file {results_file} --max-fix-attempts 1",
             cwd=main_dir,
             timeout=120,
         )
-        
+
         # Parse the output for pass/fail
         if "[OK]" in stdout or rc == 0:
-            print(f"    [INTEGRATION TEST] PASSED", flush=True)
+            print("    [INTEGRATION TEST] PASSED", flush=True)
             return True, stdout
         else:
             print(f"    [INTEGRATION TEST] FAILED: {stderr or stdout}", flush=True)
@@ -58,10 +58,10 @@ def run_integration_tests(scenario_results, main_dir):
 
 # Phase detection — log filename prefix → display label (in pipeline order)
 _PHASE_PREFIXES = [
-    ("pm_plan",    "PM-PLAN"),
-    ("se",         "SE"),
-    ("tester",     "TESTER"),
-    ("pm_accept",  "ACCEPT"),
+    ("pm_plan", "PM-PLAN"),
+    ("se", "SE"),
+    ("tester", "TESTER"),
+    ("pm_accept", "ACCEPT"),
 ]
 
 
@@ -116,7 +116,9 @@ def _read_wt_phase_state(wt_path):
     return active_label, current_iter, max_iter, done_labels
 
 
-def _progress_bar(wt_paths, _max_iter_unused, _num_agents_unused, stop_event, interval=8):
+def _progress_bar(
+    wt_paths, _max_iter_unused, _num_agents_unused, stop_event, interval=8
+):
     """Background thread: per-worktree phase + iteration bar on the terminal.
 
     Each worktree shows:  PM-PLAN✓ SE✓ [TESTER ████░░░░░░░░░░░░░░░░░░░░ 8/75]
@@ -197,7 +199,6 @@ def scenario_to_slug(name):
     return slug[:60]
 
 
-
 def get_uncovered_scenarios(bdd_path="BDD.md"):
     """Return list of (feature, scenario) tuples that lack test coverage."""
     scenarios = parse_scenarios(bdd_path)
@@ -256,7 +257,6 @@ def detect_provider():
     return None
 
 
-
 def select_scenarios(ordered_names, max_agents):
     """Return (selected, remaining) where selected is the top max_agents scenarios."""
     return ordered_names[:max_agents], ordered_names[max_agents:]
@@ -278,7 +278,9 @@ def format_worker_output(result):
         status = "WARN: tests failing"
     else:
         status = "OK"
-    lines.append(f"[{scenario_name}] {status} — {commits} commit(s), {elapsed_s:.1f}s, exit={rc}")
+    lines.append(
+        f"[{scenario_name}] {status} — {commits} commit(s), {elapsed_s:.1f}s, exit={rc}"
+    )
     return "\n".join(lines)
 
 
@@ -307,8 +309,6 @@ def remove_worktree(wt_path, branch, main_dir):
         run_cmd(f'git branch -D "{branch}"', cwd=main_dir, timeout=10)
 
 
-
-
 def merge_worker_result(result, main_dir):
     """Merge a successful worker's branch back to main. Returns True on success."""
     branch = result["branch"]
@@ -328,16 +328,12 @@ def merge_worker_result(result, main_dir):
         return False
 
     if not result["tests_pass"]:
-        print(
-            "    → THROWN AWAY (tests failing in worktree — PM rejected)", flush=True
-        )
+        print("    → THROWN AWAY (tests failing in worktree — PM rejected)", flush=True)
         return False
 
     # Guard: reject if SE deleted existing files that the PM didn't explicitly
     # approve in PLAN.md section 5.
-    merge_base_out, _, mb_rc = run_cmd(
-        f'git merge-base HEAD "{branch}"', cwd=main_dir
-    )
+    merge_base_out, _, mb_rc = run_cmd(f'git merge-base HEAD "{branch}"', cwd=main_dir)
     if mb_rc == 0:
         merge_base = merge_base_out.strip()
         deleted_out, _, _ = run_cmd(
@@ -407,7 +403,7 @@ def merge_worker_result(result, main_dir):
     # Post-merge verification with integration test agent
     # First, run integration tests to catch any issues
     integration_success, integration_output = run_integration_tests([result], main_dir)
-    
+
     if not integration_success:
         print(
             "    Post-merge verification FAILED — reverting merge (PM rejected)",
@@ -476,7 +472,11 @@ def main():
     orch_config = config.get("orchestration", {})
     agent_config = config.get("agent", {})
     max_agents = args.max_agents or orch_config.get("max_parallel_agents", 3)
-    max_rounds = args.max_rounds if args.max_rounds is not None else orch_config.get("max_rounds", 1)
+    max_rounds = (
+        args.max_rounds
+        if args.max_rounds is not None
+        else orch_config.get("max_rounds", 1)
+    )
 
     # Apply poppins.yml config as env var defaults (env vars take priority)
     # This lets users configure their LLM once in poppins.yml
@@ -536,7 +536,9 @@ def main():
     # Pre-flight: verify existing tests pass before starting (skip in dry-run)
     if not args.dry_run:
         # Parse config once — used for both the test run and the error hint
-        bdd_cfg_out, _, _ = run_cmd("python3 scripts/parse_bdd_config.py BDD.md", cwd=main_dir)
+        bdd_cfg_out, _, _ = run_cmd(
+            "python3 scripts/parse_bdd_config.py BDD.md", cwd=main_dir
+        )
         test_cmd_hint = "pytest"
         for _line in bdd_cfg_out.splitlines():
             if _line.startswith("export TEST_CMD="):
@@ -545,14 +547,16 @@ def main():
 
         print("  Pre-flight: running test suite...", flush=True)
         _, _, preflight_rc = run_cmd(
-            f'eval "$(python3 scripts/parse_bdd_config.py BDD.md)" && eval "$TEST_CMD"',
+            'eval "$(python3 scripts/parse_bdd_config.py BDD.md)" && eval "$TEST_CMD"',
             cwd=main_dir,
             timeout=600,
             capture=None,  # stream to terminal — no Python buffering
         )
         if preflight_rc != 0:
             print("", flush=True)
-            print("ERROR: existing tests are failing — pipeline cannot run.", flush=True)
+            print(
+                "ERROR: existing tests are failing — pipeline cannot run.", flush=True
+            )
             print("Fix the failing tests on main before starting a cycle.", flush=True)
             print("", flush=True)
             print(f"  Run:  {test_cmd_hint}", flush=True)
@@ -586,13 +590,21 @@ def main():
             round_scenarios = ordered_names[start : start + max_agents]
             if not round_scenarios:
                 break
-            print(f"  Round {round_num}/{max_rounds}: {len(round_scenarios)} scenario(s)", flush=True)
+            print(
+                f"  Round {round_num}/{max_rounds}: {len(round_scenarios)} scenario(s)",
+                flush=True,
+            )
             for name in round_scenarios:
                 print(f"    - {name}", flush=True)
         truly_deferred = ordered_names[total_slots:]
         if truly_deferred:
-            print(f"\n  {len(truly_deferred)} scenario(s) deferred beyond {max_rounds} round(s).", flush=True)
-        print(f"  [dry-run] Would spawn agents across {max_rounds} round(s).", flush=True)
+            print(
+                f"\n  {len(truly_deferred)} scenario(s) deferred beyond {max_rounds} round(s).",
+                flush=True,
+            )
+        print(
+            f"  [dry-run] Would spawn agents across {max_rounds} round(s).", flush=True
+        )
         return
 
     # Rounds loop: each round picks the next max_agents scenarios from the ordered list
@@ -602,7 +614,10 @@ def main():
 
     for round_num in range(1, max_rounds + 1):
         if not remaining_names:
-            print(f"\n  All scenarios exhausted before round {round_num}. Stopping.", flush=True)
+            print(
+                f"\n  All scenarios exhausted before round {round_num}. Stopping.",
+                flush=True,
+            )
             break
 
         selected_names = remaining_names[:max_agents]
@@ -610,11 +625,15 @@ def main():
         all_selected_names.extend(selected_names)
 
         if max_rounds > 1:
-            print(f"\n=== Round {round_num}/{max_rounds} — {len(selected_names)} scenario(s) ===", flush=True)
+            print(
+                f"\n=== Round {round_num}/{max_rounds} — {len(selected_names)} scenario(s) ===",
+                flush=True,
+            )
 
         # Create worktrees for this round's scenarios
         print(
-            f"\n  Creating worktrees for {len(selected_names)} scenario(s)...", flush=True
+            f"\n  Creating worktrees for {len(selected_names)} scenario(s)...",
+            flush=True,
         )
         workers = {}
         for scenario_name in selected_names:
@@ -622,7 +641,8 @@ def main():
             wt_path, branch = create_worktree(slug, main_dir)
             if not wt_path:
                 print(
-                    f"  [WARN] Failed to create worktree for: {scenario_name}", flush=True
+                    f"  [WARN] Failed to create worktree for: {scenario_name}",
+                    flush=True,
                 )
                 continue
             # Extract scoped spec into worktree — avoids loading full BDD.md per agent
@@ -645,7 +665,9 @@ def main():
                 run_cmd(f'cp "{context_src}" "{wt_path}/"')
             workers[scenario_name] = (wt_path, branch)
             lines = len(open(scenario_md).readlines())
-            print(f"  {scenario_name[:50]} → {wt_path} ({lines} lines spec)", flush=True)
+            print(
+                f"  {scenario_name[:50]} → {wt_path} ({lines} lines spec)", flush=True
+            )
 
         if not workers:
             print("  No worktrees created for this round. Skipping.", flush=True)
@@ -691,6 +713,20 @@ def main():
                     results.append(result)
                     commits = result["commits"]
                     tests_pass = result["tests_pass"]
+                    wt_path = result["wt_path"]
+
+                    sessions_path = os.path.join(main_dir, "sessions.jsonl")
+                    append_session_event(
+                        sessions_path,
+                        {
+                            "type": "session_end",
+                            "scenario": scenario_name,
+                            "pid": os.getpid(),
+                            "wt_path": wt_path,
+                            "ts": time.time(),
+                        },
+                    )
+
                     if commits == 0:
                         status_str = "[FAIL: no commits]"
                     elif not tests_pass:
@@ -722,13 +758,26 @@ def main():
                             "stdout": str(e),
                         }
                     )
+                    sessions_path = os.path.join(main_dir, "sessions.jsonl")
+                    append_session_event(
+                        sessions_path,
+                        {
+                            "type": "session_end",
+                            "scenario": scenario_name,
+                            "pid": os.getpid(),
+                            "wt_path": wt_path,
+                            "ts": time.time(),
+                        },
+                    )
 
         pb_stop.set()
         pb_thread.join(timeout=2)
 
         # Merge results in planned order
         print(f"\n  Merging {len(results)} results in order...", flush=True)
-        for result in sorted(results, key=lambda r: selected_names.index(r["scenario"])):
+        for result in sorted(
+            results, key=lambda r: selected_names.index(r["scenario"])
+        ):
             scenario = result["scenario"]
             commits = result["commits"]
             tests = "tests pass" if result["tests_pass"] else "tests failing"
@@ -855,9 +904,7 @@ def main():
     journal_md = os.path.join(main_dir, "JOURNAL.md")
     journal_content = read_file_safe(journal_md)
     orchestrator_entry = f"\n## {date} {session_time} — Orchestrator session\n\n"
-    orchestrator_entry += (
-        f"Ran {len(results)} agents across {max_rounds} round(s) (max {max_agents} concurrent per round). "
-    )
+    orchestrator_entry += f"Ran {len(results)} agents across {max_rounds} round(s) (max {max_agents} concurrent per round). "
     orchestrator_entry += f"Total agent time: {total_time}s.\n\n"
     if merged_names:
         orchestrator_entry += (
@@ -909,7 +956,6 @@ def main():
         f"git add JOURNAL_INDEX.md && git commit -m '{date} {session_time}: update journal index'",
         cwd=main_dir,
     )
-
 
 
 if __name__ == "__main__":

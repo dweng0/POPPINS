@@ -42,13 +42,12 @@ def test_trim_context_when_exceeding_limit():
     messages.append({"role": "user", "content": "initial prompt"})
     # add many old messages with large tool results
     for i in range(20):
-        messages.append({
-            "role": "user",
-            "content": [{
-                "type": "tool_result",
-                "content": "x" * 2000
-            }]
-        })
+        messages.append(
+            {
+                "role": "user",
+                "content": [{"type": "tool_result", "content": "x" * 2000}],
+            }
+        )
     limit = 100
     result = trim_context(messages, limit)
     # some tool results should be truncated
@@ -57,7 +56,9 @@ def test_trim_context_when_exceeding_limit():
         content = msg.get("content", "")
         if isinstance(content, list):
             for item in content:
-                if isinstance(item, dict) and "[... trimmed" in str(item.get("content", "")):
+                if isinstance(item, dict) and "[... trimmed" in str(
+                    item.get("content", "")
+                ):
                     truncated_found = True
     assert truncated_found
 
@@ -68,7 +69,9 @@ def test_preserve_recent_messages_during_trim():
     messages.append({"role": "user", "content": "initial"})
     for i in range(20):
         content = f"message_{i}_" + "x" * 2000
-        messages.append({"role": "user", "content": [{"type": "tool_result", "content": content}]})
+        messages.append(
+            {"role": "user", "content": [{"type": "tool_result", "content": content}]}
+        )
 
     original_last_12 = [str(m) for m in messages[-12:]]
     limit = 10
@@ -83,10 +86,14 @@ def test_trim_only_tool_result_content():
         {"role": "user", "content": "initial prompt " + "x" * 2000},
     ]
     for i in range(5):
-        messages.append({
-            "role": "user",
-            "content": [{"type": "tool_result", "content": "tool output " + "x" * 2000}]
-        })
+        messages.append(
+            {
+                "role": "user",
+                "content": [
+                    {"type": "tool_result", "content": "tool output " + "x" * 2000}
+                ],
+            }
+        )
     messages.append({"role": "assistant", "content": "assistant text " + "x" * 2000})
     # add protected tail messages
     for i in range(12):
@@ -105,19 +112,19 @@ def test_agent_stops_at_max_iterations():
     import os
     import sys
     import tempfile
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         scripts_dir = os.path.join(tmpdir, "scripts")
         os.makedirs(scripts_dir)
-        
+
         with open("scripts/agent.py", "r") as src:
             with open(os.path.join(scripts_dir, "agent.py"), "w") as dst:
                 dst.write(src.read())
-        
+
         with open("scripts/parse_poppins_config.py", "r") as src:
             with open(os.path.join(scripts_dir, "parse_poppins_config.py"), "w") as dst:
                 dst.write(src.read())
-        
+
         # Test that MAX_ITERATIONS constant is 75 (from poppins.yml default)
         test_script = os.path.join(tmpdir, "test_iterations.py")
         with open(test_script, "w") as f:
@@ -136,14 +143,14 @@ from agent import MAX_ITERATIONS
 assert MAX_ITERATIONS == 75, f"Expected MAX_ITERATIONS=75, got {{MAX_ITERATIONS}}"
 print(f"MAX_ITERATIONS={{MAX_ITERATIONS}}")
 ''')
-        
+
         result = subprocess.run(
             [sys.executable, test_script],
             capture_output=True,
             text=True,
             cwd=tmpdir,
         )
-        
+
         assert result.returncode == 0, f"Script failed: {result.stderr}"
         assert "MAX_ITERATIONS=75" in result.stdout
 
@@ -154,19 +161,19 @@ def test_session_ends_on_end_turn_stop_reason():
     import os
     import sys
     import tempfile
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         scripts_dir = os.path.join(tmpdir, "scripts")
         os.makedirs(scripts_dir)
-        
+
         with open("scripts/agent.py", "r") as src:
             with open(os.path.join(scripts_dir, "agent.py"), "w") as dst:
                 dst.write(src.read())
-        
+
         with open("scripts/parse_poppins_config.py", "r") as src:
             with open(os.path.join(scripts_dir, "parse_poppins_config.py"), "w") as dst:
                 dst.write(src.read())
-        
+
         test_script = os.path.join(tmpdir, "test_end_turn.py")
         with open(test_script, "w") as f:
             f.write(f'''
@@ -199,13 +206,13 @@ with open(log_path) as f:
 os.unlink(log_path)
 print("session_end logged correctly")
 ''')
-        
+
         result = subprocess.run(
             [sys.executable, test_script],
             capture_output=True,
             text=True,
             cwd=tmpdir,
         )
-        
+
         assert result.returncode == 0, f"Script failed: {result.stderr}"
         assert "session_end logged correctly" in result.stdout

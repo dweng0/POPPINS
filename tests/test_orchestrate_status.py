@@ -21,14 +21,14 @@ def test_worker_output_ok_status():
         "rc": 0,
         "stdout": "",
     }
-    
+
     if result["commits"] == 0:
         status_str = "[FAIL: no commits]"
     elif not result["tests_pass"]:
         status_str = "[WARN: tests failing]"
     else:
         status_str = "[OK]"
-    
+
     assert status_str == "[OK]"
 
 
@@ -46,14 +46,14 @@ def test_worker_output_fail_no_commits():
         "rc": 0,
         "stdout": "",
     }
-    
+
     if result["commits"] == 0:
         status_str = "[FAIL: no commits]"
     elif not result["tests_pass"]:
         status_str = "[WARN: tests failing]"
     else:
         status_str = "[OK]"
-    
+
     assert status_str == "[FAIL: no commits]"
 
 
@@ -71,14 +71,14 @@ def test_worker_output_warn_failing_tests():
         "rc": 0,
         "stdout": "",
     }
-    
+
     if result["commits"] == 0:
         status_str = "[FAIL: no commits]"
     elif not result["tests_pass"]:
         status_str = "[WARN: tests failing]"
     else:
         status_str = "[OK]"
-    
+
     assert status_str == "[WARN: tests failing]"
 
 
@@ -96,9 +96,15 @@ def test_worker_output_status_with_commits_and_passing():
         "rc": 0,
         "stdout": "",
     }
-    
-    status_str = "[OK]" if result["commits"] > 0 and result["tests_pass"] else "[FAIL: no commits]" if result["commits"] == 0 else "[WARN: tests failing]"
-    
+
+    status_str = (
+        "[OK]"
+        if result["commits"] > 0 and result["tests_pass"]
+        else "[FAIL: no commits]"
+        if result["commits"] == 0
+        else "[WARN: tests failing]"
+    )
+
     assert status_str == "[OK]"
 
 
@@ -116,9 +122,9 @@ def test_worker_output_status_no_commits_failing_tests():
         "rc": 0,
         "stdout": "",
     }
-    
+
     status_str = "[FAIL: no commits]"
-    
+
     assert status_str == "[FAIL: no commits]"
 
 
@@ -136,9 +142,9 @@ def test_worker_output_status_commits_but_failing_tests():
         "rc": 0,
         "stdout": "",
     }
-    
+
     status_str = "[WARN: tests failing]"
-    
+
     assert status_str == "[WARN: tests failing]"
 
 
@@ -156,7 +162,7 @@ def test_worker_output_status_with_has_marker():
         "rc": 0,
         "stdout": "",
     }
-    
+
     if not result.get("has_marker", True):
         status_str = "[FAIL: no BDD marker]"
     elif result["commits"] == 0:
@@ -165,7 +171,7 @@ def test_worker_output_status_with_has_marker():
         status_str = "[WARN: tests failing]"
     else:
         status_str = "[OK]"
-    
+
     assert status_str == "[FAIL: no BDD marker]"
 
 
@@ -183,16 +189,16 @@ def test_worker_output_format_with_status():
         "rc": 0,
         "stdout": "",
     }
-    
+
     if result["commits"] == 0:
         status_str = "[FAIL: no commits]"
     elif not result["tests_pass"]:
         status_str = "[WARN: tests failing]"
     else:
         status_str = "[OK]"
-    
+
     output = f"{status_str} {result['scenario']} — {result['commits']} commit(s), {result['elapsed_s']}s"
-    
+
     assert "[OK]" in output
     assert "Test scenario" in output
     assert "2 commit(s)" in output
@@ -212,16 +218,16 @@ def test_worker_output_format_fail_status():
         "rc": 1,
         "stdout": "",
     }
-    
+
     if result["commits"] == 0:
         status_str = "[FAIL: no commits]"
     elif not result["tests_pass"]:
         status_str = "[WARN: tests failing]"
     else:
         status_str = "[OK]"
-    
+
     output = f"{status_str} {result['scenario']} — {result['commits']} commit(s), {result['elapsed_s']}s"
-    
+
     assert "[FAIL: no commits]" in output
 
 
@@ -239,16 +245,16 @@ def test_worker_output_format_warn_status():
         "rc": 0,
         "stdout": "",
     }
-    
+
     if result["commits"] == 0:
         status_str = "[FAIL: no commits]"
     elif not result["tests_pass"]:
         status_str = "[WARN: tests failing]"
     else:
         status_str = "[OK]"
-    
+
     output = f"{status_str} {result['scenario']} — {result['commits']} commit(s), {result['elapsed_s']}s"
-    
+
     assert "[WARN: tests failing]" in output
 
 
@@ -260,7 +266,7 @@ def test_orchestrator_status_output():
         {"scenario": "B", "commits": 1, "tests_pass": False, "has_marker": True},
         {"scenario": "C", "commits": 0, "tests_pass": True, "has_marker": True},
     ]
-    
+
     statuses = []
     for r in results:
         if r["commits"] == 0:
@@ -270,7 +276,7 @@ def test_orchestrator_status_output():
         else:
             status_str = "[OK]"
         statuses.append(status_str)
-    
+
     assert statuses == ["[OK]", "[WARN: tests failing]", "[FAIL: no commits]"]
 
 
@@ -279,10 +285,13 @@ def test_worker_output_status_priority():
     """Status priority: no commits > failing tests > OK."""
     test_cases = [
         ({"commits": 0, "tests_pass": True, "has_marker": True}, "[FAIL: no commits]"),
-        ({"commits": 1, "tests_pass": False, "has_marker": True}, "[WARN: tests failing]"),
+        (
+            {"commits": 1, "tests_pass": False, "has_marker": True},
+            "[WARN: tests failing]",
+        ),
         ({"commits": 1, "tests_pass": True, "has_marker": True}, "[OK]"),
     ]
-    
+
     for result, expected in test_cases:
         if result["commits"] == 0:
             status_str = "[FAIL: no commits]"
@@ -307,16 +316,16 @@ def test_worker_output_with_elapsed_time():
         "rc": 0,
         "stdout": "",
     }
-    
+
     if result["commits"] == 0:
         status_str = "[FAIL: no commits]"
     elif not result["tests_pass"]:
         status_str = "[WARN: tests failing]"
     else:
         status_str = "[OK]"
-    
+
     output = f"{status_str} {result['scenario']} — {result['commits']} commit(s), {result['elapsed_s']}s"
-    
+
     assert "[OK]" in output
     assert "125.5s" in output
 
@@ -335,15 +344,15 @@ def test_worker_output_status_with_rc():
         "rc": 0,
         "stdout": "",
     }
-    
+
     if result["commits"] == 0:
         status_str = "[FAIL: no commits]"
     elif not result["tests_pass"]:
         status_str = "[WARN: tests failing]"
     else:
         status_str = "[OK]"
-    
+
     output = f"{status_str} {result['scenario']} — {result['commits']} commit(s), {result['elapsed_s']}s, exit={result['rc']}"
-    
+
     assert "[OK]" in output
     assert "exit=0" in output

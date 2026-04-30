@@ -4,8 +4,7 @@
 import os
 
 WORKFLOWS_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    ".github", "workflows"
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".github", "workflows"
 )
 EVOLVE_YML = os.path.join(WORKFLOWS_DIR, "evolve.yml")
 
@@ -26,4 +25,6 @@ def test_git_bot_name_is_baadd_agent():
 def test_git_bot_email_is_noreply_address():
     """Workflow sets git user.email to baadd-agent[bot]@users.noreply.github.com."""
     content = _read_evolve_yml()
-    assert 'git config user.email "baadd-agent[bot]@users.noreply.github.com"' in content
+    assert (
+        'git config user.email "baadd-agent[bot]@users.noreply.github.com"' in content
+    )

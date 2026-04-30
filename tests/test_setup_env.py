@@ -43,7 +43,9 @@ def test_setup_node_dependencies():
         content = f.read()
 
     # 1. Verify the node|javascript) case block exists
-    assert "node|javascript)" in content, "setup_env.sh must contain a node|javascript) case block"
+    assert "node|javascript)" in content, (
+        "setup_env.sh must contain a node|javascript) case block"
+    )
 
     # 2. Extract the node|javascript) case block and verify it checks for package.json
     #    The case block ends at the next ;; pattern
@@ -76,14 +78,20 @@ def test_setup_rust_toolchain():
         content = f.read()
 
     # Verify the script has a rust case
-    assert "rust)" in content, "setup_env.sh should have a 'rust' case in its case statement"
+    assert "rust)" in content, (
+        "setup_env.sh should have a 'rust' case in its case statement"
+    )
 
     # Verify it checks for cargo not being installed
-    assert "command -v cargo" in content, "setup_env.sh should check if cargo is installed"
+    assert "command -v cargo" in content, (
+        "setup_env.sh should check if cargo is installed"
+    )
 
     # Verify it installs Rust via rustup
     assert "rustup" in content, "setup_env.sh should install Rust via rustup"
-    assert "sh.rustup.rs" in content, "setup_env.sh should use sh.rustup.rs for rustup installation"
+    assert "sh.rustup.rs" in content, (
+        "setup_env.sh should use sh.rustup.rs for rustup installation"
+    )
 
 
 # BDD: Skip unknown language gracefully

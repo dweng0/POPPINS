@@ -27,7 +27,11 @@ def test_api_error_causes_exit_without_commit():
 # BDD: Post-merge verification catches breakage
 def test_post_merge_verification_runs_tests():
     content = _evolve()
-    assert "post-merge" in content.lower() or "post_merge" in content.lower() or "Post-merge" in content
+    assert (
+        "post-merge" in content.lower()
+        or "post_merge" in content.lower()
+        or "Post-merge" in content
+    )
 
 
 # BDD: Post-merge verification catches breakage
@@ -54,7 +58,7 @@ def test_timeout_command_used():
 # BDD: Timeout kills long session
 def test_timeout_env_var_configurable():
     content = _evolve()
-    assert "TIMEOUT=" in content or 'TIMEOUT:-' in content
+    assert "TIMEOUT=" in content or "TIMEOUT:-" in content
 
 
 # BDD: Timeout kills long session

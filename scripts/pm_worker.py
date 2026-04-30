@@ -32,9 +32,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from parse_poppins_config import get_config as _get_poppins_config
 
 # Per-phase agent timeouts (seconds).  PM-plan and SE need more time than Tester/Accept.
-TIMEOUT_PM_PLAN   = 720
-TIMEOUT_SE        = 900
-TIMEOUT_TESTER    = 480
+TIMEOUT_PM_PLAN = 720
+TIMEOUT_SE = 900
+TIMEOUT_TESTER = 480
 TIMEOUT_PM_ACCEPT = 360
 
 MAX_RETRIES = 3
@@ -54,6 +54,7 @@ PROTECTED_PATHS = _poppins_cfg.get("agent", {}).get("protected_paths") or [
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def check_se_protected_files(wt_path):
     """Return list of protected files the SE modified. Empty = clean."""
@@ -100,8 +101,9 @@ def _read_event_log_tokens(event_log_path):
     return total
 
 
-def _tps_monitor(event_log_path, stream_prefix, t0, stop_event,
-                 interval=5, min_tokens=10):
+def _tps_monitor(
+    event_log_path, stream_prefix, t0, stop_event, interval=5, min_tokens=10
+):
     """Background thread: print periodic TPS status lines while an agent runs."""
     while not stop_event.wait(timeout=interval):
         elapsed = time.time() - t0
@@ -114,8 +116,9 @@ def _tps_monitor(event_log_path, stream_prefix, t0, stop_event,
             )
 
 
-def run_agent(prompt, wt_path, main_dir, provider, model,
-              log_suffix, phase_timeout, stream_prefix):
+def run_agent(
+    prompt, wt_path, main_dir, provider, model, log_suffix, phase_timeout, stream_prefix
+):
     """
     Write prompt to a temp file, run agent.py, buffer output.
     Prints periodic TPS status lines while running; dumps full output when done.
@@ -129,7 +132,11 @@ def run_agent(prompt, wt_path, main_dir, provider, model,
     event_log = os.path.join(wt_path, f"agent_events_{slug}.jsonl")
     provider_flag = f'--provider "{provider}" ' if provider else ""
     skills_dir = os.path.join(main_dir, "skills")
-    skills_flag = f'--skills "{skills_dir}" --pipeline orchestrate ' if os.path.isdir(skills_dir) else ""
+    skills_flag = (
+        f'--skills "{skills_dir}" --pipeline orchestrate '
+        if os.path.isdir(skills_dir)
+        else ""
+    )
     cmd = (
         f'cd "{wt_path}" && '
         f'timeout {phase_timeout} python3 "{main_dir}/scripts/agent.py" '
@@ -493,6 +500,7 @@ Output this exact line last:
 # Scenario text extraction
 # ---------------------------------------------------------------------------
 
+
 def extract_scenario_block(bdd_content, scenario_name):
     """
     Extract the scenario block from BDD.md content for the named scenario.
@@ -513,7 +521,9 @@ def extract_scenario_block(bdd_content, scenario_name):
                 block.append(line)
         else:
             # Stop at next Scenario/Feature boundary
-            if stripped and re.match(r"(Scenario|Feature)[\s:]", stripped, re.IGNORECASE):
+            if stripped and re.match(
+                r"(Scenario|Feature)[\s:]", stripped, re.IGNORECASE
+            ):
                 break
             block.append(line)
 
@@ -533,6 +543,7 @@ def extract_scenario_block(bdd_content, scenario_name):
 # Programmatic QA report fallback
 # ---------------------------------------------------------------------------
 
+
 def generate_qa_report(scenario_name, wt_path):
     """
     Run the mechanical checks (A, B, C) directly and write QA_REPORT.md.
@@ -540,12 +551,18 @@ def generate_qa_report(scenario_name, wt_path):
     Check D (design compliance) is left as UNKNOWN — only the agent can read code.
     Returns the report content as a string.
     """
-    lines = [f"# QA Report: {scenario_name}", "", "*(Generated programmatically — Tester agent did not write this file)*", ""]
+    lines = [
+        f"# QA Report: {scenario_name}",
+        "",
+        "*(Generated programmatically — Tester agent did not write this file)*",
+        "",
+    ]
 
     # A: Marker check
     marker_out, _, marker_rc = run_cmd(
         f'grep -rn "BDD: {scenario_name}" tests/ scripts/ src/ 2>/dev/null || true',
-        cwd=wt_path, timeout=10,
+        cwd=wt_path,
+        timeout=10,
     )
     marker_lines = [l for l in marker_out.splitlines() if l.strip()]
     # Must be immediately above a def line — check the line after each match
@@ -559,12 +576,18 @@ def generate_qa_report(scenario_name, wt_path):
                     filepath, lineno = parts[0], int(parts[1])
                     file_lines = read_file(os.path.join(wt_path, filepath)).splitlines()
                     # line numbers are 1-based; check the next line
-                    if lineno < len(file_lines) and file_lines[lineno].strip().startswith("def "):
+                    if lineno < len(file_lines) and file_lines[
+                        lineno
+                    ].strip().startswith("def "):
                         marker_above_def = True
                         break
                 except (ValueError, IndexError):
                     pass
-    a_status = "PASS" if marker_above_def else ("FOUND_BUT_MISPLACED" if marker_lines else "FAIL")
+    a_status = (
+        "PASS"
+        if marker_above_def
+        else ("FOUND_BUT_MISPLACED" if marker_lines else "FAIL")
+    )
     lines += [
         "## A. Marker check",
         f"Status: {a_status}",
@@ -575,11 +598,14 @@ def generate_qa_report(scenario_name, wt_path):
     # B: Test run
     test_out, test_err, test_rc = run_cmd(
         "python3 -m pytest tests/ --tb=short -q 2>&1 || true",
-        cwd=wt_path, timeout=120,
+        cwd=wt_path,
+        timeout=120,
     )
     b_status = "PASS" if test_rc == 0 else "FAIL"
     # Grab the summary line (last non-empty line)
-    test_summary = next((l for l in reversed(test_out.splitlines()) if l.strip()), "no output")
+    test_summary = next(
+        (l for l in reversed(test_out.splitlines()) if l.strip()), "no output"
+    )
     lines += [
         "## B. Test run",
         f"Status: {b_status}",
@@ -591,7 +617,8 @@ def generate_qa_report(scenario_name, wt_path):
     # C: Coverage check
     cov_out, _, cov_rc = run_cmd(
         f'python3 scripts/check_bdd_coverage.py BDD.md 2>&1 | grep "{scenario_name}" || echo "scenario not found in output"',
-        cwd=wt_path, timeout=30,
+        cwd=wt_path,
+        timeout=30,
     )
     cov_line = cov_out.strip().splitlines()[0] if cov_out.strip() else "no output"
     c_status = "PASS" if "[x]" in cov_line else "FAIL"
@@ -612,7 +639,11 @@ def generate_qa_report(scenario_name, wt_path):
 
     # Overall
     failed = [s for s in [a_status, b_status, c_status] if s != "PASS"]
-    overall = "PASS — all checked items passed" if not failed else f"FAIL — {', '.join(['A' if a_status != 'PASS' else '', 'B' if b_status != 'PASS' else '', 'C' if c_status != 'PASS' else ''])}"
+    overall = (
+        "PASS — all checked items passed"
+        if not failed
+        else f"FAIL — {', '.join(['A' if a_status != 'PASS' else '', 'B' if b_status != 'PASS' else '', 'C' if c_status != 'PASS' else ''])}"
+    )
     lines += ["## Overall", overall.strip(", ")]
 
     content = "\n".join(lines)
@@ -624,6 +655,7 @@ def generate_qa_report(scenario_name, wt_path):
 # ---------------------------------------------------------------------------
 # Stdout extraction fallback
 # ---------------------------------------------------------------------------
+
 
 def _extract_markdown_from_stdout(stdout):
     """
@@ -647,6 +679,7 @@ def _extract_markdown_from_stdout(stdout):
 # Failed pipeline tracker
 # ---------------------------------------------------------------------------
 
+
 def _record_failed_pipeline(scenario_name, wt_path, main_dir, log):
     """Append an entry to FAILED_PIPELINES.md in the main repo directory."""
     retry_path = os.path.join(wt_path, "RETRY_NOTES.md")
@@ -655,10 +688,7 @@ def _record_failed_pipeline(scenario_name, wt_path, main_dir, log):
         retry_notes = "_No RETRY_NOTES.md found — PM did not record a reason._"
 
     date = time.strftime("%Y-%m-%d %H:%M")
-    entry = (
-        f"\n## {date} — {scenario_name}\n\n"
-        f"{retry_notes}\n"
-    )
+    entry = f"\n## {date} — {scenario_name}\n\n{retry_notes}\n"
 
     failed_path = os.path.join(main_dir, "FAILED_PIPELINES.md")
     if not os.path.exists(failed_path):
@@ -675,6 +705,7 @@ def _record_failed_pipeline(scenario_name, wt_path, main_dir, log):
 # ---------------------------------------------------------------------------
 # Main pipeline
 # ---------------------------------------------------------------------------
+
 
 def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
     """
@@ -702,14 +733,14 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
     # -----------------------------------------------------------------------
     # Pipeline header
     # -----------------------------------------------------------------------
-    log(f"{'='*60}")
+    log(f"{'=' * 60}")
     log("PIPELINE START")
     log(f"  scenario : {scenario_name}")
     log(f"  branch   : {branch}")
     log(f"  worktree : {wt_path}")
     log(f"  model    : {model}  provider: {provider or 'auto'}")
     log(f"  max retries: {MAX_RETRIES}")
-    log(f"{'='*60}")
+    log(f"{'=' * 60}")
 
     # -----------------------------------------------------------------------
     # Phase 1: PM designs
@@ -723,8 +754,13 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
         scenario_name=scenario_name,
     )
     stdout, rc, phase_elapsed = run_agent(
-        plan_prompt, wt_path, main_dir, provider, model,
-        f"pm-plan-{scenario_name[:20]}", TIMEOUT_PM_PLAN,
+        plan_prompt,
+        wt_path,
+        main_dir,
+        provider,
+        model,
+        f"pm-plan-{scenario_name[:20]}",
+        TIMEOUT_PM_PLAN,
         f"{prefix} PM-PLAN",
     )
     all_stdout.append(stdout)
@@ -742,8 +778,17 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
             log(f"Extracted PLAN.md from stdout ({len(plan_content)} bytes)")
         else:
             log("ERROR: could not extract plan from stdout — aborting pipeline")
-            return _result(scenario_name, branch, wt_path, 0, False, False,
-                           start_time, 1, "\n".join(all_stdout))
+            return _result(
+                scenario_name,
+                branch,
+                wt_path,
+                0,
+                False,
+                False,
+                start_time,
+                1,
+                "\n".join(all_stdout),
+            )
 
     plan_size = os.path.getsize(plan_path)
     log(f"PLAN.md written ({plan_size} bytes)")
@@ -766,7 +811,8 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
             stack_hint = (
                 "\nThe full stack trace from the failing test run is in "
                 "FAIL_STACK_TRACE.md — read it before making any changes.\n"
-                if os.path.exists(stack_trace_path) else ""
+                if os.path.exists(stack_trace_path)
+                else ""
             )
             retry_notes_text = read_file(retry_path)[:3000]
             retry_section = (
@@ -775,10 +821,14 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
                 + stack_hint
                 + "\n\nAddress every point above. Nothing else.\n"
             )
-            log(f"RETRY_NOTES.md injected into SE prompt ({os.path.getsize(retry_path)} bytes):")
+            log(
+                f"RETRY_NOTES.md injected into SE prompt ({os.path.getsize(retry_path)} bytes):"
+            )
             print(tail_file(retry_path, "RETRY_NOTES.md"), flush=True)
             if os.path.exists(stack_trace_path):
-                log(f"FAIL_STACK_TRACE.md present ({os.path.getsize(stack_trace_path)} bytes) — SE will be directed to read it")
+                log(
+                    f"FAIL_STACK_TRACE.md present ({os.path.getsize(stack_trace_path)} bytes) — SE will be directed to read it"
+                )
 
         se_prompt = SE_IMPLEMENT_PROMPT.format(
             date=date,
@@ -788,8 +838,13 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
             retry_section=retry_section,
         )
         stdout, rc, phase_elapsed = run_agent(
-            se_prompt, wt_path, main_dir, provider, model,
-            f"se-{attempt}-{scenario_name[:15]}", TIMEOUT_SE,
+            se_prompt,
+            wt_path,
+            main_dir,
+            provider,
+            model,
+            f"se-{attempt}-{scenario_name[:15]}",
+            TIMEOUT_SE,
             f"{prefix} SE",
         )
         all_stdout.append(stdout)
@@ -817,7 +872,8 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
         # Quick marker pre-check so we can warn early without waiting for tester
         marker_out, _, _ = run_cmd(
             f'grep -rn "BDD: {scenario_name}" tests/ scripts/ src/ 2>/dev/null || true',
-            cwd=wt_path, timeout=10,
+            cwd=wt_path,
+            timeout=10,
         )
         if marker_out.strip():
             log(f"Marker pre-check: FOUND — {marker_out.strip().splitlines()[0]}")
@@ -841,8 +897,13 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
             retry_context=retry_context,
         )
         stdout, rc, phase_elapsed = run_agent(
-            tester_prompt, wt_path, main_dir, provider, model,
-            f"tester-{attempt}-{scenario_name[:12]}", TIMEOUT_TESTER,
+            tester_prompt,
+            wt_path,
+            main_dir,
+            provider,
+            model,
+            f"tester-{attempt}-{scenario_name[:12]}",
+            TIMEOUT_TESTER,
             f"{prefix} TESTER",
         )
         all_stdout.append(stdout)
@@ -852,7 +913,9 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
         qa_content = read_file(qa_path).strip()
         if not qa_content:
             # Try stdout extraction first (agent may have printed instead of written)
-            log("WARN: Tester did not write QA_REPORT.md — attempting stdout extraction")
+            log(
+                "WARN: Tester did not write QA_REPORT.md — attempting stdout extraction"
+            )
             qa_extracted = _extract_markdown_from_stdout(stdout)
             if qa_extracted:
                 with open(qa_path, "w") as f:
@@ -863,7 +926,9 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
                 # Programmatic fallback: run the mechanical checks ourselves
                 log("Stdout extraction failed — running checks programmatically")
                 qa_content = generate_qa_report(scenario_name, wt_path)
-                log(f"Generated QA_REPORT.md programmatically ({len(qa_content)} bytes)")
+                log(
+                    f"Generated QA_REPORT.md programmatically ({len(qa_content)} bytes)"
+                )
         else:
             log(f"QA_REPORT.md written ({os.path.getsize(qa_path)} bytes)")
 
@@ -882,8 +947,13 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
             scenario_name=scenario_name,
         )
         stdout, rc, phase_elapsed = run_agent(
-            accept_prompt, wt_path, main_dir, provider, model,
-            f"pm-accept-{attempt}-{scenario_name[:10]}", TIMEOUT_PM_ACCEPT,
+            accept_prompt,
+            wt_path,
+            main_dir,
+            provider,
+            model,
+            f"pm-accept-{attempt}-{scenario_name[:10]}",
+            TIMEOUT_PM_ACCEPT,
             f"{prefix} PM-ACCEPT",
         )
         all_stdout.append(stdout)
@@ -935,26 +1005,29 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
     # -----------------------------------------------------------------------
     commits_out, _, _ = run_cmd(
         f'git log --oneline HEAD.."{branch}" 2>/dev/null | wc -l',
-        cwd=main_dir, timeout=10,
+        cwd=main_dir,
+        timeout=10,
     )
     commit_count = int(commits_out.strip()) if commits_out.strip().isdigit() else 0
 
     _, _, test_rc = run_cmd(
         'eval "$(python3 scripts/parse_bdd_config.py BDD.md)" && eval "$TEST_CMD"',
-        cwd=wt_path, timeout=120,
+        cwd=wt_path,
+        timeout=120,
     )
     tests_pass = test_rc == 0
 
     marker_grep, _, _ = run_cmd(
         f'grep -rn "BDD: {scenario_name}" tests/ scripts/ src/ 2>/dev/null || true',
-        cwd=wt_path, timeout=10,
+        cwd=wt_path,
+        timeout=10,
     )
     has_marker = bool(marker_grep.strip())
 
     # -----------------------------------------------------------------------
     # Pipeline summary
     # -----------------------------------------------------------------------
-    log(f"{'='*60}")
+    log(f"{'=' * 60}")
     log("PIPELINE COMPLETE")
     log(f"  accepted   : {accepted}")
     log(f"  commits    : {commit_count}")
@@ -963,18 +1036,24 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
     if marker_grep.strip():
         log(f"  marker at  : {marker_grep.strip().splitlines()[0]}")
     log(f"  total time : {elapsed()}")
-    log(f"{'='*60}")
+    log(f"{'=' * 60}")
 
     return _result(
-        scenario_name, branch, wt_path,
-        commit_count, tests_pass, has_marker,
-        start_time, 0 if accepted else 1,
+        scenario_name,
+        branch,
+        wt_path,
+        commit_count,
+        tests_pass,
+        has_marker,
+        start_time,
+        0 if accepted else 1,
         "\n".join(all_stdout),
     )
 
 
-def _result(scenario, branch, wt_path, commits, tests_pass, has_marker,
-            start_time, rc, stdout):
+def _result(
+    scenario, branch, wt_path, commits, tests_pass, has_marker, start_time, rc, stdout
+):
     return {
         "scenario": scenario,
         "branch": branch,

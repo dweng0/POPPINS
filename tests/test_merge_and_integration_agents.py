@@ -3,8 +3,6 @@
 
 import os
 import sys
-import tempfile
-import json
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -12,9 +10,11 @@ sys.path.insert(0, os.path.join(ROOT, "scripts"))
 
 # ── Merge agent ────────────────────────────────────────────────────────────────
 
+
 # BDD: Merge agent inserts markers above test functions
 def test_merge_agent_insert_marker_above_test():
     from merge_agent import insert_marker_above_line
+
     content = "def test_foo():\n    pass\n"
     result = insert_marker_above_line(content, 0, "My Scenario", "#")
     assert result is not None
@@ -28,6 +28,7 @@ def test_merge_agent_insert_marker_above_test():
 # BDD: Merge agent inserts markers above test functions
 def test_merge_agent_insert_marker_uses_prefix():
     from merge_agent import insert_marker_above_line
+
     content = "def test_bar():\n    pass\n"
     result = insert_marker_above_line(content, 0, "Bar Scenario", "//")
     assert result is not None
@@ -36,7 +37,8 @@ def test_merge_agent_insert_marker_uses_prefix():
 
 # BDD: Merge agent handles duplicate markers
 def test_merge_agent_skips_existing_marker():
-    from merge_agent import insert_marker_above_line, has_existing_marker
+    from merge_agent import insert_marker_above_line
+
     content = "# BDD: My Scenario\ndef test_foo():\n    pass\n"
     # Line 1 (index 1) is def test_foo — marker already at index 0
     result = insert_marker_above_line(content, 1, "My Scenario", "#")
@@ -46,6 +48,7 @@ def test_merge_agent_skips_existing_marker():
 # BDD: Merge agent handles duplicate markers
 def test_merge_agent_has_existing_marker_detects_correctly():
     from merge_agent import has_existing_marker
+
     content = "# BDD: My Scenario\ndef test_foo():\n    pass\n"
     assert has_existing_marker(content, 1, "My Scenario", "#") is True
     assert has_existing_marker(content, 1, "Other Scenario", "#") is False
@@ -53,9 +56,7 @@ def test_merge_agent_has_existing_marker_detects_correctly():
 
 # BDD: Merge agent writes resolved file to staging
 def test_merge_agent_logs_to_jsonl():
-    from merge_agent import merge_results
     # merge_results writes to merge_resolution.jsonl
-    import merge_agent
     src = open(os.path.join(ROOT, "scripts", "merge_agent.py")).read()
     assert "merge_resolution.jsonl" in src
 
@@ -63,6 +64,7 @@ def test_merge_agent_logs_to_jsonl():
 # BDD: Merge agent writes resolved file to staging
 def test_merge_agent_resolve_file_merge_returns_content():
     from merge_agent import resolve_file_merge
+
     content_a = "import os\n\ndef test_a():\n    assert True\n"
     content_b = "import sys\n\ndef test_b():\n    assert True\n"
     result, status = resolve_file_merge(
@@ -85,6 +87,7 @@ def test_merge_agent_logs_marker_additions():
 
 
 # ── Integration test agent ─────────────────────────────────────────────────────
+
 
 # BDD: Integration test agent re-runs tests after fix
 def test_integration_agent_reruns_after_fix():

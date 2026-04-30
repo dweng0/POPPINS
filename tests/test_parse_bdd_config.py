@@ -134,11 +134,11 @@ def test_search_parent_directories_for_poppins_yml():
         with open(poppins_path, "w") as f:
             f.write("orchestration:\n")
             f.write("  max_rounds: 5\n")
-        
+
         # Create a subdirectory and change into it
         subdir = os.path.join(tmpdir, "subdir")
         os.makedirs(subdir)
-        
+
         orig = os.getcwd()
         os.chdir(subdir)
         try:
@@ -147,12 +147,17 @@ def test_search_parent_directories_for_poppins_yml():
             # Import here to get fresh find_config
             import importlib
             import scripts.parse_poppins_config as ppm
+
             importlib.reload(ppm)
             config_path = ppm.find_config()
-            
+
             # Should find poppins.yml in parent directory
-            assert config_path is not None, "find_config() should find poppins.yml in parent"
-            assert config_path == poppins_path, f"Should find {poppins_path}, got {config_path}"
+            assert config_path is not None, (
+                "find_config() should find poppins.yml in parent"
+            )
+            assert config_path == poppins_path, (
+                f"Should find {poppins_path}, got {config_path}"
+            )
         finally:
             os.chdir(orig)
 
@@ -162,13 +167,13 @@ def test_get_single_config_value_via_dot_notation():
     """Test that --get flag retrieves a single config value via dot notation."""
     script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     script_path = os.path.join(script_dir, "scripts", "parse_poppins_config.py")
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         poppins_path = os.path.join(tmpdir, "poppins.yml")
         with open(poppins_path, "w") as f:
             f.write("agent:\n")
             f.write("  max_iterations: 50\n")
-        
+
         orig = os.getcwd()
         os.chdir(tmpdir)
         try:
@@ -178,7 +183,8 @@ def test_get_single_config_value_via_dot_notation():
                 text=True,
             )
             assert result.returncode == 0, f"Command failed: {result.stderr}"
-            assert result.stdout.strip() == "50", f"Expected '50', got '{result.stdout.strip()}'"
+            assert result.stdout.strip() == "50", (
+                f"Expected '50', got '{result.stdout.strip()}'"
+            )
         finally:
             os.chdir(orig)
-

@@ -16,7 +16,9 @@ def test_run_bash_command_and_capture_output():
 
 # BDD: Run bash command with stderr
 def test_run_bash_command_with_stderr():
-    result = run_tool("bash", {"command": "ls /nonexistent_path_xyz 2>&1 || ls /nonexistent_path_xyz"})
+    result = run_tool(
+        "bash", {"command": "ls /nonexistent_path_xyz 2>&1 || ls /nonexistent_path_xyz"}
+    )
     assert result  # some output returned
 
 
@@ -62,7 +64,9 @@ def test_edit_file_replaces_exact_string():
         f.write("old text here")
         path = f.name
     try:
-        result = run_tool("edit_file", {"path": path, "old_str": "old text", "new_str": "new text"})
+        result = run_tool(
+            "edit_file", {"path": path, "old_str": "old text", "new_str": "new text"}
+        )
         with open(path) as f:
             assert f.read() == "new text here"
     finally:
@@ -75,7 +79,9 @@ def test_edit_file_fails_when_string_not_found():
         f.write("some content")
         path = f.name
     try:
-        result = run_tool("edit_file", {"path": path, "old_str": "missing string", "new_str": "x"})
+        result = run_tool(
+            "edit_file", {"path": path, "old_str": "missing string", "new_str": "x"}
+        )
         assert "ERROR: string not found" in result
     finally:
         os.unlink(path)

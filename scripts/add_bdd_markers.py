@@ -78,18 +78,22 @@ def compute_planned_changes(scenarios, test_contents):
             continue
 
         prefix = detect_comment_prefix(found_in)
-        planned.append({
-            "scenario_name": scenario_name,
-            "filepath": found_in,
-            "line_index": found_line,
-            "prefix": prefix,
-            "match_type": match_type,
-        })
+        planned.append(
+            {
+                "scenario_name": scenario_name,
+                "filepath": found_in,
+                "line_index": found_line,
+                "prefix": prefix,
+                "match_type": match_type,
+            }
+        )
 
     return planned
 
 
-def format_output(planned, applied_count, skipped_has_marker, skipped_no_match, apply_mode):
+def format_output(
+    planned, applied_count, skipped_has_marker, skipped_no_match, apply_mode
+):
     """Formats the terminal output for dry-run or apply mode.
 
     When apply_mode=False, each planned change is prefixed with [would add].

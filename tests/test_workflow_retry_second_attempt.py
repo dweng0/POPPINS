@@ -4,8 +4,7 @@
 import os
 
 WORKFLOWS_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    ".github", "workflows"
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".github", "workflows"
 )
 EVOLVE_YML = os.path.join(WORKFLOWS_DIR, "evolve.yml")
 
@@ -30,8 +29,11 @@ def test_workflow_third_attempt_requires_both_failures():
     content = _read_evolve_yml()
     # The condition must check both attempt1 failure AND attempt2 failure
     assert (
-        ("attempt1.outcome == 'failure'" in content and "attempt2.outcome == 'failure'" in content)
-        or ("attempt1.outcome == \"failure\"" in content and "attempt2.outcome == \"failure\"" in content)
+        "attempt1.outcome == 'failure'" in content
+        and "attempt2.outcome == 'failure'" in content
+    ) or (
+        'attempt1.outcome == "failure"' in content
+        and 'attempt2.outcome == "failure"' in content
     ), "Third retry should require both attempt1 and attempt2 to have failed"
 
 

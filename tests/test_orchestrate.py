@@ -3,13 +3,17 @@
 
 import sys
 import os
-import json
 import tempfile
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 
-from orchestrate import scenario_to_slug, get_uncovered_scenarios, select_scenarios, create_worktree, run_pm_pipeline
+from orchestrate import (
+    scenario_to_slug,
+    get_uncovered_scenarios,
+    select_scenarios,
+    create_worktree,
+)
 
 
 # BDD: Slug truncates to 60 characters
@@ -21,7 +25,9 @@ def test_slug_truncates_to_60_characters():
 
     assert len(slug) <= 60, f"Slug length {len(slug)} exceeds 60 characters: {slug}"
     assert slug == slug.lower(), "Slug should be lowercase"
-    assert all(c.isalnum() or c == "-" for c in slug), "Slug should only contain alphanumeric and hyphens"
+    assert all(c.isalnum() or c == "-" for c in slug), (
+        "Slug should only contain alphanumeric and hyphens"
+    )
 
 
 # BDD: Find uncovered scenarios for orchestration
@@ -76,7 +82,9 @@ Feature: Test Feature
     finally:
         os.unlink(bdd_path)
 
-    assert len(result) == 8, f"Expected 8 uncovered scenarios, got {len(result)}: {result}"
+    assert len(result) == 8, (
+        f"Expected 8 uncovered scenarios, got {len(result)}: {result}"
+    )
     scenario_names = [s for _, s in result]
     assert "Alpha scenario one" in scenario_names
     assert "Theta scenario eight" in scenario_names
@@ -99,15 +107,18 @@ def test_select_top_n_scenarios_for_parallel_run():
 def test_run_agents_in_parallel_with_threadpoool_executor():
     """orchestrate.py uses ThreadPoolExecutor to spawn multiple agent workers concurrently."""
     import os
-    
-    scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+
+    scripts_dir = (
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    )
     orchestrate_path = scripts_dir + "/orchestrate.py"
-    
+
     with open(orchestrate_path) as f:
         source = f.read()
-    
-    assert "ThreadPoolExecutor" in source, \
+
+    assert "ThreadPoolExecutor" in source, (
         "orchestrate.py should use ThreadPoolExecutor for parallel execution"
+    )
 
 
 # BDD: Create worktrees for parallel scenarios
@@ -120,7 +131,9 @@ def test_create_worktrees_for_parallel_scenarios():
             os.system("git init > /dev/null 2>&1")
             os.system("git config user.email 'test@example.com'")
             os.system("git config user.name 'Test User'")
-            os.system("touch README.md && git add README.md && git commit -m 'init' > /dev/null 2>&1")
+            os.system(
+                "touch README.md && git add README.md && git commit -m 'init' > /dev/null 2>&1"
+            )
 
             main_dir = tmpdir
             scenarios = ["Scenario 1", "Scenario 2", "Scenario 3"]
@@ -134,11 +147,19 @@ def test_create_worktrees_for_parallel_scenarios():
             assert len(worktrees) == 3, f"Expected 3 worktrees, got {len(worktrees)}"
 
             for wt_path, branch, scenario in worktrees:
-                assert wt_path is not None, f"Worktree path should not be None for {scenario}"
+                assert wt_path is not None, (
+                    f"Worktree path should not be None for {scenario}"
+                )
                 assert branch is not None, f"Branch should not be None for {scenario}"
-                assert os.path.isdir(wt_path), f"Worktree directory should exist: {wt_path}"
-                assert branch.startswith("agent/"), f"Branch should start with 'agent/': {branch}"
-                assert scenario_to_slug(scenario) in branch, f"Branch should contain scenario slug: {branch}"
+                assert os.path.isdir(wt_path), (
+                    f"Worktree directory should exist: {wt_path}"
+                )
+                assert branch.startswith("agent/"), (
+                    f"Branch should start with 'agent/': {branch}"
+                )
+                assert scenario_to_slug(scenario) in branch, (
+                    f"Branch should contain scenario slug: {branch}"
+                )
 
             branches = [branch for _, branch, _ in worktrees]
             assert len(set(branches)) == 3, "All branches should be unique"

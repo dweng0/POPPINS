@@ -6,7 +6,9 @@ import json
 import tempfile
 import subprocess
 
-INSTALL_SH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "install.sh")
+INSTALL_SH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "install.sh"
+)
 
 
 def _read():
@@ -31,10 +33,10 @@ def test_update_mode_downloads_files():
 # BDD: Auto-detect update mode
 def test_auto_detect_update_when_manifest_exists():
     content = _read()
-    assert 'MANIFEST_FILE' in content
-    assert 'FORCE_UPDATE=true' in content
+    assert "MANIFEST_FILE" in content
+    assert "FORCE_UPDATE=true" in content
     # The auto-detect block checks if manifest file exists and flips FORCE_UPDATE
-    assert '-f "$MANIFEST_FILE"' in content or "-f \"$MANIFEST_FILE\"" in content
+    assert '-f "$MANIFEST_FILE"' in content or '-f "$MANIFEST_FILE"' in content
 
 
 # BDD: Auto-detect update mode
@@ -54,7 +56,9 @@ def test_version_flag_parsed():
 # BDD: Pin to specific version
 def test_raw_url_uses_version():
     content = _read()
-    assert 'RAW="${RAW_BASE}/${VERSION}"' in content or "RAW_BASE}/${VERSION}" in content
+    assert (
+        'RAW="${RAW_BASE}/${VERSION}"' in content or "RAW_BASE}/${VERSION}" in content
+    )
 
 
 # BDD: Fetch latest version from GitHub API
@@ -150,9 +154,13 @@ def test_read_manifest_files_unit():
         with open(manifest_path, "w") as f:
             json.dump(manifest, f)
         result = subprocess.run(
-            ["python3", "-c",
-             f"import json; [print(f) for f in json.load(open('{manifest_path}'))['files']]"],
-            capture_output=True, text=True
+            [
+                "python3",
+                "-c",
+                f"import json; [print(f) for f in json.load(open('{manifest_path}'))['files']]",
+            ],
+            capture_output=True,
+            text=True,
         )
         assert result.returncode == 0
         lines = result.stdout.strip().splitlines()

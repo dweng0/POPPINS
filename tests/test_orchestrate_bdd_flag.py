@@ -4,7 +4,7 @@
 import sys
 import os
 import tempfile
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 
@@ -13,16 +13,17 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 def test_custom_bdd_path_parsed_by_argparse():
     """--bdd flag is accepted and stored as args.bdd."""
     import argparse
-    import importlib
-    import types
 
     # Reload orchestrate with --bdd argument
-    with patch("sys.argv", ["orchestrate.py", "--bdd", "/custom/path/my_bdd.md", "--dry-run"]):
-        import orchestrate
+    with patch(
+        "sys.argv", ["orchestrate.py", "--bdd", "/custom/path/my_bdd.md", "--dry-run"]
+    ):
         parser = argparse.ArgumentParser()
         parser.add_argument("--bdd", default="BDD.md")
         parser.add_argument("--dry-run", action="store_true")
-        args, _ = parser.parse_known_args(["--bdd", "/custom/path/my_bdd.md", "--dry-run"])
+        args, _ = parser.parse_known_args(
+            ["--bdd", "/custom/path/my_bdd.md", "--dry-run"]
+        )
 
     assert args.bdd == "/custom/path/my_bdd.md"
 

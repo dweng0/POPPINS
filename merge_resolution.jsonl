@@ -729,3 +729,285 @@
 {"ts": "2026-04-30T21:29:05.843791", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
 {"ts": "2026-04-30T21:29:05.843866", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
 {"ts": "2026-04-30T21:29:05.849164", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:26:52.511090", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:26:52.511150", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:26:52.514907", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:26:53.973052", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:26:53.973127", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:26:53.979127", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:26:55.459151", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:26:55.459216", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:26:55.463238", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:26:56.949244", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:26:56.949333", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:26:56.953839", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:26:58.409770", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:26:58.409851", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:26:58.414130", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:26:59.886002", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:26:59.886063", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:26:59.891919", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:01.361831", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:01.361892", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:01.365643", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:02.849710", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:02.849758", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:02.853873", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:04.372556", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:04.372614", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:04.375950", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:05.885610", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:05.885670", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:05.889175", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:07.372871", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:07.372924", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:07.376319", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:08.839651", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:08.839765", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:08.843907", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:10.295447", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:10.295499", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:10.299495", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:11.791771", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:11.791837", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:11.796481", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:13.257832", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:13.257886", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:13.263026", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:14.759101", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:14.759158", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:14.762790", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:16.285795", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:16.285850", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:16.290006", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:17.808943", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:17.809000", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:17.812758", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:19.276779", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:19.276834", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:19.280154", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:20.763006", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:20.763057", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:20.766927", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:22.224016", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:22.224067", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:22.231126", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:23.724290", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:23.724375", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:23.730290", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:25.200285", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:25.200371", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:25.205041", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:26.697178", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:26.697237", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:26.700731", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:28.163116", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:28.163178", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:28.166804", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:29.689678", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:29.689759", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:29.694525", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:31.281419", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:31.281527", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:31.285751", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:32.722648", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:32.722711", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:32.726455", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:34.040945", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:34.040994", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:34.044718", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:38.256437", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:38.256541", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:38.265676", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:42.200253", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:42.200419", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:42.211116", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:46.083805", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:46.083891", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:46.092741", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:50.143608", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:50.143730", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:50.156441", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:54.413076", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:54.413246", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:54.429077", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:27:58.402670", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:27:58.402822", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:27:58.419492", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:28:02.662962", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:28:02.663083", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:28:02.671333", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:28:07.112445", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:28:07.112591", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:28:07.124413", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:28:12.176832", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:28:12.176935", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:28:12.185261", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:28:15.701963", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:28:15.702071", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:28:15.711391", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:28:19.046127", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:28:19.046242", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:28:19.055027", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:28:22.425729", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:28:22.425864", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:28:22.436901", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:28:26.964512", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:28:26.964770", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:28:26.984303", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:28:32.091234", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:28:32.091468", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:28:32.110906", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:36:22.094208", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:36:22.094395", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:36:22.116427", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:36:27.210947", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:36:27.211112", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:36:27.231323", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:36:32.474864", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:36:32.475238", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:36:32.502067", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:36:37.562644", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:36:37.562896", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:36:37.577232", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:36:42.688457", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:36:42.688673", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:36:42.706279", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:36:47.769178", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:36:47.769327", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:36:47.783586", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:36:52.739541", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:36:52.739718", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:36:52.757744", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:36:57.727711", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:36:57.727898", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:36:57.746993", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:37:02.919003", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:37:02.919414", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:37:02.936792", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:37:08.063087", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:37:08.063237", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:37:08.075286", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:37:12.398107", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:37:12.398227", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:37:12.407974", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:37:15.750362", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:37:15.750479", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:37:15.760394", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:37:22.419091", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:37:22.419494", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:37:22.455116", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:37:29.468389", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:37:29.468583", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:37:29.485193", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:37:34.490478", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:37:34.490644", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:37:34.508556", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:37:39.494950", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:37:39.495206", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:37:39.510594", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:37:44.031205", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:37:44.031332", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:37:44.040580", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:37:48.885778", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:37:48.885978", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:37:48.903965", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:37:53.824371", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:37:53.824582", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:37:53.839361", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:37:58.885793", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:37:58.885923", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:37:58.898261", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:38:03.870190", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:38:03.870353", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:38:03.887714", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:38:08.965582", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:38:08.965854", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:38:08.980932", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:38:14.007704", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:38:14.007921", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:38:14.024213", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:38:28.326149", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:38:28.326289", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:38:28.340030", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:38:33.366613", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:38:33.366738", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:38:33.382201", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:38:38.530290", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:38:38.530491", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:38:38.543342", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:38:43.503001", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:38:43.503242", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:38:43.522317", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:38:48.444794", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:38:48.444966", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:38:48.467495", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:38:54.137527", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:38:54.137650", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:38:54.148247", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:38:57.786775", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:38:57.786890", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:38:57.796010", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:39:01.300919", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:39:01.301054", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:39:01.311781", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:39:05.647251", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:39:05.647437", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:39:05.660541", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:39:09.101703", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:39:09.101804", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:39:09.111729", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:39:12.370313", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:39:12.370420", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:39:12.379329", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:39:15.763170", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:39:15.763270", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:39:15.773684", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:39:20.310430", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:39:20.310678", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:39:20.330196", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:39:24.775273", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:39:24.775414", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:39:24.785630", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:39:28.210142", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:39:28.210317", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:39:28.223999", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:39:32.831850", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:39:32.832079", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:39:32.847460", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:39:36.896349", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:39:36.896471", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:39:36.906333", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:39:40.309344", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:39:40.309595", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:39:40.322011", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:39:44.328654", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:39:44.328753", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:39:44.337691", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:39:48.195619", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:39:48.195762", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:39:48.205156", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:39:51.703206", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:39:51.703466", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:39:51.720905", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:39:55.417879", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:39:55.418013", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:39:55.432584", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:40:00.442311", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:40:00.442470", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:40:00.457412", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:40:05.398097", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:40:05.398308", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:40:05.415751", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:40:09.642839", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:40:09.642937", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:40:09.651369", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:40:13.655780", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:40:13.655878", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:40:13.665129", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:40:17.574984", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:40:17.575128", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:40:17.588561", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}
+{"ts": "2026-04-30T22:40:21.025742", "event": "conflict_marker_removed", "file": "test.py", "version": "A"}
+{"ts": "2026-04-30T22:40:21.025858", "event": "conflict_marker_removed", "file": "test.py", "version": "B"}
+{"ts": "2026-04-30T22:40:21.035643", "event": "import_merge", "file": "test_sample.py", "scenario_a": "Scenario A", "scenario_b": "Scenario B"}

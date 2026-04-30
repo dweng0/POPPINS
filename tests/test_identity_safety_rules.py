@@ -56,4 +56,8 @@ def test_identity_md_declares_bdd_as_source_of_truth():
 def test_identity_md_no_features_outside_bdd():
     content = _identity()
     # Rule 1 explicitly says not to build things not in BDD.md
-    assert "not in BDD.md" in content or "outside BDD" in content or "do not build" in content.lower()
+    assert (
+        "not in BDD.md" in content
+        or "outside BDD" in content
+        or "do not build" in content.lower()
+    )

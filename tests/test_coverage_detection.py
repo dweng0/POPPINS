@@ -1,5 +1,6 @@
 from scripts.coverage_checker import is_partial_word_match
 
+
 # BDD: Detect coverage via partial name matching
 def test_partial_name_matching_success():
     # Assuming inputs that should pass the check based on implementation.

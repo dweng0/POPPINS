@@ -6,7 +6,12 @@ import os
 import tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
-from add_bdd_markers import detect_comment_prefix, has_existing_marker, add_marker_to_file, compute_planned_changes, format_output
+from add_bdd_markers import (
+    detect_comment_prefix,
+    add_marker_to_file,
+    compute_planned_changes,
+    format_output,
+)
 
 
 # BDD: Detect comment prefix by file extension
@@ -31,7 +36,12 @@ def test_skip_if_marker_already_exists():
 
     try:
         # Line index 1 is the "def test_login..." line; line index 0 has the marker
-        result = add_marker_to_file(tmp_path, line_index=1, scenario_name="Login with valid credentials", prefix="#")
+        result = add_marker_to_file(
+            tmp_path,
+            line_index=1,
+            scenario_name="Login with valid credentials",
+            prefix="#",
+        )
         assert result is None, f"Expected None (marker already exists), got: {result!r}"
 
         # Verify file was not modified
@@ -60,6 +70,12 @@ def test_dry_run_mode_shows_planned_changes():
     assert planned[0]["match_type"] in ("full", "partial", "words")
 
     # Assert dry-run output formatting
-    output = format_output(planned, applied_count=1, skipped_has_marker=0, skipped_no_match=0, apply_mode=False)
+    output = format_output(
+        planned,
+        applied_count=1,
+        skipped_has_marker=0,
+        skipped_no_match=0,
+        apply_mode=False,
+    )
     assert "[would add]" in output
     assert "[add]" not in output.replace("[would add]", "")

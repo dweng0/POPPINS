@@ -32,7 +32,9 @@ def test_ci_group_emits_group_annotation():
         assert "::group::test title" in out, f"Expected ::group:: in output, got: {{out!r}}"
         print("OK")
     """)
-    result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+    result = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True
+    )
     assert result.returncode == 0, f"stdout={result.stdout!r} stderr={result.stderr!r}"
     assert "OK" in result.stdout
 
@@ -40,7 +42,9 @@ def test_ci_group_emits_group_annotation():
 # BDD: GitHub Actions log grouping
 def test_print_tool_result_wraps_long_output_in_ci():
     """print_tool_result uses ::group:: / ::endgroup:: when output > 5 lines in CI."""
-    scripts_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts"))
+    scripts_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "scripts")
+    )
     agent_path = os.path.join(scripts_dir, "agent.py")
 
     script = textwrap.dedent(f"""
@@ -77,7 +81,9 @@ def test_print_tool_result_wraps_long_output_in_ci():
         assert "::endgroup::" in out, f"Expected ::endgroup:: in output, got: {{out!r}}"
         print("OK")
     """)
-    result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+    result = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True
+    )
     assert result.returncode == 0, f"stdout={result.stdout!r} stderr={result.stderr!r}"
     assert "OK" in result.stdout
 
@@ -85,7 +91,9 @@ def test_print_tool_result_wraps_long_output_in_ci():
 # BDD: GitHub Actions log grouping
 def test_print_tool_result_no_group_when_output_short_in_ci():
     """print_tool_result does NOT use ::group:: when output <= 5 lines even in CI."""
-    scripts_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts"))
+    scripts_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "scripts")
+    )
     agent_path = os.path.join(scripts_dir, "agent.py")
 
     script = textwrap.dedent(f"""
@@ -116,6 +124,8 @@ def test_print_tool_result_no_group_when_output_short_in_ci():
         assert "::group::" not in out, f"Should NOT have ::group:: for short output, got: {{out!r}}"
         print("OK")
     """)
-    result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+    result = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True
+    )
     assert result.returncode == 0, f"stdout={result.stdout!r} stderr={result.stderr!r}"
     assert "OK" in result.stdout

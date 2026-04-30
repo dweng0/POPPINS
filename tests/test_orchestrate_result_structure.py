@@ -21,7 +21,7 @@ def test_worker_result_has_scenario():
         "rc": 0,
         "stdout": "",
     }
-    
+
     assert "scenario" in result
     assert result["scenario"] == "Test scenario"
 
@@ -40,7 +40,7 @@ def test_worker_result_has_branch():
         "rc": 0,
         "stdout": "",
     }
-    
+
     assert "branch" in result
     assert result["branch"] == "agent/test-scenario"
 
@@ -59,7 +59,7 @@ def test_worker_result_has_wt_path():
         "rc": 0,
         "stdout": "",
     }
-    
+
     assert "wt_path" in result
     assert result["wt_path"] == "/tmp/wt-test"
 
@@ -78,7 +78,7 @@ def test_worker_result_has_commits():
         "rc": 0,
         "stdout": "",
     }
-    
+
     assert "commits" in result
     assert isinstance(result["commits"], int)
     assert result["commits"] >= 0
@@ -98,7 +98,7 @@ def test_worker_result_has_tests_pass():
         "rc": 0,
         "stdout": "",
     }
-    
+
     assert "tests_pass" in result
     assert isinstance(result["tests_pass"], bool)
 
@@ -117,7 +117,7 @@ def test_worker_result_has_elapsed_s():
         "rc": 0,
         "stdout": "",
     }
-    
+
     assert "elapsed_s" in result
     assert isinstance(result["elapsed_s"], (int, float))
     assert result["elapsed_s"] >= 0
@@ -137,7 +137,7 @@ def test_worker_result_has_rc():
         "rc": 0,
         "stdout": "",
     }
-    
+
     assert "rc" in result
     assert isinstance(result["rc"], int)
 
@@ -156,7 +156,7 @@ def test_worker_result_has_stdout():
         "rc": 0,
         "stdout": "Agent output here",
     }
-    
+
     assert "stdout" in result
     assert isinstance(result["stdout"], str)
 
@@ -176,7 +176,7 @@ def test_worker_result_merged_flag():
         "stdout": "",
         "merged": True,
     }
-    
+
     assert "merged" in result
     assert result["merged"] is True
 
@@ -195,7 +195,7 @@ def test_worker_result_empty_stdout():
         "rc": 0,
         "stdout": "",
     }
-    
+
     assert result["stdout"] == ""
 
 
@@ -213,7 +213,7 @@ def test_worker_result_failed_case():
         "rc": 1,
         "stdout": "Error message",
     }
-    
+
     assert result["rc"] == 1
     assert result["tests_pass"] is False
     assert result["commits"] == 0
@@ -233,7 +233,7 @@ def test_worker_result_with_has_marker():
         "rc": 0,
         "stdout": "",
     }
-    
+
     assert "has_marker" in result
     assert isinstance(result["has_marker"], bool)
 
@@ -267,7 +267,7 @@ def test_orchestrator_result_aggregation():
             "merged": False,
         },
     ]
-    
+
     assert len(results) == 2
     assert all(r["scenario"] in ["Scenario A", "Scenario B"] for r in results)
     assert all(r["branch"] is not None for r in results)
@@ -287,9 +287,9 @@ def test_worker_result_total_time_calculation():
         {"scenario": "B", "elapsed_s": 90},
         {"scenario": "C", "elapsed_s": 150},
     ]
-    
+
     total_time = sum(r.get("elapsed_s", 0) for r in results)
-    
+
     assert total_time == 360
 
 
@@ -301,9 +301,9 @@ def test_worker_result_merge_status():
         {"scenario": "B", "merged": True},
         {"scenario": "C", "merged": False},
     ]
-    
+
     merged_count = sum(1 for r in results if r.get("merged"))
     failed_count = len(results) - merged_count
-    
+
     assert merged_count == 2
     assert failed_count == 1

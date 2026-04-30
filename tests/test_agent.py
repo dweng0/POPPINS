@@ -14,17 +14,17 @@ def test_detect_anthropic_provider_from_api_key():
         # Create scripts directory in tmpdir
         scripts_dir = os.path.join(tmpdir, "scripts")
         os.makedirs(scripts_dir)
-        
+
         # Copy agent.py to tmpdir/scripts
         with open("scripts/agent.py", "r") as src:
             with open(os.path.join(scripts_dir, "agent.py"), "w") as dst:
                 dst.write(src.read())
-        
-        # Copy parse_poppins_config.py to tmpdir/scripts  
+
+        # Copy parse_poppins_config.py to tmpdir/scripts
         with open("scripts/parse_poppins_config.py", "r") as src:
             with open(os.path.join(scripts_dir, "parse_poppins_config.py"), "w") as dst:
                 dst.write(src.read())
-        
+
         # Create a test script that imports agent and calls detect_provider
         test_script = os.path.join(tmpdir, "test_detect.py")
         with open(test_script, "w") as f:
@@ -49,7 +49,7 @@ from agent import detect_provider
 result = detect_provider()
 print(result)
 ''')
-        
+
         # Run the test script
         result = subprocess.run(
             [sys.executable, test_script],
@@ -57,9 +57,11 @@ print(result)
             text=True,
             cwd=tmpdir,
         )
-        
+
         assert result.returncode == 0, f"Script failed: {result.stderr}"
-        assert result.stdout.strip() == "anthropic", f"Expected 'anthropic', got '{result.stdout.strip()}'"
+        assert result.stdout.strip() == "anthropic", (
+            f"Expected 'anthropic', got '{result.stdout.strip()}'"
+        )
 
 
 # BDD: Detect Groq provider from API key
@@ -72,21 +74,21 @@ def test_detect_groq_provider_from_api_key():
             f.write("# No provider set - should fall back to env var detection\n")
             f.write("agent:\n")
             f.write("  max_iterations: 10\n")
-        
+
         # Create scripts directory in tmpdir
         scripts_dir = os.path.join(tmpdir, "scripts")
         os.makedirs(scripts_dir)
-        
+
         # Copy agent.py to tmpdir/scripts
         with open("scripts/agent.py", "r") as src:
             with open(os.path.join(scripts_dir, "agent.py"), "w") as dst:
                 dst.write(src.read())
-        
-        # Copy parse_poppins_config.py to tmpdir/scripts  
+
+        # Copy parse_poppins_config.py to tmpdir/scripts
         with open("scripts/parse_poppins_config.py", "r") as src:
             with open(os.path.join(scripts_dir, "parse_poppins_config.py"), "w") as dst:
                 dst.write(src.read())
-        
+
         # Create a test script that imports agent and calls detect_provider
         test_script = os.path.join(tmpdir, "test_detect.py")
         with open(test_script, "w") as f:
@@ -111,7 +113,7 @@ from agent import detect_provider
 result = detect_provider()
 print(result)
 ''')
-        
+
         # Run the test script
         result = subprocess.run(
             [sys.executable, test_script],
@@ -119,9 +121,11 @@ print(result)
             text=True,
             cwd=tmpdir,
         )
-        
+
         assert result.returncode == 0, f"Script failed: {result.stderr}"
-        assert result.stdout.strip() == "groq", f"Expected 'groq', got '{result.stdout.strip()}'"
+        assert result.stdout.strip() == "groq", (
+            f"Expected 'groq', got '{result.stdout.strip()}'"
+        )
 
 
 # BDD: Environment variables override poppins.yml config
@@ -134,21 +138,21 @@ def test_environment_variables_override_poppins_yml_config():
             f.write("agent:\n")
             f.write("  provider: openai\n")
             f.write("  max_iterations: 10\n")
-        
+
         # Create scripts directory in tmpdir
         scripts_dir = os.path.join(tmpdir, "scripts")
         os.makedirs(scripts_dir)
-        
+
         # Copy agent.py to tmpdir/scripts
         with open("scripts/agent.py", "r") as src:
             with open(os.path.join(scripts_dir, "agent.py"), "w") as dst:
                 dst.write(src.read())
-        
-        # Copy parse_poppins_config.py to tmpdir/scripts  
+
+        # Copy parse_poppins_config.py to tmpdir/scripts
         with open("scripts/parse_poppins_config.py", "r") as src:
             with open(os.path.join(scripts_dir, "parse_poppins_config.py"), "w") as dst:
                 dst.write(src.read())
-        
+
         # Create a test script that imports agent and calls detect_provider
         test_script = os.path.join(tmpdir, "test_detect.py")
         with open(test_script, "w") as f:
@@ -173,7 +177,7 @@ from agent import detect_provider
 result = detect_provider()
 print(result)
 ''')
-        
+
         # Run the test script
         result = subprocess.run(
             [sys.executable, test_script],
@@ -181,7 +185,9 @@ print(result)
             text=True,
             cwd=tmpdir,
         )
-        
+
         assert result.returncode == 0, f"Script failed: {result.stderr}"
         # Should return 'anthropic' from env var, not 'openai' from poppins.yml
-        assert result.stdout.strip() == "anthropic", f"Expected 'anthropic' (env priority), got '{result.stdout.strip()}'"
+        assert result.stdout.strip() == "anthropic", (
+            f"Expected 'anthropic' (env priority), got '{result.stdout.strip()}'"
+        )

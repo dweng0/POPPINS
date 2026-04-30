@@ -4,8 +4,7 @@
 import os
 
 WORKFLOWS_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    ".github", "workflows"
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".github", "workflows"
 )
 
 
@@ -24,13 +23,21 @@ def test_release_workflow_triggers_on_version_tag():
 # BDD: Release workflow on version tag
 def test_release_workflow_creates_github_release():
     content = _read("release.yml")
-    assert "action-gh-release" in content or "create-release" in content or "gh release" in content
+    assert (
+        "action-gh-release" in content
+        or "create-release" in content
+        or "gh release" in content
+    )
 
 
 # BDD: Release workflow on version tag
 def test_release_workflow_generates_release_notes():
     content = _read("release.yml")
-    assert "generate_release_notes" in content or "release_notes" in content or "auto" in content
+    assert (
+        "generate_release_notes" in content
+        or "release_notes" in content
+        or "auto" in content
+    )
 
 
 # BDD: Release includes install.sh

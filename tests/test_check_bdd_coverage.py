@@ -6,7 +6,12 @@ import sys
 import tempfile
 
 sys.path.insert(0, "scripts")
-from check_bdd_coverage import parse_scenarios, find_test_files, check_marker, check_coverage
+from check_bdd_coverage import (
+    parse_scenarios,
+    find_test_files,
+    check_marker,
+    check_coverage,
+)
 
 
 # BDD: Find test files in project
@@ -17,7 +22,7 @@ def test_find_test_files_in_project():
         os.makedirs(os.path.join(tmpdir, "tests"))
         os.makedirs(os.path.join(tmpdir, "src"))
         os.makedirs(os.path.join(tmpdir, "src", "nested"))
-        
+
         # Create test files with various patterns (relative paths since find_test_files returns relative)
         test_files = [
             "tests/test_example.py",
@@ -26,33 +31,37 @@ def test_find_test_files_in_project():
             "src/nested/test_nested.py",
             "src/nested/nested_test.py",
         ]
-        
+
         # Create non-test files (should not be included)
         non_test_files = [
             "src/main.py",
             "src/utils.py",
             "README.md",
         ]
-        
+
         for f in test_files + non_test_files:
             full_path = os.path.join(tmpdir, f)
             with open(full_path, "w") as fh:
                 fh.write("# test file\n" if f in test_files else "# source file\n")
-        
+
         # Change to temp directory and run find_test_files
         original_cwd = os.getcwd()
         try:
             os.chdir(tmpdir)
             result = find_test_files()
-            
+
             # Verify all test files are found
             result_set = set(result)
             for tf in test_files:
-                assert tf in result_set, f"Expected test file {tf} not found in {result_set}"
-            
+                assert tf in result_set, (
+                    f"Expected test file {tf} not found in {result_set}"
+                )
+
             # Verify non-test files are not included
             for ntf in non_test_files:
-                assert ntf not in result_set, f"Non-test file {ntf} should not be included"
+                assert ntf not in result_set, (
+                    f"Non-test file {ntf} should not be included"
+                )
         finally:
             os.chdir(original_cwd)
 
@@ -144,16 +153,28 @@ def test_skip_frontmatter_when_parsing_scenarios():
         scenarios = parse_scenarios(f.name)
 
         # Should only find the 2 real scenarios, not any frontmatter lines
-        assert len(scenarios) == 2, f"Expected 2 scenarios, got {len(scenarios)}: {scenarios}"
+        assert len(scenarios) == 2, (
+            f"Expected 2 scenarios, got {len(scenarios)}: {scenarios}"
+        )
         assert scenarios[0] == ("Test Feature", "A real scenario")
         assert scenarios[1] == ("Test Feature", "Another real scenario")
-        
+
         # Verify no frontmatter content leaked into scenarios
         for feature, scenario in scenarios:
-            assert ":" not in scenario or "<" in scenario, f"Frontmatter line leaked into scenario: {scenario}"
-            assert scenario not in ["language: python", "framework: none", "build_cmd: npm run build",
-                                    "test_cmd: npm test", "lint_cmd: npm run lint", "fmt_cmd: npm run format",
-                                    "birth_date: 2026-03-05", "custom_key: custom_value", "another_key: another_value"]
+            assert ":" not in scenario or "<" in scenario, (
+                f"Frontmatter line leaked into scenario: {scenario}"
+            )
+            assert scenario not in [
+                "language: python",
+                "framework: none",
+                "build_cmd: npm run build",
+                "test_cmd: npm test",
+                "lint_cmd: npm run lint",
+                "fmt_cmd: npm run format",
+                "birth_date: 2026-03-05",
+                "custom_key: custom_value",
+                "another_key: another_value",
+            ]
 
         os.unlink(f.name)
 
@@ -199,12 +220,12 @@ def test_detect_coverage_via_bdd_marker_comment():
         "tests/test_example.py": f"# BDD: {scenario}\ndef test_something(): pass\n"
     }
     result = check_marker(scenario, contents_with_marker)
-    assert result == "tests/test_example.py", "Should find file containing the BDD marker"
+    assert result == "tests/test_example.py", (
+        "Should find file containing the BDD marker"
+    )
 
     # File without the marker should not match
-    contents_without_marker = {
-        "tests/test_other.py": "def test_unrelated(): pass\n"
-    }
+    contents_without_marker = {"tests/test_other.py": "def test_unrelated(): pass\n"}
     result = check_marker(scenario, contents_without_marker)
     assert result is None, "Should return None when marker is absent"
 
@@ -252,7 +273,9 @@ def test_report_uncovered_scenarios():
             f.write("# BDD: Alpha scenario\ndef test_alpha(): pass\n")
             f.write("# BDD: Beta scenario\ndef test_beta(): pass\n")
 
-        script_path = os.path.join(os.path.dirname(__file__), "..", "scripts", "check_bdd_coverage.py")
+        script_path = os.path.join(
+            os.path.dirname(__file__), "..", "scripts", "check_bdd_coverage.py"
+        )
         result = subprocess.run(
             [sys.executable, script_path, bdd_file],
             capture_output=True,
@@ -292,7 +315,11 @@ def test_handle_empty_bdd_md_with_no_scenarios():
         )
 
         # Should output "No scenarios found in BDD.md" and exit with code 0
-        assert result.returncode == 0, f"Expected exit code 0, got {result.returncode}. stderr: {result.stderr}"
-        assert "No scenarios found in BDD.md" in result.stdout, f"Expected 'No scenarios found in BDD.md' in output. Got: {result.stdout}"
+        assert result.returncode == 0, (
+            f"Expected exit code 0, got {result.returncode}. stderr: {result.stderr}"
+        )
+        assert "No scenarios found in BDD.md" in result.stdout, (
+            f"Expected 'No scenarios found in BDD.md' in output. Got: {result.stdout}"
+        )
 
         os.unlink(f.name)

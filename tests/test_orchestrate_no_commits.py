@@ -21,14 +21,14 @@ def test_worker_no_commits_shows_fail():
         "rc": 0,
         "stdout": "",
     }
-    
+
     if result["commits"] == 0:
         status_str = "[FAIL: no commits]"
     elif not result["tests_pass"]:
         status_str = "[WARN: tests failing]"
     else:
         status_str = "[OK]"
-    
+
     assert status_str == "[FAIL: no commits]"
 
 
@@ -46,9 +46,13 @@ def test_worker_no_commits_not_merged():
         "rc": 0,
         "stdout": "",
     }
-    
-    merged = result["commits"] > 0 and result.get("has_marker", True) and result["tests_pass"]
-    
+
+    merged = (
+        result["commits"] > 0
+        and result.get("has_marker", True)
+        and result["tests_pass"]
+    )
+
     assert merged is False
 
 
@@ -66,7 +70,7 @@ def test_worker_no_commits_thrown_away():
         "rc": 0,
         "stdout": "",
     }
-    
+
     if result["commits"] == 0:
         outcome = "THROWN AWAY (no commits — agent made no progress)"
     elif not result.get("has_marker", True):
@@ -75,7 +79,7 @@ def test_worker_no_commits_thrown_away():
         outcome = "THROWN AWAY (tests failing)"
     else:
         outcome = "MERGED"
-    
+
     assert outcome == "THROWN AWAY (no commits — agent made no progress)"
 
 
@@ -93,7 +97,7 @@ def test_worker_no_commits_zero_elapsed():
         "rc": 0,
         "stdout": "",
     }
-    
+
     assert result["commits"] == 0
     assert result["elapsed_s"] == 0
 
@@ -112,7 +116,7 @@ def test_worker_no_commits_empty_stdout():
         "rc": 0,
         "stdout": "",
     }
-    
+
     assert result["commits"] == 0
     assert result["stdout"] == ""
 
@@ -131,7 +135,7 @@ def test_worker_no_commits_with_rc():
         "rc": 1,
         "stdout": "Error occurred",
     }
-    
+
     assert result["commits"] == 0
     assert result["rc"] == 1
 
@@ -144,7 +148,7 @@ def test_worker_no_commits_status_in_orchestrator():
         {"scenario": "B", "commits": 0, "tests_pass": True, "has_marker": True},
         {"scenario": "C", "commits": 1, "tests_pass": True, "has_marker": True},
     ]
-    
+
     statuses = []
     for r in results:
         if r["commits"] == 0:
@@ -154,7 +158,7 @@ def test_worker_no_commits_status_in_orchestrator():
         else:
             status_str = "[OK]"
         statuses.append(status_str)
-    
+
     assert statuses == ["[OK]", "[FAIL: no commits]", "[OK]"]
 
 
@@ -172,10 +176,14 @@ def test_worker_no_commits_merged_flag_false():
         "rc": 0,
         "stdout": "",
     }
-    
-    merged = result["commits"] > 0 and result.get("has_marker", True) and result["tests_pass"]
+
+    merged = (
+        result["commits"] > 0
+        and result.get("has_marker", True)
+        and result["tests_pass"]
+    )
     result["merged"] = merged
-    
+
     assert result["merged"] is False
 
 
@@ -193,10 +201,10 @@ def test_worker_no_commits_thrown_away_message():
         "rc": 0,
         "stdout": "",
     }
-    
+
     if result["commits"] == 0:
         message = "THROWN AWAY (no commits — agent made no progress)"
-    
+
     assert "no commits" in message
     assert "agent made no progress" in message
 
@@ -209,9 +217,9 @@ def test_worker_no_commits_total_time_excluded():
         {"scenario": "B", "commits": 0, "elapsed_s": 0},
         {"scenario": "C", "commits": 1, "elapsed_s": 50},
     ]
-    
+
     total_time = sum(r.get("elapsed_s", 0) for r in results)
-    
+
     assert total_time == 150
 
 
@@ -223,10 +231,14 @@ def test_worker_no_commits_orchestrator_summary():
         {"scenario": "B", "commits": 0, "tests_pass": True, "has_marker": True},
         {"scenario": "C", "commits": 1, "tests_pass": False, "has_marker": True},
     ]
-    
-    merged_count = sum(1 for r in results if r["commits"] > 0 and r.get("has_marker", True) and r["tests_pass"])
+
+    merged_count = sum(
+        1
+        for r in results
+        if r["commits"] > 0 and r.get("has_marker", True) and r["tests_pass"]
+    )
     failed_count = len(results) - merged_count
-    
+
     assert merged_count == 1
     assert failed_count == 2
 
@@ -245,10 +257,10 @@ def test_worker_no_commits_status_text():
         "rc": 0,
         "stdout": "",
     }
-    
+
     if result["commits"] == 0:
         status_text = f"[FAIL: no commits] {result['scenario']} — 0 commit(s), {result['elapsed_s']}s"
-    
+
     assert "[FAIL: no commits]" in status_text
     assert "0 commit(s)" in status_text
 
@@ -267,9 +279,19 @@ def test_worker_no_commits_result_dict():
         "rc": 0,
         "stdout": "",
     }
-    
-    required_fields = ["scenario", "branch", "wt_path", "commits", "tests_pass", "has_marker", "elapsed_s", "rc", "stdout"]
-    
+
+    required_fields = [
+        "scenario",
+        "branch",
+        "wt_path",
+        "commits",
+        "tests_pass",
+        "has_marker",
+        "elapsed_s",
+        "rc",
+        "stdout",
+    ]
+
     for field in required_fields:
         assert field in result, f"Missing required field: {field}"
 
@@ -288,15 +310,19 @@ def test_worker_no_commits_status_consistency():
         "rc": 0,
         "stdout": "",
     }
-    
+
     if result["commits"] == 0:
         status_str = "[FAIL: no commits]"
     elif not result["tests_pass"]:
         status_str = "[WARN: tests failing]"
     else:
         status_str = "[OK]"
-    
-    merged = result["commits"] > 0 and result.get("has_marker", True) and result["tests_pass"]
-    
+
+    merged = (
+        result["commits"] > 0
+        and result.get("has_marker", True)
+        and result["tests_pass"]
+    )
+
     assert status_str == "[FAIL: no commits]"
     assert merged is False

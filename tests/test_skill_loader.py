@@ -30,6 +30,7 @@ def test_load_skills_concatenates_multiple_files():
 def test_skills_appended_to_system_prompt():
     sys.path.insert(0, os.path.abspath("scripts"))
     import importlib
+
     agent = importlib.import_module("agent")
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -55,6 +56,7 @@ def test_skills_appended_to_system_prompt():
 def test_skip_skills_loading_if_directory_missing():
     sys.path.insert(0, os.path.abspath("scripts"))
     import importlib
+
     agent = importlib.import_module("agent")
 
     result = agent.load_skills("./nonexistent_skills_dir_xyz")

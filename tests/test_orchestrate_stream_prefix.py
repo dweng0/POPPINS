@@ -3,24 +3,21 @@
 
 import sys
 import os
-import tempfile
 import re
-from unittest.mock import patch, MagicMock, mock_open
-from io import StringIO
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 
-from orchestrate import run_pm_pipeline, format_worker_output
+from orchestrate import format_worker_output
 
 
 # BDD: Stream agent output with scenario prefix
 def test_worker_output_streaming_with_scenario_prefix():
     """Each line of agent output should be prefixed with scenario name for parallel execution clarity."""
-    
+
     scenario_name = "Login with valid credentials"
-    
+
     mock_stdout = "Line 1\nLine 2\nLine 3"
-    
+
     result = {
         "scenario": scenario_name,
         "branch": "agent/login-with-valid-credentials",
@@ -32,23 +29,25 @@ def test_worker_output_streaming_with_scenario_prefix():
         "rc": 0,
         "stdout": mock_stdout,
     }
-    
+
     formatted = format_worker_output(result)
-    
+
     for line in mock_stdout.split("\n"):
-        assert f"[{scenario_name}]" in formatted, \
+        assert f"[{scenario_name}]" in formatted, (
             f"Expected scenario prefix in output for line: {line}"
-        assert line in formatted or re.search(rf"\[{re.escape(scenario_name)}\].*{re.escape(line)}", formatted), \
-            f"Expected line '{line}' to be in formatted output with prefix"
+        )
+        assert line in formatted or re.search(
+            rf"\[{re.escape(scenario_name)}\].*{re.escape(line)}", formatted
+        ), f"Expected line '{line}' to be in formatted output with prefix"
 
 
 # BDD: Stream agent output with scenario prefix
 def test_worker_output_streaming_multiline_with_prefix():
     """Multi-line agent output should preserve scenario prefix on each line."""
-    
+
     scenario_name = "Parse YAML frontmatter from BDD.md"
     multiline_output = "Starting parse...\nReading frontmatter...\nDone!"
-    
+
     result = {
         "scenario": scenario_name,
         "branch": "agent/parse-yaml",
@@ -60,23 +59,24 @@ def test_worker_output_streaming_multiline_with_prefix():
         "rc": 0,
         "stdout": multiline_output,
     }
-    
+
     formatted = format_worker_output(result)
-    
+
     lines = formatted.strip().split("\n")
     for line in lines:
         if line.strip():
-            assert f"[{scenario_name}]" in line, \
+            assert f"[{scenario_name}]" in line, (
                 f"Line should have scenario prefix: {line}"
+            )
 
 
 # BDD: Stream agent output with scenario prefix
 def test_worker_output_error_with_scenario_prefix():
     """Error output should also be prefixed with scenario name."""
-    
+
     scenario_name = "Setup Go dependencies"
     error_output = "ERROR: go not installed\nTrying to install..."
-    
+
     result = {
         "scenario": scenario_name,
         "branch": "agent/setup-go",
@@ -88,20 +88,19 @@ def test_worker_output_error_with_scenario_prefix():
         "rc": 1,
         "stdout": error_output,
     }
-    
+
     formatted = format_worker_output(result)
-    
-    assert f"[{scenario_name}]" in formatted, \
-        "Error output should have scenario prefix"
+
+    assert f"[{scenario_name}]" in formatted, "Error output should have scenario prefix"
     assert "ERROR: go not installed" in formatted
 
 
 # BDD: Stream agent output with scenario prefix
 def test_worker_output_empty_stdout():
     """Worker with empty stdout should still show scenario prefix in status line."""
-    
+
     scenario_name = "Handle missing gh CLI gracefully"
-    
+
     result = {
         "scenario": scenario_name,
         "branch": "agent/gh-cli",
@@ -113,20 +112,21 @@ def test_worker_output_empty_stdout():
         "rc": 0,
         "stdout": "",
     }
-    
+
     formatted = format_worker_output(result)
-    
-    assert f"[{scenario_name}]" in formatted or f"({scenario_name})" in formatted, \
+
+    assert f"[{scenario_name}]" in formatted or f"({scenario_name})" in formatted, (
         "Status output should identify the scenario"
+    )
 
 
 # BDD: Stream agent output with scenario prefix
 def test_worker_output_long_scenario_name():
     """Long scenario names should be truncated in prefix but remain readable."""
-    
+
     scenario_name = "This is a very long scenario name that exceeds normal display width and should be truncated for cleaner output"
     assert len(scenario_name) > 50
-    
+
     result = {
         "scenario": scenario_name,
         "branch": "agent/long-name",
@@ -138,9 +138,11 @@ def test_worker_output_long_scenario_name():
         "rc": 0,
         "stdout": "Output line",
     }
-    
+
     formatted = format_worker_output(result)
-    
+
     assert "Output line" in formatted
-    assert f"[{scenario_name}" in formatted or "[This is a very long scenario name" in formatted, \
-        "Prefix should show scenario name (possibly truncated)"
+    assert (
+        f"[{scenario_name}" in formatted
+        or "[This is a very long scenario name" in formatted
+    ), "Prefix should show scenario name (possibly truncated)"

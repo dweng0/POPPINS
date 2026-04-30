@@ -18,7 +18,7 @@ def test_go_language_setup():
             capture_output=True,
             text=True,
         )
-    
+
     assert result.returncode == 0
     assert "Go setup complete" in result.stdout
 
@@ -30,13 +30,17 @@ def test_go_mod_download_command():
         go_mod_path = os.path.join(tmpdir, "go.mod")
         with open(go_mod_path, "w") as f:
             f.write("module example.com/test\n\ngo 1.21\n")
-        
+
         result = subprocess.run(
-            ["bash", "-c", f"cd {tmpdir} && LANGUAGE=go && [ -f go.mod ] && go mod download 2>/dev/null || true"],
+            [
+                "bash",
+                "-c",
+                f"cd {tmpdir} && LANGUAGE=go && [ -f go.mod ] && go mod download 2>/dev/null || true",
+            ],
             capture_output=True,
             text=True,
         )
-        
+
         assert result.returncode == 0
 
 
@@ -48,7 +52,7 @@ def test_go_version_output():
         capture_output=True,
         text=True,
     )
-    
+
     if result.returncode == 0:
         version_result = subprocess.run(
             ["bash", "-c", "go version"],
@@ -68,7 +72,7 @@ def test_go_not_found_error():
         capture_output=True,
         text=True,
     )
-    
+
     if result.returncode != 0:
         assert True
 
@@ -80,25 +84,27 @@ def test_go_mod_download_silent():
         go_mod_path = os.path.join(tmpdir, "go.mod")
         with open(go_mod_path, "w") as f:
             f.write("module example.com/test\n\ngo 1.21\n")
-        
+
         result = subprocess.run(
             ["bash", "-c", f"cd {tmpdir} && go mod download 2>/dev/null || true"],
             capture_output=True,
             text=True,
         )
-        
+
         assert result.returncode == 0
 
 
 # BDD: Setup Go dependencies
 def test_go_setup_in_setup_env_sh():
     """setup_env.sh should have go case."""
-    scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    scripts_dir = (
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    )
     setup_env_path = scripts_dir + "/setup_env.sh"
-    
+
     with open(setup_env_path) as f:
         content = f.read()
-    
+
     assert "go)" in content
     assert "go mod download" in content
 
@@ -106,12 +112,14 @@ def test_go_setup_in_setup_env_sh():
 # BDD: Setup Go dependencies
 def test_go_case_handles_missing_go():
     """setup_env.sh go case should handle missing go command."""
-    scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    scripts_dir = (
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    )
     setup_env_path = scripts_dir + "/setup_env.sh"
-    
+
     with open(setup_env_path) as f:
         content = f.read()
-    
+
     assert "if ! command -v go" in content
     assert "exit 1" in content
 
@@ -119,48 +127,56 @@ def test_go_case_handles_missing_go():
 # BDD: Setup Go dependencies
 def test_go_case_checks_go_mod():
     """setup_env.sh go case should check for go.mod."""
-    scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    scripts_dir = (
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    )
     setup_env_path = scripts_dir + "/setup_env.sh"
-    
+
     with open(setup_env_path) as f:
         content = f.read()
-    
+
     assert "[ -f go.mod ]" in content
 
 
 # BDD: Setup Go dependencies
 def test_go_case_downloads_modules():
     """setup_env.sh go case should download modules."""
-    scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    scripts_dir = (
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    )
     setup_env_path = scripts_dir + "/setup_env.sh"
-    
+
     with open(setup_env_path) as f:
         content = f.read()
-    
+
     assert "go mod download" in content
 
 
 # BDD: Setup Go dependencies
 def test_go_case_versions_output():
     """setup_env.sh go case should output Go version."""
-    scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    scripts_dir = (
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    )
     setup_env_path = scripts_dir + "/setup_env.sh"
-    
+
     with open(setup_env_path) as f:
         content = f.read()
-    
+
     assert "go version" in content
 
 
 # BDD: Setup Go dependencies
 def test_go_case_error_message():
     """setup_env.sh go case should have error message for missing go."""
-    scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    scripts_dir = (
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    )
     setup_env_path = scripts_dir + "/setup_env.sh"
-    
+
     with open(setup_env_path) as f:
         content = f.read()
-    
+
     assert "Go not found" in content
     assert "install it manually" in content
 
@@ -168,36 +184,42 @@ def test_go_case_error_message():
 # BDD: Setup Go dependencies
 def test_go_case_uses_setup_go_action():
     """setup_env.sh go case should mention setup-go action."""
-    scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    scripts_dir = (
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    )
     setup_env_path = scripts_dir + "/setup_env.sh"
-    
+
     with open(setup_env_path) as f:
         content = f.read()
-    
+
     assert "setup-go action" in content
 
 
 # BDD: Setup Go dependencies
 def test_go_case_silent_mod_download():
     """setup_env.sh go case should run go mod download silently."""
-    scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    scripts_dir = (
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    )
     setup_env_path = scripts_dir + "/setup_env.sh"
-    
+
     with open(setup_env_path) as f:
         content = f.read()
-    
+
     assert "go mod download 2>/dev/null || true" in content
 
 
 # BDD: Setup Go dependencies
 def test_go_case_language_variable():
     """setup_env.sh should use LANGUAGE variable for go."""
-    scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    scripts_dir = (
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    )
     setup_env_path = scripts_dir + "/setup_env.sh"
-    
+
     with open(setup_env_path) as f:
         content = f.read()
-    
+
     assert 'case "$LANGUAGE"' in content
     assert "go)" in content
 
@@ -205,12 +227,14 @@ def test_go_case_language_variable():
 # BDD: Setup Go dependencies
 def test_go_case_default_fallback():
     """setup_env.sh should have default fallback for unknown languages."""
-    scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    scripts_dir = (
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    )
     setup_env_path = scripts_dir + "/setup_env.sh"
-    
+
     with open(setup_env_path) as f:
         content = f.read()
-    
+
     assert "*)" in content
     assert "Unknown language" in content
 
@@ -218,22 +242,24 @@ def test_go_case_default_fallback():
 # BDD: Setup Go dependencies
 def test_go_case_order_in_switch():
     """setup_env.sh go case should be in correct position in switch."""
-    scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    scripts_dir = (
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    )
     setup_env_path = scripts_dir + "/setup_env.sh"
-    
+
     with open(setup_env_path) as f:
         content = f.read()
-    
+
     lines = content.split("\n")
     go_line = None
     java_line = None
-    
+
     for i, line in enumerate(lines):
         if line.strip() == "go)":
             go_line = i
         if line.strip() == "java)":
             java_line = i
-    
+
     assert go_line is not None
     assert java_line is not None
     assert go_line < java_line
@@ -242,11 +268,13 @@ def test_go_case_order_in_switch():
 # BDD: Setup Go dependencies
 def test_go_case_error_handling():
     """setup_env.sh go case should handle errors gracefully."""
-    scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    scripts_dir = (
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/scripts"
+    )
     setup_env_path = scripts_dir + "/setup_env.sh"
-    
+
     with open(setup_env_path) as f:
         content = f.read()
-    
+
     assert "set -euo pipefail" in content
     assert "go mod download 2>/dev/null || true" in content

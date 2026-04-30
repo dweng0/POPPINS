@@ -6,15 +6,23 @@ import sys
 import tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
-from scenario_locking import scenario_to_slug, is_pid_alive, check_and_remove_stale_lock, release_lock
+from scenario_locking import (
+    scenario_to_slug,
+    is_pid_alive,
+    check_and_remove_stale_lock,
+    release_lock,
+)
 
 
 # BDD: Generate scenario slug from name
 def test_generate_scenario_slug_from_name():
     """Test that scenario names are converted to slugs correctly."""
     # Basic case from BDD spec
-    assert scenario_to_slug("Login with valid credentials") == "login-with-valid-credentials"
-    
+    assert (
+        scenario_to_slug("Login with valid credentials")
+        == "login-with-valid-credentials"
+    )
+
     # Additional edge cases for robustness
     assert scenario_to_slug("Simple") == "simple"
     assert scenario_to_slug("Multiple   spaces") == "multiple-spaces"
@@ -33,12 +41,12 @@ def test_slug_truncates_to_60_characters():
     slug = scenario_to_slug(long_name)
     assert len(slug) <= 60
     assert slug == "a" * 60
-    
+
     # Scenario name at exactly 60 chars should not be truncated
     exact_name = "A" * 60
     slug = scenario_to_slug(exact_name)
     assert len(slug) == 60
-    
+
     # Scenario name at 61 chars should be truncated to 60
     over_name = "A" * 61
     slug = scenario_to_slug(over_name)
@@ -113,7 +121,9 @@ def test_clean_up_lock_on_early_exit():
         assert os.path.exists(lock_path)
 
         # Run a bash script that sources cleanup_worktree from evolve.sh and calls it
-        evolve_sh = os.path.join(os.path.dirname(__file__), "..", "scripts", "evolve.sh")
+        evolve_sh = os.path.join(
+            os.path.dirname(__file__), "..", "scripts", "evolve.sh"
+        )
         script = f"""
 set +e
 MAIN_DIR={tmpdir}
@@ -136,4 +146,6 @@ cleanup_worktree
 """
         result = subprocess.run(["bash", "-c", script], capture_output=True, text=True)
         assert result.returncode == 0, result.stderr
-        assert not os.path.exists(lock_path), "Lock file should be removed by cleanup_worktree"
+        assert not os.path.exists(lock_path), (
+            "Lock file should be removed by cleanup_worktree"
+        )

@@ -26,7 +26,9 @@ def _run_in_ci_env(env_vars: dict) -> bool:
         spec.loader.exec_module(mod)
         print("true" if mod.IN_CI else "false")
     """)
-    result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+    result = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True
+    )
     assert result.returncode == 0, f"stderr={result.stderr!r}"
     return result.stdout.strip() == "true"
 
@@ -80,6 +82,8 @@ def test_in_ci_uses_ci_optimized_output():
         assert "::group::" in out, f"Expected CI log group annotation, got: {{out!r}}"
         print("OK")
     """)
-    result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+    result = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True
+    )
     assert result.returncode == 0, f"stdout={result.stdout!r} stderr={result.stderr!r}"
     assert "OK" in result.stdout

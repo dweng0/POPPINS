@@ -84,6 +84,7 @@ Type 'q' to quit without saving.
 
 # ── docs helpers ──────────────────────────────────────────────────────────────
 
+
 def find_context_file(root: Path) -> Path | None:
     """Return CONTEXT.md path if it exists (single-context repos only)."""
     candidate = root / "CONTEXT.md"
@@ -123,6 +124,7 @@ def build_system_prompt(context_text: str | None) -> str:
 
 
 # ── AI helpers ────────────────────────────────────────────────────────────────
+
 
 def stream_response(client, system: str, messages: list) -> str:
     full = []
@@ -164,11 +166,10 @@ def extract_scenario(text: str) -> str:
 
 # ── post-session docs update ──────────────────────────────────────────────────
 
+
 def extract_doc_updates(client, conversation: list, existing_context: str) -> dict:
     """Ask Claude to pull new terms and ADR candidates from the conversation."""
-    conv_text = "\n".join(
-        f"{m['role'].upper()}: {m['content']}" for m in conversation
-    )
+    conv_text = "\n".join(f"{m['role'].upper()}: {m['content']}" for m in conversation)
     existing_block = (
         f"Existing CONTEXT.md:\n{existing_context}\n\n" if existing_context else ""
     )
@@ -248,13 +249,13 @@ def write_adr(adr_dir: Path, num: int, candidate: dict) -> Path:
     slug = slugify(candidate["title"])
     filename = f"{num:04d}-{slug}.md"
     path = adr_dir / filename
-    content = f"""# ADR-{num:04d}: {candidate['title']}
+    content = f"""# ADR-{num:04d}: {candidate["title"]}
 
-Context: {candidate['context']}
+Context: {candidate["context"]}
 
-Decision: {candidate['decision']}
+Decision: {candidate["decision"]}
 
-Why: {candidate['why']}
+Why: {candidate["why"]}
 """
     path.write_text(content)
     return path
@@ -269,6 +270,7 @@ def prompt_yn(question: str) -> bool:
 
 
 # ── main ──────────────────────────────────────────────────────────────────────
+
 
 def run():
     api_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -308,7 +310,11 @@ def run():
             scenario_text = extract_scenario(response)
             break
 
-        print("\nYour answer (Enter = accept recommendation, q = quit): ", end="", flush=True)
+        print(
+            "\nYour answer (Enter = accept recommendation, q = quit): ",
+            end="",
+            flush=True,
+        )
         try:
             user_input = input().strip()
         except (EOFError, KeyboardInterrupt):
@@ -367,7 +373,7 @@ def run():
     if new_terms or new_rels:
         target = context_path or (root / "CONTEXT.md")
         rel = target.relative_to(root)
-        print(f"\nNew domain terms/relationships found:")
+        print("\nNew domain terms/relationships found:")
         for t in new_terms:
             print(f"  + {t['term']}: {t['definition']}")
         for r in new_rels:

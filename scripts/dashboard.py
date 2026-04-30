@@ -40,10 +40,10 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 _PHASE_PREFIXES = [
-    ("pm_plan",    "PM-PLAN"),
-    ("se",         "SE"),
-    ("tester",     "TESTER"),
-    ("pm_accept",  "ACCEPT"),
+    ("pm_plan", "PM-PLAN"),
+    ("se", "SE"),
+    ("tester", "TESTER"),
+    ("pm_accept", "ACCEPT"),
 ]
 _ALL_PHASE_LABELS = [label for _, label in _PHASE_PREFIXES]
 _BAR_WIDTH = 20
@@ -54,6 +54,7 @@ _MAX_SCENARIO_NAME = 60
 # ---------------------------------------------------------------------------
 # parse_args
 # ---------------------------------------------------------------------------
+
 
 def parse_args(argv=None):
     """Parse known args; return (Namespace, pass_through_list).
@@ -82,9 +83,11 @@ def parse_args(argv=None):
     namespace, remainder = parser.parse_known_args(argv)
     return namespace, remainder
 
+
 # ---------------------------------------------------------------------------
 # Worktree discovery
 # ---------------------------------------------------------------------------
+
 
 def discover_worktrees(main_dir=None):
     """Return list of /tmp/baadd-wt-* paths from git worktree list."""
@@ -101,7 +104,7 @@ def discover_worktrees(main_dir=None):
         paths = []
         for line in result.stdout.splitlines():
             if line.startswith("worktree "):
-                path = line[len("worktree "):]
+                path = line[len("worktree ") :]
                 if "/tmp/baadd-wt-" in path:
                     paths.append(path)
         return paths
@@ -114,7 +117,7 @@ def slug_to_name(wt_path):
     basename = os.path.basename(wt_path)
     # Strip leading "baadd-wt-"
     if basename.startswith("baadd-wt-"):
-        basename = basename[len("baadd-wt-"):]
+        basename = basename[len("baadd-wt-") :]
     # Strip trailing -<digits> pid suffix
     basename = re.sub(r"-\d+$", "", basename)
     return basename.replace("-", " ")
@@ -124,9 +127,11 @@ def resolve_display_name(wt_path, wt_map):
     """Return explicit name from wt_map, or fall back to slug_to_name."""
     return wt_map.get(wt_path) or slug_to_name(wt_path)
 
+
 # ---------------------------------------------------------------------------
 # Log line filtering
 # ---------------------------------------------------------------------------
+
 
 def is_log_noise(line):
     """Return True for per-agent lines that should be suppressed from the log strip."""
@@ -150,20 +155,26 @@ def parse_wt_mapping_line(line):
         return m.group(1).strip(), m.group(2).strip()
     return None
 
+
 # ---------------------------------------------------------------------------
 # JSONL reading
 # ---------------------------------------------------------------------------
+
 
 @dataclasses.dataclass
 class AgentState:
     wt_path: str
     scenario_name: str
     active_phase: Optional[str] = None
-    done_phases: dataclasses.field(default_factory=list) = dataclasses.field(default_factory=list)
+    done_phases: dataclasses.field(default_factory=list) = dataclasses.field(
+        default_factory=list
+    )
     current_iter: int = 0
     max_iter: int = 125
     tokens: int = 0
-    last_tools: dataclasses.field(default_factory=list) = dataclasses.field(default_factory=list)
+    last_tools: dataclasses.field(default_factory=list) = dataclasses.field(
+        default_factory=list
+    )
     start_ts: float = dataclasses.field(default_factory=time.time)
 
     @property
@@ -216,7 +227,10 @@ def read_wt_state(wt_path, scenario_name=None):
         name = os.path.basename(log_path)
         phase_key = None
         for prefix, _label in _PHASE_PREFIXES:
-            if name.startswith(f"agent_events_{prefix}_") or name == f"agent_events_{prefix}.jsonl":
+            if (
+                name.startswith(f"agent_events_{prefix}_")
+                or name == f"agent_events_{prefix}.jsonl"
+            ):
                 phase_key = prefix
                 break
         if phase_key is None:
@@ -248,7 +262,9 @@ def read_wt_state(wt_path, scenario_name=None):
                         ts_str = rec.get("ts")
                         if ts_str:
                             try:
-                                start_ts = datetime.datetime.fromisoformat(ts_str).timestamp()
+                                start_ts = datetime.datetime.fromisoformat(
+                                    ts_str
+                                ).timestamp()
                             except Exception:
                                 pass
                     elif ev == "iteration_start":
@@ -258,7 +274,9 @@ def read_wt_state(wt_path, scenario_name=None):
                         t = rec.get("cumulative_output_tokens") or 0
                         tokens = max(tokens, t)
                     elif ev == "tool_call":
-                        desc = format_tool_call(rec.get("tool", "?"), rec.get("input") or {})
+                        desc = format_tool_call(
+                            rec.get("tool", "?"), rec.get("input") or {}
+                        )
                         tools.append(desc)
                     elif ev == "session_end":
                         done = True
@@ -310,9 +328,11 @@ def read_wt_state(wt_path, scenario_name=None):
 
     return state
 
+
 # ---------------------------------------------------------------------------
 # Rendering helpers
 # ---------------------------------------------------------------------------
+
 
 def render_progress_bar(current_iter, max_iter, bar_width=_BAR_WIDTH):
     """Return a unicode progress bar string of exactly bar_width chars."""
@@ -360,7 +380,7 @@ def build_agent_panel(state):
     """Build a rich.panel.Panel for one agent."""
     name = state.scenario_name
     if len(name) > _MAX_SCENARIO_NAME:
-        name = name[:_MAX_SCENARIO_NAME - 1] + "…"
+        name = name[: _MAX_SCENARIO_NAME - 1] + "…"
     title = name
     if state.is_stale:
         title = f"{name} (stale)"
@@ -405,21 +425,27 @@ def build_renderable(states, log_buffer, session_start_ts):
     """Build the full Rich renderable (Group of Panels)."""
     header_text = format_header(states, session_start_ts)
     header_panel = Panel(Text(header_text), style="bold")
-    log_panel = Panel(Text(format_log_strip(log_buffer)), title="log", title_align="left")
+    log_panel = Panel(
+        Text(format_log_strip(log_buffer)), title="log", title_align="left"
+    )
     agent_panels = [build_agent_panel(s) for s in states]
     return Group(header_panel, *agent_panels, log_panel)
+
 
 # ---------------------------------------------------------------------------
 # Subprocess command builder
 # ---------------------------------------------------------------------------
 
+
 def build_subprocess_cmd(pass_args):
     """Return the command list to launch orchestrate.py."""
     return [sys.executable, "scripts/orchestrate.py"] + list(pass_args)
 
+
 # ---------------------------------------------------------------------------
 # Wrapper mode
 # ---------------------------------------------------------------------------
+
 
 def run_wrapper_mode(pass_args, poll_interval, console):
     cmd = build_subprocess_cmd(pass_args)
@@ -467,8 +493,7 @@ def run_wrapper_mode(pass_args, poll_interval, console):
             while True:
                 wt_paths = discover_worktrees()
                 states = [
-                    read_wt_state(p, resolve_display_name(p, wt_map))
-                    for p in wt_paths
+                    read_wt_state(p, resolve_display_name(p, wt_map)) for p in wt_paths
                 ]
                 live.update(build_renderable(states, log_buffer, session_start))
                 if done_event.wait(timeout=poll_interval):
@@ -487,9 +512,11 @@ def run_wrapper_mode(pass_args, poll_interval, console):
     proc.wait()
     sys.exit(proc.returncode)
 
+
 # ---------------------------------------------------------------------------
 # Watcher mode
 # ---------------------------------------------------------------------------
+
 
 def run_watcher_mode(poll_interval, console):
     wt_map: Dict[str, str] = {}
@@ -510,8 +537,7 @@ def run_watcher_mode(poll_interval, console):
                     consecutive_empty = 0
 
                 states = [
-                    read_wt_state(p, resolve_display_name(p, wt_map))
-                    for p in wt_paths
+                    read_wt_state(p, resolve_display_name(p, wt_map)) for p in wt_paths
                 ]
                 live.update(build_renderable(states, log_buffer, session_start))
                 time.sleep(poll_interval)
@@ -520,9 +546,11 @@ def run_watcher_mode(poll_interval, console):
 
     console.print("All agents done.")
 
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
+
 
 def main():
     args, pass_args = parse_args()
