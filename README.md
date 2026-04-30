@@ -338,6 +338,39 @@ Claude Code will read the spec, pick the next uncovered scenario, write the test
 
 ---
 
+## Skills
+
+The `skills/` directory contains optional guidance documents that are appended to the agent's system prompt in every pipeline (`evolve.sh`, `orchestrate.py`, and Claude Code interactive). Each skill is a `SKILL.md` file describing a specific discipline. You can add, remove, or edit skills without touching any script.
+
+### Built-in skills
+
+| Skill | When the agent uses it |
+|-------|----------------------|
+| `skills/evolve/` | Core TDD/BDD cycle — the prime directive for every implementation session |
+| `skills/self-assess/` | Coverage gap analysis — finding uncovered scenarios and misfiled tests |
+| `skills/hexagonal-architecture/` | Ports and adapters design when adding new I/O boundaries |
+| `skills/communicate/` | Writing journal entries and GitHub issue responses |
+| `skills/research/` | Web search when implementing something unfamiliar |
+| `skills/diagnose/` | Structured debug loop for hard bugs — build a feedback loop, hypothesise, instrument, fix |
+| `skills/zoom-out/` | Map unfamiliar modules before navigating them |
+
+### Pipeline fit
+
+| Pipeline | How skills load | Key skills |
+|----------|----------------|-----------|
+| `scripts/evolve.sh` | `agent.py --skills ./skills` — all skills in system prompt | `evolve`, `diagnose` (fix loop), `zoom-out` (navigate code) |
+| `scripts/orchestrate.py` | Same `agent.py` call per sub-agent (PM-PLAN, SE, TESTER, ACCEPT) | SE uses `evolve` + `diagnose`; PM-PLAN uses `zoom-out` |
+| Claude Code interactive | Skills loaded via Claude Code's skill system | All skills available on demand |
+
+### Adding a skill
+
+1. Create `skills/<name>/SKILL.md` with YAML frontmatter (`name`, `description`) and markdown body.
+2. The agent picks it up automatically — no script changes needed.
+
+To disable a skill without deleting it, move it out of `skills/` (e.g., to `skills/_disabled/`).
+
+---
+
 ## Guardrails
 
 The orchestrator applies deterministic checks before merging any worktree branch to prevent the SE agent from causing unintended damage.
