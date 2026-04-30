@@ -752,7 +752,19 @@ def make_wrap_up_message(iteration, max_iterations, mode):
     )
 
 
-def load_skills(skills_dir):
+def _parse_skill_pipelines(content):
+    """Return list of pipelines from YAML frontmatter, or None if field absent."""
+    import re as _re
+    match = _re.match(r'^---\s*\n(.*?)\n---', content, _re.DOTALL)
+    if not match:
+        return None
+    line = _re.search(r'^pipelines:\s*\[([^\]]*)\]', match.group(1), _re.MULTILINE)
+    if not line:
+        return None
+    return [p.strip() for p in line.group(1).split(',') if p.strip()]
+
+
+def load_skills(skills_dir, pipeline=None):
     if not skills_dir or not os.path.isdir(skills_dir):
         return ""
     skill_texts = []
@@ -761,7 +773,12 @@ def load_skills(skills_dir):
     ):
         try:
             with open(skill_file) as f:
-                skill_texts.append(f.read())
+                content = f.read()
+            if pipeline is not None:
+                allowed = _parse_skill_pipelines(content)
+                if allowed is not None and pipeline not in allowed:
+                    continue
+            skill_texts.append(content)
         except Exception:
             pass
     return "\n\n---\n\n".join(skill_texts) if skill_texts else ""
@@ -1086,6 +1103,7 @@ def main():
         help="Force provider: anthropic|moonshot|dashscope|openai|groq|ollama",
     )
     parser.add_argument("--skills", default=None)
+    parser.add_argument("--pipeline", default=None, help="Pipeline context for skill filtering (e.g. evolve, orchestrate, claude)")
     parser.add_argument("--mode", default="evolve", choices=["evolve", "bootstrap"])
     parser.add_argument(
         "--event-log",
@@ -1144,7 +1162,7 @@ def main():
         print("ERROR: no prompt provided on stdin", file=sys.stderr)
         sys.exit(1)
 
-    skills_text = load_skills(args.skills)
+    skills_text = load_skills(args.skills, pipeline=args.pipeline)
     system_prompt = (
         "You are an expert software developer. You build software strictly according to BDD specifications.\n\n"
         "CRITICAL RULE — TDD cycle:\n"

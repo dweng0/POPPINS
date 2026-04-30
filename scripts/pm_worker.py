@@ -129,7 +129,7 @@ def run_agent(prompt, wt_path, main_dir, provider, model,
     event_log = os.path.join(wt_path, f"agent_events_{slug}.jsonl")
     provider_flag = f'--provider "{provider}" ' if provider else ""
     skills_dir = os.path.join(main_dir, "skills")
-    skills_flag = f'--skills "{skills_dir}" ' if os.path.isdir(skills_dir) else ""
+    skills_flag = f'--skills "{skills_dir}" --pipeline orchestrate ' if os.path.isdir(skills_dir) else ""
     cmd = (
         f'cd "{wt_path}" && '
         f'timeout {phase_timeout} python3 "{main_dir}/scripts/agent.py" '

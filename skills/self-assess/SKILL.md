@@ -2,6 +2,7 @@
 name: self-assess
 description: Analyse the codebase and BDD coverage to find gaps, bugs, and improvement opportunities
 tools: [bash, read_file]
+pipelines: [evolve, claude]
 ---
 
 # Self-Assessment

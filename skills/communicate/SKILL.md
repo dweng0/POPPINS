@@ -2,6 +2,7 @@
 name: communicate
 description: Write journal entries and respond to GitHub issues
 tools: [write_file, read_file]
+pipelines: [evolve, claude]
 ---
 
 # Communication

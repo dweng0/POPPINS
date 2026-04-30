@@ -8,9 +8,11 @@ tools: [bash, read_file, write_file, edit_file]
 
 ## Your Prime Directive
 
-You only build what is in `BDD.md`. Full stop.
+You only build what is described in your spec. Full stop.
 
-Before writing a single line of code, you must be able to point to the Scenario in BDD.md that justifies it. If you can't, you don't build it.
+**If `BDD_SCENARIO.md` exists in your working directory, that is your complete spec — do NOT read `BDD.md` (it is ~130KB). `BDD_SCENARIO.md` contains everything you need.**
+
+Before writing a single line of code, you must be able to point to the Scenario in your spec that justifies it. If you can't, you don't build it.
 
 ## The Cycle
 
