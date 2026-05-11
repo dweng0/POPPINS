@@ -1,5 +1,13 @@
 # Journal
 
+## 2026-05-11 00:55 — Bootstrap verification and bug fix
+
+The project (BAADD framework itself) was already scaffolded and extensively developed. Verified build/test commands work:
+- Build: `python3 -m py_compile scripts/*.py` ✓
+- Tests: 552 passed after fixing one bug ✓
+- Fixed infinite recursion bug in `merge_agent.py` - when AI merge fails due to missing API key,
+  the fallback now passes `skip_ai=True` to prevent retrying AI merge recursively.
+- Created `.baadd_initialized` marker file to indicate project is ready for evolution.
 
 ## 2026-04-30 22:50 — Orchestrator session
 
