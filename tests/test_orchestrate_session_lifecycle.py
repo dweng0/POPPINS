@@ -1,7 +1,7 @@
 import os
 import json
 import os.path
-from unittest.mock import patch, mock_open, MagicMock
+from unittest.mock import patch, mock_open
 
 # BDD: Worktree Session Lifecycle
 
@@ -95,15 +95,21 @@ def test_orchestrate_appends_session_start_per_worker_worktree():
     with open(sessions_path, "r") as f:
         lines = f.readlines()
 
-    assert len(lines) >= 3, f"Expected at least 3 session_start events, got {len(lines)}"
+    assert len(lines) >= 3, (
+        f"Expected at least 3 session_start events, got {len(lines)}"
+    )
     wt_paths = []
     for line in lines:
         data = json.loads(line)
         if data["type"] == "session_start":
             wt_paths.append(data["wt_path"])
 
-    assert len(wt_paths) >= 3, f"Expected at least 3 session_start wt_paths, got {len(wt_paths)}"
-    assert len(set(wt_paths)) >= 3, f"Expected at least 3 unique wt_paths, got {len(set(wt_paths))}"
+    assert len(wt_paths) >= 3, (
+        f"Expected at least 3 session_start wt_paths, got {len(wt_paths)}"
+    )
+    assert len(set(wt_paths)) >= 3, (
+        f"Expected at least 3 unique wt_paths, got {len(set(wt_paths))}"
+    )
 
     if _original_exists(sessions_path):
         os.remove(sessions_path)

@@ -172,7 +172,7 @@ def resolve_import_conflict(content_a, content_b, filepath):
 
 
 def resolve_file_merge(
-    file_path, content_a, content_b, scenario_a, scenario_b, main_dir
+    file_path, content_a, content_b, scenario_a, scenario_b, main_dir, skip_ai=False
 ):
     """Resolve merge conflict between two file versions using AI when possible."""
     log_path = os.path.join(main_dir, "merge_resolution.jsonl")
@@ -196,15 +196,16 @@ def resolve_file_merge(
     if content_a == content_b:
         return content_a, "identical"
 
-    # Try to use AI merge if anthropic is available
-    try:
-        import anthropic
+    # Try to use AI merge if anthropic is available and not skipped
+    if not skip_ai:
+        try:
+            import anthropic
 
-        return _resolve_file_merge_with_ai(
-            file_path, content_a, content_b, scenario_a, scenario_b, main_dir
-        )
-    except ImportError:
-        pass
+            return _resolve_file_merge_with_ai(
+                file_path, content_a, content_b, scenario_a, scenario_b, main_dir
+            )
+        except ImportError:
+            pass
 
     # Fallback: check for import conflicts
     ext = os.path.splitext(file_path)[1].lower()
@@ -382,9 +383,15 @@ Return the merged file content."""
 
     except Exception as e:
         log_event(log_path, "ai_merge_failed", file=file_path, error=str(e))
-        # Fallback to simple resolution
+        # Fallback to simple resolution (skip_ai=True to prevent recursion)
         return resolve_file_merge(
-            file_path, content_a, content_b, scenario_a, scenario_b, main_dir
+            file_path,
+            content_a,
+            content_b,
+            scenario_a,
+            scenario_b,
+            main_dir,
+            skip_ai=True,
         )
 
 
