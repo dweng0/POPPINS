@@ -97,3 +97,30 @@ def test_evolve_runs_sessions_through_run_agent():
         src = f.read()
     assert "python3 scripts/agent.py" not in src
     assert src.count("bash scripts/run_agent.sh") >= 3
+
+
+# BDD: Orchestrated workers use the configured harness
+def test_pm_worker_uses_run_agent_for_hermes(monkeypatch, tmp_path):
+    import sys
+    sys.path.insert(0, "scripts")
+    import pm_worker
+
+    captured = {}
+
+    class FakeProc:
+        stdout = iter(["ok\n"])
+        returncode = 0
+
+        def wait(self, timeout=None):
+            return 0
+
+    def fake_popen(cmd, **kwargs):
+        captured["cmd"] = cmd
+        return FakeProc()
+
+    monkeypatch.setenv("AGENT_HARNESS", "hermes")
+    monkeypatch.setattr(pm_worker.subprocess, "Popen", fake_popen)
+    pm_worker.run_agent("prompt", str(tmp_path), "/main", None, "gemma", "SE", 60, "[x]")
+    assert "scripts/run_agent.sh" in captured["cmd"]
+    assert "scripts/agent.py" not in captured["cmd"]
+    assert 'MODEL="gemma"' in captured["cmd"]

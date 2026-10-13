@@ -2544,6 +2544,11 @@ System: BAADD (Behaviour and AI Driven Development) — a framework where an AI 
             Then it prints a JSON line with "type":"error" naming "bogus"
             And it exits non-zero
 
+        Scenario: Orchestrated workers use the configured harness
+            Given agent.harness is "hermes"
+            When pm_worker runs an agent phase
+            Then it runs scripts/run_agent.sh with MODEL set, not scripts/agent.py
+
         Scenario: evolve.sh runs every agent session through run_agent.sh
             Given scripts/evolve.sh
             Then it never invokes scripts/agent.py directly

@@ -116,6 +116,18 @@ def _tps_monitor(
             )
 
 
+def _agent_harness():
+    """agent.harness from AGENT_HARNESS or poppins.yml; exports agent.* as POPPINS_AGENT_* for run_agent.sh."""
+    try:
+        agent_cfg = _get_poppins_config().get("agent", {})
+    except Exception:
+        agent_cfg = {}
+    for key, value in agent_cfg.items():
+        if not isinstance(value, (dict, list)):
+            os.environ.setdefault(f"POPPINS_AGENT_{key.upper()}", str(value))
+    return os.environ.get("AGENT_HARNESS") or str(agent_cfg.get("harness", "native"))
+
+
 def run_agent(
     prompt, wt_path, main_dir, provider, model, log_suffix, phase_timeout, stream_prefix
 ):
@@ -137,12 +149,20 @@ def run_agent(
         if os.path.isdir(skills_dir)
         else ""
     )
-    cmd = (
-        f'cd "{wt_path}" && '
-        f'timeout {phase_timeout} python3 "{main_dir}/scripts/agent.py" '
-        f'{provider_flag}{skills_flag}--model "{model}" --event-log "{event_log}" '
-        f'< "{prompt_file}" 2>&1'
-    )
+    if _agent_harness() == "hermes":
+        # Same harness switch as evolve.sh: scripts/run_agent.sh picks hermes.
+        cmd = (
+            f'cd "{wt_path}" && MODEL="{model}" '
+            f'timeout {phase_timeout} bash "{main_dir}/scripts/run_agent.sh" '
+            f'< "{prompt_file}" 2>&1'
+        )
+    else:
+        cmd = (
+            f'cd "{wt_path}" && '
+            f'timeout {phase_timeout} python3 "{main_dir}/scripts/agent.py" '
+            f'{provider_flag}{skills_flag}--model "{model}" --event-log "{event_log}" '
+            f'< "{prompt_file}" 2>&1'
+        )
 
     stdout_lines = []
     t0 = time.time()
