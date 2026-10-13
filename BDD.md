@@ -2594,3 +2594,21 @@ System: BAADD (Behaviour and AI Driven Development) — a framework where an AI 
             And the only uncovered scenarios are a1, a2 and a3 in feature A
             When a round is selected
             Then only a1 is selected
+
+    Feature: Orchestrated Pipeline Safety Net
+        As a developer running small local models
+        I want accepted work to reach main even if the agent forgot to commit it
+        So that a passing scenario is never silently thrown away
+
+        Scenario: Accepted work left uncommitted is committed before merge
+            Given a worker pipeline whose PM accepted the scenario
+            And the worktree has an uncommitted src/test/FooTest.kt plus PLAN.md and BDD_SCENARIO.md
+            When the pipeline finishes
+            Then src/test/FooTest.kt is committed on the branch
+            And PLAN.md and BDD_SCENARIO.md are not committed
+
+        Scenario: Clean accepted worktree gets no extra commit
+            Given a worker pipeline whose PM accepted the scenario
+            And the worktree has no uncommitted changes
+            When the pipeline finishes
+            Then no extra commit is made

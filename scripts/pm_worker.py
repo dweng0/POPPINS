@@ -1020,6 +1020,11 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
             log(f"All {MAX_RETRIES} attempts exhausted — no commit")
             _record_failed_pipeline(scenario_name, wt_path, main_dir, log)
 
+    # Accepted work the agent forgot to commit would be lost when the worktree
+    # is removed (only commits are merged), so commit it on the agent's behalf.
+    if accepted:
+        _commit_leftover_work(scenario_name, wt_path, log)
+
     # -----------------------------------------------------------------------
     # Final checks
     # -----------------------------------------------------------------------
@@ -1069,6 +1074,31 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
         0 if accepted else 1,
         "\n".join(all_stdout),
     )
+
+
+# Pipeline scratch files that must never be committed by the safety net.
+_SCRATCH_PATHSPECS = [
+    ":!PLAN.md", ":!QA_REPORT.md", ":!RETRY_NOTES.md", ":!FAIL_STACK_TRACE.md",
+    ":!BDD_SCENARIO.md", ":!BDD_STATUS.md", ":!JOURNAL.md", ":!JOURNAL_INDEX.md",
+    ":!agent_events*.jsonl",
+]
+
+
+def _commit_leftover_work(scenario_name, wt_path, log):
+    """Commit uncommitted changes left in an accepted worktree. Returns True if it committed."""
+    pathspec = " ".join(f"'{p}'" for p in _SCRATCH_PATHSPECS)
+    status, _, _ = run_cmd(f"git status --porcelain -- . {pathspec}", cwd=wt_path, timeout=10)
+    if not status.strip():
+        return False
+    log(f"Accepted but uncommitted changes found — committing:\n{status.strip()[:500]}")
+    msg = f"implement {scenario_name} (uncommitted agent work)".replace('"', "'")
+    _, err, rc = run_cmd(
+        f'git add -A -- . {pathspec} && git commit -q -m "{msg}"', cwd=wt_path, timeout=30
+    )
+    if rc != 0:
+        log(f"WARN: could not commit leftover work: {err.strip()[:200]}")
+        return False
+    return True
 
 
 def _result(
