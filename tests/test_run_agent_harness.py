@@ -53,14 +53,14 @@ def test_hermes_harness_passes_prompt_as_one_shot_query():
         hermes = _stub(tmp, "hermes")
         env = _clean_env(AGENT_HARNESS="hermes", HERMES_CMD=hermes,
                          MODEL="gemma-4-26b-a4b-it",
-                         HERMES_BASE_URL="http://llm.local:1234/v1")
+                         HERMES_PROVIDER="lan-lmstudio")
         r = _run(env, stdin="do the thing")
         assert r.returncode == 0, r.stderr
         argv = json.loads(r.stdout)["argv"]
-        assert argv[:4] == ["chat", "-q", "do the thing", "--oneshot"]
+        assert argv[:5] == ["chat", "-q", "do the thing", "--oneshot", "-Q"]
         assert argv[argv.index("--max-turns") + 1] == "75"
         assert argv[argv.index("--model") + 1] == "gemma-4-26b-a4b-it"
-        assert argv[argv.index("--base-url") + 1] == "http://llm.local:1234/v1"
+        assert argv[argv.index("--provider") + 1] == "lan-lmstudio"
 
 
 # BDD: Hermes harness uses poppins.yml max_iterations as max turns

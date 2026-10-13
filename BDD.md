@@ -2523,9 +2523,9 @@ System: BAADD (Behaviour and AI Driven Development) — a framework where an AI 
 
         Scenario: Hermes harness passes the prompt as a one-shot query
             Given AGENT_HARNESS is "hermes" and HERMES_CMD points to an installed hermes
-            And MODEL is "gemma-4-26b-a4b-it" and HERMES_BASE_URL is "http://llm.local:1234/v1"
+            And MODEL is "gemma-4-26b-a4b-it" and HERMES_PROVIDER is "lan-lmstudio"
             When scripts/run_agent.sh is run with the prompt "do the thing" on stdin
-            Then hermes is invoked with: chat -q "do the thing" --oneshot --max-turns 75 --model gemma-4-26b-a4b-it --base-url http://llm.local:1234/v1
+            Then hermes is invoked with: chat -q "do the thing" --oneshot -Q --max-turns 75 --model gemma-4-26b-a4b-it --provider lan-lmstudio
 
         Scenario: Hermes harness uses poppins.yml max_iterations as max turns
             Given AGENT_HARNESS is "hermes" and POPPINS_AGENT_MAX_ITERATIONS is "40"

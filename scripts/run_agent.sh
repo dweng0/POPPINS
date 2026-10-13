@@ -10,10 +10,13 @@
 #   hermes  — NousResearch hermes-agent in one-shot mode
 #
 # Hermes settings (poppins.yml `agent.*`, env overrides in brackets):
-#   hermes_cmd   command to invoke             [HERMES_CMD]       default: hermes
-#   base_url     OpenAI-compatible endpoint    [HERMES_BASE_URL]  falls back to agent.base_url
-#   max_iterations  passed as --max-turns
-#   MODEL        model name (already resolved by evolve.sh)
+#   hermes_cmd       command to invoke                  [HERMES_CMD]       default: hermes
+#   hermes_provider  provider name from ~/.hermes/config.yaml `providers:`
+#                    (e.g. a local LM Studio entry)    [HERMES_PROVIDER]  default: hermes config
+#   max_iterations   passed as --max-turns
+#   MODEL            model name (already resolved by evolve.sh)
+#
+# hermes chat has no --base-url flag: endpoints and keys live in hermes' own config.
 set -uo pipefail
 
 HARNESS="${AGENT_HARNESS:-${POPPINS_AGENT_HARNESS:-native}}"
@@ -24,8 +27,7 @@ case "$HARNESS" in
         ;;
     hermes)
         HERMES_CMD="${HERMES_CMD:-${POPPINS_AGENT_HERMES_CMD:-hermes}}"
-        BASE_URL="${HERMES_BASE_URL:-${POPPINS_AGENT_BASE_URL:-${CUSTOM_BASE_URL:-}}}"
-        API_KEY="${CUSTOM_API_KEY:-${POPPINS_AGENT_API_KEY:-local}}"
+        PROVIDER="${HERMES_PROVIDER:-${POPPINS_AGENT_HERMES_PROVIDER:-}}"
         MAX_TURNS="${POPPINS_AGENT_MAX_ITERATIONS:-75}"
 
         if ! command -v "${HERMES_CMD%% *}" >/dev/null 2>&1; then
@@ -34,9 +36,9 @@ case "$HARNESS" in
         fi
 
         PROMPT="$(cat)"
-        ARGS=(chat -q "$PROMPT" --oneshot --max-turns "$MAX_TURNS" --api-key "$API_KEY")
+        ARGS=(chat -q "$PROMPT" --oneshot -Q --max-turns "$MAX_TURNS")
         [ -n "${MODEL:-}" ] && ARGS+=(--model "$MODEL")
-        [ -n "$BASE_URL" ] && ARGS+=(--base-url "$BASE_URL")
+        [ -n "$PROVIDER" ] && ARGS+=(--provider "$PROVIDER")
 
         # shellcheck disable=SC2086
         exec $HERMES_CMD "${ARGS[@]}"

@@ -27,6 +27,7 @@ agent:
   # Agent harness for each session: native (scripts/agent.py) | hermes (NousResearch hermes-agent)
   # harness: native
   # hermes_cmd: hermes
+  # hermes_provider: lan-lmstudio   # a `providers:` entry in ~/.hermes/config.yaml
   # LLM provider for worker agents
   # Options: anthropic | openai | groq | ollama | moonshot | dashscope | custom
   provider: custom
