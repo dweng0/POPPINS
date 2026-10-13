@@ -13,6 +13,9 @@
 #   hermes_cmd       command to invoke                  [HERMES_CMD]       default: hermes
 #   hermes_provider  provider name from ~/.hermes/config.yaml `providers:`
 #                    (e.g. a local LM Studio entry)    [HERMES_PROVIDER]  default: hermes config
+#   hermes_reasoning reasoning effort, e.g. none       [HERMES_REASONING] default: hermes config
+#   hermes_toolsets  comma-separated toolsets          [HERMES_TOOLSETS]  default: hermes config
+#                    (small local models do best with reasoning none and file,terminal,todo)
 #   max_iterations   passed as --max-turns
 #   MODEL            model name (already resolved by evolve.sh)
 #
@@ -39,6 +42,10 @@ case "$HARNESS" in
         ARGS=(chat -q "$PROMPT" --oneshot -Q --max-turns "$MAX_TURNS")
         [ -n "${MODEL:-}" ] && ARGS+=(--model "$MODEL")
         [ -n "$PROVIDER" ] && ARGS+=(--provider "$PROVIDER")
+        REASONING="${HERMES_REASONING:-${POPPINS_AGENT_HERMES_REASONING:-}}"
+        TOOLSETS="${HERMES_TOOLSETS:-${POPPINS_AGENT_HERMES_TOOLSETS:-}}"
+        [ -n "$REASONING" ] && ARGS+=(--reasoning "$REASONING")
+        [ -n "$TOOLSETS" ] && ARGS+=(-t "$TOOLSETS")
 
         # shellcheck disable=SC2086
         exec $HERMES_CMD "${ARGS[@]}"

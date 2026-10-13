@@ -124,3 +124,18 @@ def test_pm_worker_uses_run_agent_for_hermes(monkeypatch, tmp_path):
     assert "scripts/run_agent.sh" in captured["cmd"]
     assert "scripts/agent.py" not in captured["cmd"]
     assert 'MODEL="gemma"' in captured["cmd"]
+
+
+# BDD: Hermes harness passes reasoning and toolsets when configured
+def test_hermes_reasoning_and_toolsets():
+    import json
+    with tempfile.TemporaryDirectory() as tmp:
+        hermes = _stub(tmp, "hermes")
+        env = _clean_env(AGENT_HARNESS="hermes", HERMES_CMD=hermes,
+                         POPPINS_AGENT_HERMES_REASONING="none",
+                         POPPINS_AGENT_HERMES_TOOLSETS="file,terminal,todo")
+        argv = json.loads(_run(env, stdin="x").stdout)["argv"]
+        assert argv[argv.index("--reasoning") + 1] == "none"
+        assert argv[argv.index("-t") + 1] == "file,terminal,todo"
+        bare = json.loads(_run(_clean_env(AGENT_HARNESS="hermes", HERMES_CMD=hermes), stdin="x").stdout)["argv"]
+        assert "--reasoning" not in bare and "-t" not in bare

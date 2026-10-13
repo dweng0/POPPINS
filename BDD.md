@@ -2527,6 +2527,13 @@ System: BAADD (Behaviour and AI Driven Development) — a framework where an AI 
             When scripts/run_agent.sh is run with the prompt "do the thing" on stdin
             Then hermes is invoked with: chat -q "do the thing" --oneshot -Q --max-turns 75 --model gemma-4-26b-a4b-it --provider lan-lmstudio
 
+        Scenario: Hermes harness passes reasoning and toolsets when configured
+            Given AGENT_HARNESS is "hermes"
+            And POPPINS_AGENT_HERMES_REASONING is "none" and POPPINS_AGENT_HERMES_TOOLSETS is "file,terminal,todo"
+            When scripts/run_agent.sh is run
+            Then hermes is passed --reasoning none and -t file,terminal,todo
+            And neither flag is passed when they are not configured
+
         Scenario: Hermes harness uses poppins.yml max_iterations as max turns
             Given AGENT_HARNESS is "hermes" and POPPINS_AGENT_MAX_ITERATIONS is "40"
             When scripts/run_agent.sh is run
