@@ -2564,3 +2564,21 @@ System: BAADD (Behaviour and AI Driven Development) — a framework where an AI 
             Given a file build/generated/test/FooTest.kt
             When find_test_files is called
             Then it is not returned
+
+    Feature: Feature-Spread Scheduling
+        As a developer running several agents in parallel
+        I want each round to take scenarios from different features
+        So that parallel agents do not edit the same files and collide at merge
+
+        Scenario: Spread features picks one scenario per feature per round
+            Given orchestration.spread_features is true and 4 agents
+            And uncovered scenarios a1, a2 (feature A), b1 (B), c1, c2 (C), d1 (D), e1 (E) in that order
+            When a round is selected
+            Then a1, b1, c1 and d1 are selected
+            And a2, c2 and e1 remain in order
+
+        Scenario: Spread features leaves slots empty rather than doubling up a feature
+            Given orchestration.spread_features is true and 4 agents
+            And the only uncovered scenarios are a1, a2 and a3 in feature A
+            When a round is selected
+            Then only a1 is selected

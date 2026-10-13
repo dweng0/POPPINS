@@ -257,9 +257,28 @@ def detect_provider():
     return None
 
 
-def select_scenarios(ordered_names, max_agents):
-    """Return (selected, remaining) where selected is the top max_agents scenarios."""
-    return ordered_names[:max_agents], ordered_names[max_agents:]
+def select_scenarios(ordered_names, max_agents, features=None):
+    """Return (selected, remaining) where selected is up to max_agents scenarios.
+
+    Without ``features`` this is the top max_agents scenarios in order.
+    With ``features`` (scenario name -> feature name) at most one scenario per
+    feature is picked, in order, so parallel agents work in different parts of
+    the codebase. Slots stay empty rather than put two agents in one feature,
+    because they would collide on the same files.
+    """
+    if not features:
+        return ordered_names[:max_agents], ordered_names[max_agents:]
+    selected, seen = [], set()
+    for name in ordered_names:
+        if len(selected) >= max_agents:
+            break
+        feature = features.get(name)
+        if feature in seen:
+            continue
+        seen.add(feature)
+        selected.append(name)
+    remaining = [n for n in ordered_names if n not in selected]
+    return selected, remaining
 
 
 def format_worker_output(result):
@@ -577,6 +596,10 @@ def main():
 
     # Step 2: Use BDD.md natural order (top-to-bottom = intentional priority order)
     ordered_names = [s for _, s in uncovered]
+    # spread_features: one scenario per feature per round, so parallel agents
+    # do not edit the same files.
+    spread = str(orch_config.get("spread_features", False)).lower() == "true"
+    features = {s: f for f, s in uncovered} if spread else None
 
     print("  Execution order (BDD.md order):", flush=True)
     for i, name in enumerate(ordered_names, 1):
@@ -584,10 +607,11 @@ def main():
     print("", flush=True)
 
     if args.dry_run:
-        total_slots = max_rounds * max_agents
+        dry_remaining = list(ordered_names)
         for round_num in range(1, max_rounds + 1):
-            start = (round_num - 1) * max_agents
-            round_scenarios = ordered_names[start : start + max_agents]
+            round_scenarios, dry_remaining = select_scenarios(
+                dry_remaining, max_agents, features
+            )
             if not round_scenarios:
                 break
             print(
@@ -596,7 +620,7 @@ def main():
             )
             for name in round_scenarios:
                 print(f"    - {name}", flush=True)
-        truly_deferred = ordered_names[total_slots:]
+        truly_deferred = dry_remaining
         if truly_deferred:
             print(
                 f"\n  {len(truly_deferred)} scenario(s) deferred beyond {max_rounds} round(s).",
@@ -620,8 +644,9 @@ def main():
             )
             break
 
-        selected_names = remaining_names[:max_agents]
-        remaining_names = remaining_names[max_agents:]
+        selected_names, remaining_names = select_scenarios(
+            remaining_names, max_agents, features
+        )
         all_selected_names.extend(selected_names)
 
         if max_rounds > 1:
