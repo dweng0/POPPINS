@@ -24,6 +24,9 @@ orchestration:
   # api_key: sk-...
 
 agent:
+  # Agent harness for each session: native (scripts/agent.py) | hermes (NousResearch hermes-agent)
+  # harness: native
+  # hermes_cmd: hermes
   # LLM provider for worker agents
   # Options: anthropic | openai | groq | ollama | moonshot | dashscope | custom
   provider: custom

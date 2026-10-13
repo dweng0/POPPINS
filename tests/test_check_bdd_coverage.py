@@ -323,3 +323,34 @@ def test_handle_empty_bdd_md_with_no_scenarios():
         )
 
         os.unlink(f.name)
+
+
+# BDD: Kotlin test files are found
+def test_kotlin_test_files_are_found():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        for rel in ["src/test/kotlin/RoomsTest.kt", "src/main/kotlin/Rooms.kt"]:
+            os.makedirs(os.path.join(tmpdir, os.path.dirname(rel)), exist_ok=True)
+            open(os.path.join(tmpdir, rel), "w").close()
+        cwd = os.getcwd()
+        os.chdir(tmpdir)
+        try:
+            found = find_test_files()
+        finally:
+            os.chdir(cwd)
+        assert os.path.join("src", "test", "kotlin", "RoomsTest.kt") in found
+        assert os.path.join("src", "main", "kotlin", "Rooms.kt") not in found
+
+
+# BDD: Kotlin files under build output are ignored
+def test_kotlin_files_under_build_are_ignored():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        rel = "build/generated/test/FooTest.kt"
+        os.makedirs(os.path.join(tmpdir, os.path.dirname(rel)))
+        open(os.path.join(tmpdir, rel), "w").close()
+        cwd = os.getcwd()
+        os.chdir(tmpdir)
+        try:
+            found = find_test_files()
+        finally:
+            os.chdir(cwd)
+        assert not any(p.endswith("FooTest.kt") for p in found)

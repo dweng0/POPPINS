@@ -2511,3 +2511,56 @@ System: BAADD (Behaviour and AI Driven Development) — a framework where an AI 
             Given log_buffer = deque([]) and scroll_offset = 0
             When format_log_strip(log_buffer, height=8, scroll_offset=0) is called
             Then it returns a non-empty placeholder string (e.g. "(waiting for orchestrator output...)")
+    Feature: Pluggable Agent Harness
+        As a developer running poppins against a local model
+        I want to choose which agent harness runs each session
+        So that I can use hermes-agent instead of the built-in agent loop
+
+        Scenario: Native harness is used by default
+            Given neither AGENT_HARNESS nor POPPINS_AGENT_HARNESS is set
+            When scripts/run_agent.sh is run
+            Then it runs scripts/agent.py with the same arguments and stdin
+
+        Scenario: Hermes harness passes the prompt as a one-shot query
+            Given AGENT_HARNESS is "hermes" and HERMES_CMD points to an installed hermes
+            And MODEL is "gemma-4-26b-a4b-it" and HERMES_BASE_URL is "http://llm.local:1234/v1"
+            When scripts/run_agent.sh is run with the prompt "do the thing" on stdin
+            Then hermes is invoked with: chat -q "do the thing" --oneshot --max-turns 75 --model gemma-4-26b-a4b-it --base-url http://llm.local:1234/v1
+
+        Scenario: Hermes harness uses poppins.yml max_iterations as max turns
+            Given AGENT_HARNESS is "hermes" and POPPINS_AGENT_MAX_ITERATIONS is "40"
+            When scripts/run_agent.sh is run
+            Then hermes is invoked with --max-turns 40
+
+        Scenario: Hermes harness reports an error when hermes is not installed
+            Given AGENT_HARNESS is "hermes" and HERMES_CMD names a command that does not exist
+            When scripts/run_agent.sh is run
+            Then it prints a JSON line with "type":"error"
+            And it exits non-zero
+
+        Scenario: Unknown harness reports an error
+            Given AGENT_HARNESS is "bogus"
+            When scripts/run_agent.sh is run
+            Then it prints a JSON line with "type":"error" naming "bogus"
+            And it exits non-zero
+
+        Scenario: evolve.sh runs every agent session through run_agent.sh
+            Given scripts/evolve.sh
+            Then it never invokes scripts/agent.py directly
+            And every agent session goes through scripts/run_agent.sh
+
+    Feature: Kotlin Test Discovery
+        As a developer building a Kotlin project with poppins
+        I want Kotlin tests to count toward BDD coverage
+        So that Kotlin scenarios are marked covered
+
+        Scenario: Kotlin test files are found
+            Given files src/test/kotlin/RoomsTest.kt and src/main/kotlin/Rooms.kt
+            When find_test_files is called
+            Then src/test/kotlin/RoomsTest.kt is returned
+            And src/main/kotlin/Rooms.kt is not returned
+
+        Scenario: Kotlin files under build output are ignored
+            Given a file build/generated/test/FooTest.kt
+            When find_test_files is called
+            Then it is not returned

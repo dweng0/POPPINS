@@ -6,6 +6,7 @@
     "CLAUDE.md",
     "BDD.example.md",
     "scripts/agent.py",
+    "scripts/run_agent.sh",
     "scripts/evolve.sh",
     "scripts/bootstrap.sh",
     "scripts/build.sh",

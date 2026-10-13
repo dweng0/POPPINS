@@ -65,7 +65,7 @@ def test_timeout_env_var_configurable():
 def test_timeout_applied_to_agent_call():
     content = _evolve()
     assert "TIMEOUT_CMD" in content
-    assert "python3 scripts/agent.py" in content
+    assert "bash scripts/run_agent.sh" in content
 
 
 # BDD: Worktree creation failure

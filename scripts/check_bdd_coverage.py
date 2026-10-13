@@ -40,6 +40,8 @@ TEST_FILE_PATTERNS = [
     "**/*_test.go",
     "**/test/**/*.java",
     "**/*Test.java",
+    "**/*Test.kt",
+    "**/test/**/*.kt",
     "**/tests/**/*.py",
     "**/test/**/*.py",
     "**/tests/**/*.ts",
