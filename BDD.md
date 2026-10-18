@@ -2612,3 +2612,73 @@ System: BAADD (Behaviour and AI Driven Development) — a framework where an AI 
             And the worktree has no uncommitted changes
             When the pipeline finishes
             Then no extra commit is made
+
+    Feature: Model Profiles
+        As a framework user
+        I want to define several model profiles and choose the active one
+        So that I can use any OpenAI- or Anthropic-compatible endpoint
+
+        Scenario: Load named model profiles from poppins.yml
+            Given a poppins.yml with a models map containing profiles "fast" and "smart"
+            When the poppins config is loaded
+            Then both profiles are available with their model_name, api_type, base_url, max_tokens and max_context_window
+
+        Scenario: Select the active model profile
+            Given a poppins.yml with profiles "fast" and "smart" and active_model "smart"
+            When the active profile is resolved
+            Then the "smart" profile is returned
+
+        Scenario: Unknown active model fails clearly
+            Given a poppins.yml whose active_model names a profile that is not defined
+            When the active profile is resolved
+            Then it exits with an error naming the missing profile and listing the defined profiles
+
+        Scenario: Default base_url from api_type
+            Given a profile with api_type "openai-completions" and no base_url
+            When the profile is resolved
+            Then base_url defaults to "https://api.openai.com/v1"
+
+        Scenario: Custom base_url for an OpenAI-compatible endpoint
+            Given a profile with api_type "openai-completions" and base_url "https://openrouter.ai/api/v1"
+            When the agent creates its client
+            Then the client is configured with base_url "https://openrouter.ai/api/v1"
+
+        Scenario: Custom base_url for an Anthropic-compatible endpoint
+            Given a profile with api_type "anthropic-messages" and a custom base_url
+            When the agent creates its client
+            Then the Anthropic client is configured with that base_url
+
+        Scenario: Resolve the API key from an environment variable
+            Given a profile with api_key_env "MY_KEY" and MY_KEY set in the environment
+            When the profile is resolved
+            Then the api_key is the value of MY_KEY
+
+        Scenario: Plaintext api_key is used when no environment variable is set
+            Given a profile with a plaintext api_key and no api_key_env
+            When the profile is resolved
+            Then the api_key is the plaintext value
+
+        Scenario: Per-profile max_tokens limits the response size
+            Given a profile with max_tokens 4096
+            When the agent sends a request
+            Then the request uses max_tokens 4096 instead of the global max_tokens_per_response
+
+        Scenario: Per-profile max_context_window triggers context trimming
+            Given a profile with max_context_window 32000
+            When the estimated context exceeds 32000 tokens
+            Then older tool results are summarized to stay under the limit
+
+        Scenario: Legacy flat config still works
+            Given a poppins.yml with provider, base_url and default_model but no models map
+            When the active profile is resolved
+            Then an equivalent profile is built from the legacy keys
+
+        Scenario: Command-line model overrides the active profile
+            Given an active profile and a --model flag
+            When the agent resolves its model
+            Then the model name from --model is used with the profile's endpoint settings
+
+        Scenario: Orchestrator uses a configurable model profile
+            Given orchestration.model names a profile
+            When the orchestrator makes its scenario-ordering call
+            Then it uses that profile, falling back to active_model when unset

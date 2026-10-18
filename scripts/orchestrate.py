@@ -25,6 +25,12 @@ from glob import glob
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from parse_poppins_config import get_config
+from model_profiles import (
+    ProfileError,
+    profile_to_agent_cfg,
+    resolve_orchestrator_profile,
+    resolve_profile,
+)
 from check_bdd_coverage import parse_scenarios, find_test_files, check_coverage
 from pm_worker import run_pm_pipeline
 from session_lifecycle import append_session_event
@@ -490,6 +496,22 @@ def main():
     config = get_config()
     orch_config = config.get("orchestration", {})
     agent_config = config.get("agent", {})
+    if config.get("models"):
+        # Named model profiles override the flat provider/model keys
+        try:
+            agent_config = {
+                **agent_config,
+                **profile_to_agent_cfg(resolve_profile(config)),
+            }
+            orch_profile = resolve_orchestrator_profile(config)
+        except ProfileError as e:
+            print(f"ERROR: {e}", file=sys.stderr)
+            sys.exit(1)
+        orch_config = {
+            **orch_config,
+            **profile_to_agent_cfg(orch_profile),
+            "model_orchestrator": orch_profile["model_name"],
+        }
     max_agents = args.max_agents or orch_config.get("max_parallel_agents", 3)
     max_rounds = (
         args.max_rounds

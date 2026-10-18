@@ -84,8 +84,23 @@ def parse_cli_args(args):
 # Import poppins config (lives alongside this script)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from parse_poppins_config import get_config as _get_poppins_config
+from model_profiles import ProfileError, profile_to_agent_cfg, resolve_profile
 
-_POPPINS_CFG = _get_poppins_config().get("agent", {})
+_FULL_CFG = _get_poppins_config()
+_POPPINS_CFG = dict(_FULL_CFG.get("agent", {}))
+try:
+    _PROFILE = resolve_profile(_FULL_CFG)
+except ProfileError as _e:
+    print(f"ERROR: {_e}", file=sys.stderr)
+    sys.exit(1)
+# An explicit `models:` profile is authoritative; legacy flat keys stay as-is.
+_PROFILE_ACTIVE = _PROFILE["source"] == "models"
+if _PROFILE_ACTIVE:
+    _POPPINS_CFG.update(profile_to_agent_cfg(_PROFILE))
+    if _PROFILE["max_tokens"]:
+        _POPPINS_CFG["max_tokens_per_response"] = _PROFILE["max_tokens"]
+    if _PROFILE["max_context_window"]:
+        _POPPINS_CFG["context_window_limit"] = _PROFILE["max_context_window"]
 MAX_TOKENS = _POPPINS_CFG.get("max_tokens_per_response", 8192)
 TOOL_OUTPUT_LIMIT = _POPPINS_CFG.get("tool_output_limit", 12000)
 CONTEXT_WINDOW_LIMIT = _POPPINS_CFG.get("context_window_limit", 100000)
@@ -95,14 +110,20 @@ WRAP_UP_AT = _POPPINS_CFG.get("wrap_up_at", 70)
 
 # Apply poppins.yml provider config as env var defaults (env vars take priority).
 # This lets users set provider/base_url/api_key once in poppins.yml.
-def _apply_poppins_provider_config(cfg):
+# With override=True (an active models: profile) the profile wins over env vars.
+def _apply_poppins_provider_config(cfg, override=False):
     provider = cfg.get("provider", "")
     base_url = cfg.get("base_url")
     api_key = cfg.get("api_key")
 
-    if provider == "ollama" and base_url and not os.environ.get("OLLAMA_HOST"):
+    def _unset(name):
+        return override or not os.environ.get(name)
+
+    if provider == "ollama" and base_url and _unset("OLLAMA_HOST"):
         os.environ["OLLAMA_HOST"] = base_url.rstrip("/").removesuffix("/v1")
-    elif base_url and not os.environ.get("CUSTOM_BASE_URL"):
+    elif provider == "anthropic" and base_url and _unset("ANTHROPIC_BASE_URL"):
+        os.environ["ANTHROPIC_BASE_URL"] = base_url
+    elif base_url and _unset("CUSTOM_BASE_URL"):
         os.environ["CUSTOM_BASE_URL"] = base_url
 
     if api_key:
@@ -114,16 +135,16 @@ def _apply_poppins_provider_config(cfg):
             "dashscope": "DASHSCOPE_API_KEY",
             "custom": "CUSTOM_API_KEY",
         }.get(provider, "CUSTOM_API_KEY")
-        if not os.environ.get(key_env):
+        if _unset(key_env):
             os.environ[key_env] = api_key
 
-    if provider == "custom" and not os.environ.get("CUSTOM_MODEL"):
+    if provider == "custom" and _unset("CUSTOM_MODEL"):
         model = cfg.get("default_model")
         if model:
             os.environ["CUSTOM_MODEL"] = model
 
 
-_apply_poppins_provider_config(_POPPINS_CFG)
+_apply_poppins_provider_config(_POPPINS_CFG, override=_PROFILE_ACTIVE)
 
 # Detect GitHub Actions for log grouping
 IN_CI = os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true"
@@ -460,6 +481,9 @@ def detect_provider():
 
     Environment variables take priority over poppins.yml config.
     """
+    # An explicit models: profile decides the provider, regardless of stray env keys
+    if _PROFILE_ACTIVE:
+        return _POPPINS_CFG["provider"]
     # Check environment variables first (highest priority)
     for name, env_var in PROVIDER_PRIORITY:
         if os.environ.get(env_var):
@@ -789,7 +813,9 @@ def load_skills(skills_dir, pipeline=None):
     return "\n\n---\n\n".join(skill_texts) if skill_texts else ""
 
 
-def run_anthropic_loop(api_key, model, system_prompt, prompt, mode, event_log):
+def run_anthropic_loop(
+    api_key, model, system_prompt, prompt, mode, event_log, base_url=None
+):
     try:
         import anthropic
     except ImportError:
@@ -799,7 +825,10 @@ def run_anthropic_loop(api_key, model, system_prompt, prompt, mode, event_log):
         )
         sys.exit(1)
 
-    client = anthropic.Anthropic(api_key=api_key)
+    client_kwargs = {"api_key": api_key}
+    if base_url:
+        client_kwargs["base_url"] = base_url
+    client = anthropic.Anthropic(**client_kwargs)
     messages = [{"role": "user", "content": prompt}]
 
     iteration = 0
@@ -1221,7 +1250,15 @@ def main():
     event_log.session_start(provider, model, args.mode)
 
     if provider == "anthropic":
-        run_anthropic_loop(api_key, model, system_prompt, prompt, args.mode, event_log)
+        run_anthropic_loop(
+            api_key,
+            model,
+            system_prompt,
+            prompt,
+            args.mode,
+            event_log,
+            base_url=os.environ.get("ANTHROPIC_BASE_URL"),
+        )
         return
 
     # All other providers use the OpenAI-compatible client

@@ -30,6 +30,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from parse_poppins_config import get_config as _get_poppins_config
+from model_profiles import profile_to_agent_cfg, resolve_profile
 
 # Per-phase agent timeouts (seconds).  PM-plan and SE need more time than Tester/Accept.
 TIMEOUT_PM_PLAN = 720
@@ -733,6 +734,11 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
     Returns a result dict with the same shape expected by orchestrate.py.
     """
     agent_config = config.get("agent", {})
+    if config.get("models"):
+        agent_config = {
+            **agent_config,
+            **profile_to_agent_cfg(resolve_profile(config)),
+        }
     model = os.environ.get(
         "MODEL", agent_config.get("default_model", "claude-haiku-4-5-20251001")
     )
@@ -1078,8 +1084,14 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
 
 # Pipeline scratch files that must never be committed by the safety net.
 _SCRATCH_PATHSPECS = [
-    ":!PLAN.md", ":!QA_REPORT.md", ":!RETRY_NOTES.md", ":!FAIL_STACK_TRACE.md",
-    ":!BDD_SCENARIO.md", ":!BDD_STATUS.md", ":!JOURNAL.md", ":!JOURNAL_INDEX.md",
+    ":!PLAN.md",
+    ":!QA_REPORT.md",
+    ":!RETRY_NOTES.md",
+    ":!FAIL_STACK_TRACE.md",
+    ":!BDD_SCENARIO.md",
+    ":!BDD_STATUS.md",
+    ":!JOURNAL.md",
+    ":!JOURNAL_INDEX.md",
     ":!agent_events*.jsonl",
 ]
 
@@ -1087,13 +1099,17 @@ _SCRATCH_PATHSPECS = [
 def _commit_leftover_work(scenario_name, wt_path, log):
     """Commit uncommitted changes left in an accepted worktree. Returns True if it committed."""
     pathspec = " ".join(f"'{p}'" for p in _SCRATCH_PATHSPECS)
-    status, _, _ = run_cmd(f"git status --porcelain -- . {pathspec}", cwd=wt_path, timeout=10)
+    status, _, _ = run_cmd(
+        f"git status --porcelain -- . {pathspec}", cwd=wt_path, timeout=10
+    )
     if not status.strip():
         return False
     log(f"Accepted but uncommitted changes found — committing:\n{status.strip()[:500]}")
     msg = f"implement {scenario_name} (uncommitted agent work)".replace('"', "'")
     _, err, rc = run_cmd(
-        f'git add -A -- . {pathspec} && git commit -q -m "{msg}"', cwd=wt_path, timeout=30
+        f'git add -A -- . {pathspec} && git commit -q -m "{msg}"',
+        cwd=wt_path,
+        timeout=30,
     )
     if rc != 0:
         log(f"WARN: could not commit leftover work: {err.strip()[:200]}")

@@ -65,6 +65,8 @@ def parse_yaml_simple(path):
     result = {}
     current_section = None
     current_list_key = None  # last key with empty value — may be a list
+    sub_key = None  # empty-valued key inside a section — may open a sub-map
+    sub_indent = 0
 
     with open(path) as f:
         for line in f:
@@ -80,6 +82,7 @@ def parse_yaml_simple(path):
                 current_section = stripped[:-1].strip()
                 result[current_section] = {}
                 current_list_key = None
+                sub_key = None
                 continue
 
             # List item — append to current_list_key
@@ -103,10 +106,14 @@ def parse_yaml_simple(path):
                 elif "#" in value:
                     value = value[: value.index("#")].strip()
 
+                if sub_key is not None and indent <= sub_indent:
+                    sub_key = None
+
                 if value == "":
                     current_list_key = key
                     if current_section and indent > 0:
                         result.setdefault(current_section, {})[key] = ""
+                        sub_key, sub_indent = key, indent
                     else:
                         result[key] = ""
                     continue
@@ -124,7 +131,12 @@ def parse_yaml_simple(path):
                         except ValueError:
                             value = value.strip('"').strip("'")
 
-                if current_section and indent > 0:
+                if current_section and sub_key is not None and indent > sub_indent:
+                    section = result.setdefault(current_section, {})
+                    if not isinstance(section.get(sub_key), dict):
+                        section[sub_key] = {}
+                    section[sub_key][key] = value
+                elif current_section and indent > 0:
                     result.setdefault(current_section, {})[key] = value
                 else:
                     result[key] = value
