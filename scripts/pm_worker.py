@@ -116,6 +116,18 @@ def _tps_monitor(
             )
 
 
+def _agent_harness():
+    """agent.harness from AGENT_HARNESS or poppins.yml; exports agent.* as POPPINS_AGENT_* for run_agent.sh."""
+    try:
+        agent_cfg = _get_poppins_config().get("agent", {})
+    except Exception:
+        agent_cfg = {}
+    for key, value in agent_cfg.items():
+        if not isinstance(value, (dict, list)):
+            os.environ.setdefault(f"POPPINS_AGENT_{key.upper()}", str(value))
+    return os.environ.get("AGENT_HARNESS") or str(agent_cfg.get("harness", "native"))
+
+
 def run_agent(
     prompt, wt_path, main_dir, provider, model, log_suffix, phase_timeout, stream_prefix
 ):
@@ -137,12 +149,20 @@ def run_agent(
         if os.path.isdir(skills_dir)
         else ""
     )
-    cmd = (
-        f'cd "{wt_path}" && '
-        f'timeout {phase_timeout} python3 "{main_dir}/scripts/agent.py" '
-        f'{provider_flag}{skills_flag}--model "{model}" --event-log "{event_log}" '
-        f'< "{prompt_file}" 2>&1'
-    )
+    if _agent_harness() == "hermes":
+        # Same harness switch as evolve.sh: scripts/run_agent.sh picks hermes.
+        cmd = (
+            f'cd "{wt_path}" && MODEL="{model}" '
+            f'timeout {phase_timeout} bash "{main_dir}/scripts/run_agent.sh" '
+            f'< "{prompt_file}" 2>&1'
+        )
+    else:
+        cmd = (
+            f'cd "{wt_path}" && '
+            f'timeout {phase_timeout} python3 "{main_dir}/scripts/agent.py" '
+            f'{provider_flag}{skills_flag}--model "{model}" --event-log "{event_log}" '
+            f'< "{prompt_file}" 2>&1'
+        )
 
     stdout_lines = []
     t0 = time.time()
@@ -1000,6 +1020,11 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
             log(f"All {MAX_RETRIES} attempts exhausted — no commit")
             _record_failed_pipeline(scenario_name, wt_path, main_dir, log)
 
+    # Accepted work the agent forgot to commit would be lost when the worktree
+    # is removed (only commits are merged), so commit it on the agent's behalf.
+    if accepted:
+        _commit_leftover_work(scenario_name, wt_path, log)
+
     # -----------------------------------------------------------------------
     # Final checks
     # -----------------------------------------------------------------------
@@ -1049,6 +1074,31 @@ def run_pm_pipeline(scenario_name, wt_path, branch, main_dir, config):
         0 if accepted else 1,
         "\n".join(all_stdout),
     )
+
+
+# Pipeline scratch files that must never be committed by the safety net.
+_SCRATCH_PATHSPECS = [
+    ":!PLAN.md", ":!QA_REPORT.md", ":!RETRY_NOTES.md", ":!FAIL_STACK_TRACE.md",
+    ":!BDD_SCENARIO.md", ":!BDD_STATUS.md", ":!JOURNAL.md", ":!JOURNAL_INDEX.md",
+    ":!agent_events*.jsonl",
+]
+
+
+def _commit_leftover_work(scenario_name, wt_path, log):
+    """Commit uncommitted changes left in an accepted worktree. Returns True if it committed."""
+    pathspec = " ".join(f"'{p}'" for p in _SCRATCH_PATHSPECS)
+    status, _, _ = run_cmd(f"git status --porcelain -- . {pathspec}", cwd=wt_path, timeout=10)
+    if not status.strip():
+        return False
+    log(f"Accepted but uncommitted changes found — committing:\n{status.strip()[:500]}")
+    msg = f"implement {scenario_name} (uncommitted agent work)".replace('"', "'")
+    _, err, rc = run_cmd(
+        f'git add -A -- . {pathspec} && git commit -q -m "{msg}"', cwd=wt_path, timeout=30
+    )
+    if rc != 0:
+        log(f"WARN: could not commit leftover work: {err.strip()[:200]}")
+        return False
+    return True
 
 
 def _result(

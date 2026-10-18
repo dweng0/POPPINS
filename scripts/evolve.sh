@@ -74,6 +74,7 @@ eval "$(python3 scripts/parse_poppins_config.py)"
 
 REPO="${REPO:-$(git remote get-url origin 2>/dev/null | sed 's/.*github.com[:/]//' | sed 's/\.git$//' || echo 'unknown/repo')}"
 MODEL="${MODEL:-${CUSTOM_MODEL:-${POPPINS_AGENT_DEFAULT_MODEL:-claude-haiku-4-5-20251001}}}"
+export MODEL
 TIMEOUT="${TIMEOUT:-${POPPINS_AGENT_SESSION_TIMEOUT:-3600}}"
 DATE=$(date +%Y-%m-%d)
 SESSION_TIME=$(date +%H:%M)
@@ -417,7 +418,7 @@ fi
 
 AGENT_LOG=$(mktemp)
 cd "$AGENT_DIR"
-${TIMEOUT_CMD:+$TIMEOUT_CMD "$TIMEOUT"} python3 scripts/agent.py \
+${TIMEOUT_CMD:+$TIMEOUT_CMD "$TIMEOUT"} bash scripts/run_agent.sh \
     --model "$MODEL" \
     --skills ./skills \
     < "$PROMPT_FILE" 2>&1 | tee "$AGENT_LOG" || true
@@ -502,7 +503,7 @@ Steps:
 FIXEOF
         fi
         cd "$AGENT_DIR"
-        ${TIMEOUT_CMD:+$TIMEOUT_CMD 300} python3 scripts/agent.py \
+        ${TIMEOUT_CMD:+$TIMEOUT_CMD 300} bash scripts/run_agent.sh \
             --model "$MODEL" \
             --skills ./skills \
             < "$FIX_PROMPT" || true
@@ -603,7 +604,7 @@ Read JOURNAL.md first, then use edit_file to INSERT your new entry after the
 
 Commit: git add JOURNAL.md && git commit -m "$DATE $SESSION_TIME: journal entry"
 JEOF
-    ${TIMEOUT_CMD:+$TIMEOUT_CMD 120} python3 scripts/agent.py \
+    ${TIMEOUT_CMD:+$TIMEOUT_CMD 120} bash scripts/run_agent.sh \
         --model "$MODEL" \
         --skills ./skills \
         < "$JOURNAL_PROMPT" || true

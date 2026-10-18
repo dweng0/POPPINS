@@ -179,3 +179,27 @@ def test_orchestrator_round_deferred_count():
     assert len(round2) == 4
     assert deferred_count == 7
     assert deferred == [f"Scenario {i}" for i in range(9, 16)]
+
+
+# BDD: Spread features picks one scenario per feature per round
+def test_spread_features_picks_one_scenario_per_feature():
+    import sys
+    sys.path.insert(0, "scripts")
+    from orchestrate import select_scenarios
+
+    ordered = ["a1", "a2", "b1", "c1", "c2", "d1", "e1"]
+    features = {"a1": "A", "a2": "A", "b1": "B", "c1": "C", "c2": "C", "d1": "D", "e1": "E"}
+    selected, remaining = select_scenarios(ordered, 4, features)
+    assert selected == ["a1", "b1", "c1", "d1"]
+    assert remaining == ["a2", "c2", "e1"]
+
+
+# BDD: Spread features leaves slots empty rather than doubling up a feature
+def test_spread_features_leaves_slots_empty():
+    import sys
+    sys.path.insert(0, "scripts")
+    from orchestrate import select_scenarios
+
+    selected, remaining = select_scenarios(["a1", "a2", "a3"], 4, {"a1": "A", "a2": "A", "a3": "A"})
+    assert selected == ["a1"]
+    assert remaining == ["a2", "a3"]

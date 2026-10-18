@@ -2511,3 +2511,104 @@ System: BAADD (Behaviour and AI Driven Development) — a framework where an AI 
             Given log_buffer = deque([]) and scroll_offset = 0
             When format_log_strip(log_buffer, height=8, scroll_offset=0) is called
             Then it returns a non-empty placeholder string (e.g. "(waiting for orchestrator output...)")
+    Feature: Pluggable Agent Harness
+        As a developer running poppins against a local model
+        I want to choose which agent harness runs each session
+        So that I can use hermes-agent instead of the built-in agent loop
+
+        Scenario: Native harness is used by default
+            Given neither AGENT_HARNESS nor POPPINS_AGENT_HARNESS is set
+            When scripts/run_agent.sh is run
+            Then it runs scripts/agent.py with the same arguments and stdin
+
+        Scenario: Hermes harness passes the prompt as a one-shot query
+            Given AGENT_HARNESS is "hermes" and HERMES_CMD points to an installed hermes
+            And MODEL is "gemma-4-26b-a4b-it" and HERMES_PROVIDER is "lan-lmstudio"
+            When scripts/run_agent.sh is run with the prompt "do the thing" on stdin
+            Then hermes is invoked with: chat -q "do the thing" --oneshot -Q --max-turns 75 --model gemma-4-26b-a4b-it --provider lan-lmstudio
+
+        Scenario: Hermes harness passes reasoning and toolsets when configured
+            Given AGENT_HARNESS is "hermes"
+            And POPPINS_AGENT_HERMES_REASONING is "none" and POPPINS_AGENT_HERMES_TOOLSETS is "file,terminal,todo"
+            When scripts/run_agent.sh is run
+            Then hermes is passed --reasoning none and -t file,terminal,todo
+            And neither flag is passed when they are not configured
+
+        Scenario: Hermes harness uses poppins.yml max_iterations as max turns
+            Given AGENT_HARNESS is "hermes" and POPPINS_AGENT_MAX_ITERATIONS is "40"
+            When scripts/run_agent.sh is run
+            Then hermes is invoked with --max-turns 40
+
+        Scenario: Hermes harness reports an error when hermes is not installed
+            Given AGENT_HARNESS is "hermes" and HERMES_CMD names a command that does not exist
+            When scripts/run_agent.sh is run
+            Then it prints a JSON line with "type":"error"
+            And it exits non-zero
+
+        Scenario: Unknown harness reports an error
+            Given AGENT_HARNESS is "bogus"
+            When scripts/run_agent.sh is run
+            Then it prints a JSON line with "type":"error" naming "bogus"
+            And it exits non-zero
+
+        Scenario: Orchestrated workers use the configured harness
+            Given agent.harness is "hermes"
+            When pm_worker runs an agent phase
+            Then it runs scripts/run_agent.sh with MODEL set, not scripts/agent.py
+
+        Scenario: evolve.sh runs every agent session through run_agent.sh
+            Given scripts/evolve.sh
+            Then it never invokes scripts/agent.py directly
+            And every agent session goes through scripts/run_agent.sh
+
+    Feature: Kotlin Test Discovery
+        As a developer building a Kotlin project with poppins
+        I want Kotlin tests to count toward BDD coverage
+        So that Kotlin scenarios are marked covered
+
+        Scenario: Kotlin test files are found
+            Given files src/test/kotlin/RoomsTest.kt and src/main/kotlin/Rooms.kt
+            When find_test_files is called
+            Then src/test/kotlin/RoomsTest.kt is returned
+            And src/main/kotlin/Rooms.kt is not returned
+
+        Scenario: Kotlin files under build output are ignored
+            Given a file build/generated/test/FooTest.kt
+            When find_test_files is called
+            Then it is not returned
+
+    Feature: Feature-Spread Scheduling
+        As a developer running several agents in parallel
+        I want each round to take scenarios from different features
+        So that parallel agents do not edit the same files and collide at merge
+
+        Scenario: Spread features picks one scenario per feature per round
+            Given orchestration.spread_features is true and 4 agents
+            And uncovered scenarios a1, a2 (feature A), b1 (B), c1, c2 (C), d1 (D), e1 (E) in that order
+            When a round is selected
+            Then a1, b1, c1 and d1 are selected
+            And a2, c2 and e1 remain in order
+
+        Scenario: Spread features leaves slots empty rather than doubling up a feature
+            Given orchestration.spread_features is true and 4 agents
+            And the only uncovered scenarios are a1, a2 and a3 in feature A
+            When a round is selected
+            Then only a1 is selected
+
+    Feature: Orchestrated Pipeline Safety Net
+        As a developer running small local models
+        I want accepted work to reach main even if the agent forgot to commit it
+        So that a passing scenario is never silently thrown away
+
+        Scenario: Accepted work left uncommitted is committed before merge
+            Given a worker pipeline whose PM accepted the scenario
+            And the worktree has an uncommitted src/test/FooTest.kt plus PLAN.md and BDD_SCENARIO.md
+            When the pipeline finishes
+            Then src/test/FooTest.kt is committed on the branch
+            And PLAN.md and BDD_SCENARIO.md are not committed
+
+        Scenario: Clean accepted worktree gets no extra commit
+            Given a worker pipeline whose PM accepted the scenario
+            And the worktree has no uncommitted changes
+            When the pipeline finishes
+            Then no extra commit is made
