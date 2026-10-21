@@ -25,6 +25,10 @@ def test_detect_anthropic_provider_from_api_key():
             with open(os.path.join(scripts_dir, "parse_poppins_config.py"), "w") as dst:
                 dst.write(src.read())
 
+        with open("scripts/model_profiles.py", "r") as src:
+            with open(os.path.join(scripts_dir, "model_profiles.py"), "w") as dst:
+                dst.write(src.read())
+
         # Create a test script that imports agent and calls detect_provider
         test_script = os.path.join(tmpdir, "test_detect.py")
         with open(test_script, "w") as f:
@@ -89,6 +93,10 @@ def test_detect_groq_provider_from_api_key():
             with open(os.path.join(scripts_dir, "parse_poppins_config.py"), "w") as dst:
                 dst.write(src.read())
 
+        with open("scripts/model_profiles.py", "r") as src:
+            with open(os.path.join(scripts_dir, "model_profiles.py"), "w") as dst:
+                dst.write(src.read())
+
         # Create a test script that imports agent and calls detect_provider
         test_script = os.path.join(tmpdir, "test_detect.py")
         with open(test_script, "w") as f:
@@ -151,6 +159,10 @@ def test_environment_variables_override_poppins_yml_config():
         # Copy parse_poppins_config.py to tmpdir/scripts
         with open("scripts/parse_poppins_config.py", "r") as src:
             with open(os.path.join(scripts_dir, "parse_poppins_config.py"), "w") as dst:
+                dst.write(src.read())
+
+        with open("scripts/model_profiles.py", "r") as src:
+            with open(os.path.join(scripts_dir, "model_profiles.py"), "w") as dst:
                 dst.write(src.read())
 
         # Create a test script that imports agent and calls detect_provider

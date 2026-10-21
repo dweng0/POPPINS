@@ -1,10 +1,27 @@
 # poppins.yml — Framework configuration
 # BDD.md defines WHAT to build. This file defines HOW to build it.
 
+# Named model profiles (optional). When defined, the active profile overrides the
+# flat provider/base_url/api_key/default_model keys below.
+#   api_type: openai-completions | anthropic-messages
+#   base_url defaults per api_type; api_key_env wins over a plaintext api_key
+# models:
+#   qwen:
+#     model_name: qwen3.5-plus
+#     api_type: openai-completions
+#     base_url: https://coding-intl.dashscope.aliyuncs.com/v1
+#     api_key_env: DASHSCOPE_API_KEY
+#     max_tokens: 8192
+#     max_context_window: 128000
+# active_model: qwen
+
 orchestration:
   # Maximum number of parallel worker agents (each gets its own worktree)
   max_parallel_agents: 1
   max_rounds: 1
+
+  # Profile (from models:) for the orchestrator; falls back to active_model
+  # model: qwen
 
   # LLM provider for the scenario ordering call
   # Options: anthropic | openai | groq | ollama | moonshot | dashscope | custom

@@ -125,6 +125,10 @@ def test_agent_stops_at_max_iterations():
             with open(os.path.join(scripts_dir, "parse_poppins_config.py"), "w") as dst:
                 dst.write(src.read())
 
+        with open("scripts/model_profiles.py", "r") as src:
+            with open(os.path.join(scripts_dir, "model_profiles.py"), "w") as dst:
+                dst.write(src.read())
+
         # Test that MAX_ITERATIONS constant is 75 (from poppins.yml default)
         test_script = os.path.join(tmpdir, "test_iterations.py")
         with open(test_script, "w") as f:
@@ -172,6 +176,10 @@ def test_session_ends_on_end_turn_stop_reason():
 
         with open("scripts/parse_poppins_config.py", "r") as src:
             with open(os.path.join(scripts_dir, "parse_poppins_config.py"), "w") as dst:
+                dst.write(src.read())
+
+        with open("scripts/model_profiles.py", "r") as src:
+            with open(os.path.join(scripts_dir, "model_profiles.py"), "w") as dst:
                 dst.write(src.read())
 
         test_script = os.path.join(tmpdir, "test_end_turn.py")
